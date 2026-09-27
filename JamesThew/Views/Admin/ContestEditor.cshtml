@@ -1,0 +1,257 @@
+@model JamesThew.ViewModels.AdminContestEditViewModel
+@using JamesThew.Models
+@{
+    var isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "Create Contest - JamesThew Admin" : $"Edit Contest: {Model.Title} - JamesThew Admin";
+    var opensFormatted = Model.OpensAt.ToString("yyyy-MM-ddTHH:mm");
+    var closesFormatted = Model.ClosesAt.ToString("yyyy-MM-ddTHH:mm");
+}
+
+<div class="mb-4 pb-3 border-bottom">
+    <a asp-action="Contests" class="text-decoration-none text-muted small">&larr; Back to Contests Management</a>
+    <h1 class="h2 jt-serif mt-2 mb-1">@(isNew ? "Create Seasonal Competition" : "Edit Competition")</h1>
+    <p class="text-muted small mb-0">Configure competition criteria, rules, submission deadlines, and category settings.</p>
+</div>
+
+<form method="post" asp-action="@(isNew ? "CreateContest" : "UpdateContest")" asp-route-id="@(isNew ? null : (int?)Model.Id)">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 mb-4" role="alert"></div>
+
+    <div class="row g-4">
+        <!-- Left Column: Core Fields -->
+        <div class="col-lg-8">
+            <!-- Section 1: Overview & Rules -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title jt-serif mb-0">&#127942; Competition Details &amp; Criteria</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-bold">Contest Title <span class="text-danger">*</span></label>
+                        <input asp-for="Title" class="form-control" placeholder="e.g., Artisanal Sourdough &amp; Ancient Grains Challenge" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Slug" class="form-label small text-muted">Custom Slug (optional - auto-generated from title if blank)</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light text-muted">/contests/</span>
+                            <input asp-for="Slug" class="form-control font-monospace" placeholder="artisanal-sourdough-challenge" />
+                        </div>
+                        <span asp-validation-for="Slug" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Summary" class="form-label fw-bold">Summary Teaser <span class="text-danger">*</span></label>
+                        <textarea asp-for="Summary" class="form-control" rows="2" placeholder="Brief gastronomic summary displayed on competition cards (10-500 chars)..."></textarea>
+                        <span asp-validation-for="Summary" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DescriptionAndRules" class="form-label fw-bold">Description &amp; Detailed Rules <span class="text-danger">*</span></label>
+                        <textarea asp-for="DescriptionAndRules" class="form-control font-monospace small" rows="8" placeholder="Detailed guidelines, eligible techniques, submission requirements, and judging expectations (20-10,000 chars)..."></textarea>
+                        <div class="form-text text-muted small">
+                            Clearly specify ingredients/procedure expectations for recipe contests, or technique guidance for cooking tip contests.
+                        </div>
+                        <span asp-validation-for="DescriptionAndRules" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-0">
+                        <label asp-for="PrizeDescription" class="form-label fw-bold">Prize &amp; Recognition Details (Optional)</label>
+                        <input asp-for="PrizeDescription" class="form-control" placeholder="e.g., Grand Prize: Featured Winner on Homepage + Official Recognition Certificate" />
+                        <div class="form-text text-muted small">
+                            Academic demo recognition details. No real monetary transactions or fulfillment.
+                        </div>
+                        <span asp-validation-for="PrizeDescription" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Visual Photography -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title jt-serif mb-0">&#128444; Cover Visual</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label fw-bold mb-0">Competition Banner Photography</label>
+                        <button type="button" class="jt-btn jt-btn-outline jt-btn-sm" data-bs-toggle="modal" data-bs-target="#mediaPickerModal">
+                            &#128444; Select from Media Library
+                        </button>
+                    </div>
+
+                    <!-- Current/Selected Image Preview -->
+                    <div class="mb-3 p-3 bg-light rounded-3 border @(string.IsNullOrWhiteSpace(Model.ImageUrl) ? "d-none" : "d-flex") align-items-center gap-3" id="currentImagePreviewContainer">
+                        <img src="@Model.ImageUrl" alt="Contest Preview" class="rounded border object-fit-cover flex-shrink-0" style="width: 80px; height: 80px;" id="currentImagePreview" />
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="fw-bold small text-dark">Active Cover Image:</div>
+                            <div class="font-monospace small text-muted text-break" id="currentImageUrlText">@Model.ImageUrl</div>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="btnClearImage" onclick="clearSelectedImage()">
+                                Remove Cover
+                            </button>
+                        </div>
+                    </div>
+
+                    <input type="hidden" asp-for="ImageUrl" id="hiddenImageUrl" />
+
+                    <div>
+                        <label class="form-label small fw-bold">Image URL</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" placeholder="/uploads/editorial/... or /images/..." id="manualImageUrlInput" value="@Model.ImageUrl" oninput="updateManualUrl(this.value)" />
+                            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#mediaPickerModal">
+                                Browse Library
+                            </button>
+                        </div>
+                        <div class="form-text text-muted small">
+                            Choose an existing uploaded image or enter a relative asset path.
+                        </div>
+                        <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Settings & Timeline -->
+        <div class="col-lg-4">
+            <!-- Timeline Window -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title jt-serif mb-0">&#128197; Submission Window</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label asp-for="OpensAt" class="form-label fw-bold">Opens At (UTC) <span class="text-danger">*</span></label>
+                        <input type="datetime-local" class="form-control" id="OpensAt" name="OpensAt" value="@opensFormatted" required />
+                        <div class="form-text text-muted small">Date &amp; time entries will begin opening.</div>
+                        <span asp-validation-for="OpensAt" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-0">
+                        <label asp-for="ClosesAt" class="form-label fw-bold">Closes At (UTC) <span class="text-danger">*</span></label>
+                        <input type="datetime-local" class="form-control" id="ClosesAt" name="ClosesAt" value="@closesFormatted" required />
+                        <div class="form-text text-muted small">Final deadline. Must be strictly after opening time.</div>
+                        <span asp-validation-for="ClosesAt" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category & Publication Status -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title jt-serif mb-0">&#9881; Settings &amp; Category</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold d-block">Contest Category <span class="text-danger">*</span></label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" asp-for="Type" value="@ContestType.Recipe" id="typeRecipe" />
+                            <label class="form-check-label" for="typeRecipe">
+                                <span class="fw-semibold">&#127859; Recipe Contest</span>
+                                <span class="d-block small text-muted">Members submit recipes with ingredients and steps.</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" asp-for="Type" value="@ContestType.Tip" id="typeTip" />
+                            <label class="form-check-label" for="typeTip">
+                                <span class="fw-semibold">&#128161; Cooking Tip Contest</span>
+                                <span class="d-block small text-muted">Members submit gastronomic advice or kitchen wisdom.</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label fw-bold d-block">Publication Status <span class="text-danger">*</span></label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" asp-for="Status" value="@ContestStatus.Published" id="statusPublished" />
+                            <label class="form-check-label" for="statusPublished">
+                                <span class="fw-semibold text-success">&#10004; Published</span>
+                                <span class="d-block small text-muted">Visible on public /contests page according to schedule.</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" asp-for="Status" value="@ContestStatus.Draft" id="statusDraft" />
+                            <label class="form-check-label" for="statusDraft">
+                                <span class="fw-semibold text-secondary">&#9998; Draft</span>
+                                <span class="d-block small text-muted">Hidden from public and inaccessible via direct URL.</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Actions -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <button type="submit" class="jt-btn jt-btn-primary w-100 mb-2">
+                        @(isNew ? "Create & Save Contest" : "Update Contest Changes")
+                    </button>
+                    <a asp-action="Contests" class="btn btn-outline-secondary w-100 btn-sm">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Media Picker Modal -->
+<partial name="_MediaPickerModal" model="Model.AvailableMedia" />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function updateManualUrl(url) {
+            document.getElementById('hiddenImageUrl').value = url;
+            updateImagePreview(url);
+        }
+
+        function updateImagePreview(url) {
+            const container = document.getElementById('currentImagePreviewContainer');
+            const img = document.getElementById('currentImagePreview');
+            const text = document.getElementById('currentImageUrlText');
+
+            if (url && url.trim().length > 0) {
+                img.src = url;
+                text.textContent = url;
+                container.classList.remove('d-none');
+                container.classList.add('d-flex');
+            } else {
+                container.classList.remove('d-flex');
+                container.classList.add('d-none');
+            }
+        }
+
+        function clearSelectedImage() {
+            document.getElementById('hiddenImageUrl').value = '';
+            document.getElementById('manualImageUrlInput').value = '';
+            updateImagePreview('');
+        }
+
+        // Hook media picker modal selection
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('mediaPickerModal');
+            if (modal) {
+                modal.addEventListener('click', function (e) {
+                    const btn = e.target.closest('.btn-select-media');
+                    if (btn) {
+                        const url = btn.getAttribute('data-url');
+                        if (url) {
+                            document.getElementById('hiddenImageUrl').value = url;
+                            document.getElementById('manualImageUrlInput').value = url;
+                            updateImagePreview(url);
+
+                            const bsModal = bootstrap.Modal.getInstance(modal);
+                            if (bsModal) {
+                                bsModal.hide();
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}

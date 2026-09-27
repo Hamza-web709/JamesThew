@@ -15,6 +15,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<FaqItem> FaqItems => Set<FaqItem>();
     public DbSet<SubscriptionRequest> SubscriptionRequests => Set<SubscriptionRequest>();
     public DbSet<Feedback> Feedbacks => Set<Feedback>();
+    public DbSet<Contest> Contests => Set<Contest>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -124,6 +125,26 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithMany()
                 .HasForeignKey(x => x.RecipeId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<Contest>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Title).HasMaxLength(150).IsRequired();
+            entity.Property(x => x.Slug).HasMaxLength(160).IsRequired();
+            entity.HasIndex(x => x.Slug).IsUnique();
+            entity.Property(x => x.Summary).HasMaxLength(500).IsRequired();
+            entity.Property(x => x.DescriptionAndRules).HasMaxLength(10000).IsRequired();
+            entity.Property(x => x.PrizeDescription).HasMaxLength(500);
+            entity.Property(x => x.ImageUrl).HasMaxLength(300);
+            entity.HasIndex(x => x.Status);
+            entity.HasIndex(x => x.OpensAtUtc);
+            entity.HasIndex(x => x.ClosesAtUtc);
+            entity.HasOne(x => x.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.CreatedByUserId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

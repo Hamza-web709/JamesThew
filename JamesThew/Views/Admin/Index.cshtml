@@ -7,6 +7,8 @@
     var editorialTips = (int)(ViewBag.EditorialTipsCount ?? 0);
     var mediaItems = (int)(ViewBag.MediaItemsCount ?? 0);
     var mediaSize = (string)(ViewBag.MediaTotalSize ?? "0 B");
+    var totalContests = (int)(ViewBag.TotalContestsCount ?? 0);
+    var activeOpenContests = (int)(ViewBag.ActiveOpenContestsCount ?? 0);
 }
 
 <div class="mb-4">
@@ -152,21 +154,28 @@
         </div>
     </div>
 
-    <!-- Contests Card (Phase 5) -->
+    <!-- Contests Card (Phase 5A) -->
     <div class="col-md-6 col-lg-4">
-        <div class="p-4 bg-light rounded-4 border h-100 d-flex flex-column justify-content-between text-muted">
+        <div class="p-4 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
             <div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <span class="fs-2">&#127942;</span>
-                    <span class="badge bg-secondary">Phase 5</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2">
+                        @activeOpenContests Active &bull; @totalContests Total
+                    </span>
                 </div>
-                <h2 class="h5 jt-serif mb-2 text-dark">Contests</h2>
-                <p class="small mb-3">
-                    Cooking competitions, review submissions, and declare contest winners.
+                <h2 class="h5 jt-serif mb-2">Contests Management</h2>
+                <p class="small text-muted mb-3">
+                    Create, publish, edit, and close recipe and cooking tip competitions with structured submission windows and rules.
                 </p>
             </div>
             <div>
-                <span class="small text-muted">&#128337; Planned for Phase 5</span>
+                <div class="d-flex gap-2 mb-2">
+                    <a asp-action="NewContest" class="jt-btn jt-btn-outline jt-btn-sm flex-fill text-center">+ New Contest</a>
+                </div>
+                <a asp-action="Contests" class="jt-btn jt-btn-primary jt-btn-sm w-100 text-center">
+                    Manage Contests &rarr;
+                </a>
             </div>
         </div>
     </div>

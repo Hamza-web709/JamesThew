@@ -515,6 +515,53 @@ Scope: Admin Media Management for editorial content (`/admin/media`), secure upl
 | Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Documented Phase 4 Step 2 verification results, scenario coverage, and changed-file inventory |
 | Updated | [README.md](../README.md) | Updated Phase 4 Step 2 completed capabilities, media routes, and test status |
 
+## Phase 5A actual verification - 27 September 2026
+
+Scope: Admin-managed recipe/tip contests and public read-only discovery. Support for both Recipe and Tip contest types, unique slug handling, strict UTC date validation (`ClosesAtUtc > OpensAtUtc`), editorial status workflows (Draft, Published, Closed, Archived, Restore), dynamic timeline states (Upcoming, Open, Ended), public catalog (`/contests`) and detail (`/contests/{slug}`), draft/archived privacy (HTTP 404), member participation notices, antiforgery enforcement, role authorization, and announcements alignment.
+
+| Evidence | Actual result |
+|---|---|
+| Build | Solution build succeeded, 0 warnings / 0 errors (`dotnet build JamesThew.slnx`) |
+| Test suite run | 113 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) across Foundation, PublicContent, Subscription, ContributionAndFeedback, Moderation, EditorialContentCrud, EditorialBrowserE2E, AdminMedia, AdminMediaBrowserE2E, ContestTests, ContestBrowserE2E, and BrowserTestSafetyGuard test classes |
+| Migration check | `dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj` verified clean: 0 pending model changes |
+| Browser E2E QA | 10 Playwright Chromium lifecycle scenarios verified against isolated loopback server: admin login, open `/admin/contests`, create published recipe contest, verify public listing and detail, draft tip creation, confirm draft hidden from public catalog and direct slug returns 404, edit contest updates public view, invalid date order rejection in admin form, and non-admin write/access rejection |
+| Guest discovery | Public visitors browse all published contests read-only with category filtering (All, Recipes, Tips) and timeline tabs (All, Open Now, Upcoming, Past) |
+| Contest detail | Detailed contest page displays category badge, timeline status indicator, full description & rules with preserved whitespace/linebreaks, award information, and clear member eligibility / participation guidance |
+| Draft & Archived privacy | Draft and archived contests return HTTP 404 for public guests and members on direct slug lookup; completely excluded from public listing |
+| Slug deduplication | Duplicate title or slug input automatically appends numeric suffixes (`-2`, `-3`), preventing collision errors and database constraint exceptions |
+| Date validation | Closing date before opening date is rejected with friendly validation error; UTC date consistency enforced |
+| Admin authorization | Non-admin requests to `/admin/contests` redirect to `/account/login` (guests) or `/account/access-denied` (members) |
+| Antiforgery protection | Admin POST endpoints reject requests without a valid `__RequestVerificationToken` (HTTP 400) |
+| Non-interference | Browser QA uses `BrowserTestServer` on ephemeral test database; active development DB (`JamesThew_Development`) and uploads remain unmodified |
+
+### Phase 5A changed-file inventory
+
+| Status | File path | Description |
+|---|---|---|
+| New | [JamesThew/Models/ContestEnums.cs](../JamesThew/Models/ContestEnums.cs) | Enums for `ContestType`, `ContestStatus`, and `ContestTimelinePhase` |
+| New | [JamesThew/Models/Contest.cs](../JamesThew/Models/Contest.cs) | Contest entity with unique slug, timestamps, UTC dates, and computed timeline properties |
+| New | [JamesThew/ViewModels/ContestViewModels.cs](../JamesThew/ViewModels/ContestViewModels.cs) | View models for public listing/detail and admin management/editor |
+| New | [JamesThew/Services/IContestService.cs](../JamesThew/Services/IContestService.cs) | Service contract for contest creation, editing, status transitions, and public/admin querying |
+| New | [JamesThew/Services/ContestService.cs](../JamesThew/Services/ContestService.cs) | Contest service implementation with slug deduplication, UTC validation, and query filters |
+| New | [JamesThew/Views/Admin/Contests.cshtml](../JamesThew/Views/Admin/Contests.cshtml) | Admin contest management table with status filtering tabs, timeline badges, and action buttons |
+| New | [JamesThew/Views/Admin/ContestEditor.cshtml](../JamesThew/Views/Admin/ContestEditor.cshtml) | Admin contest create/edit form with media picker integration and date pickers |
+| New | [JamesThew/Views/Contests/Index.cshtml](../JamesThew/Views/Contests/Index.cshtml) | Public contest catalog with timeline tabs, category filter, card grid, and participation guidance |
+| New | [JamesThew/Views/Contests/Detail.cshtml](../JamesThew/Views/Contests/Detail.cshtml) | Public contest detail view with full description/rules, timeline facts, and member entry notice |
+| New | [JamesThew/Data/Migrations/20260927212751_Phase5AContests.cs](../JamesThew/Data/Migrations/20260927212751_Phase5AContests.cs) | EF Core migration creating `Contests` table with indexes and constraints |
+| New | [tests/JamesThew.Tests/ContestTests.cs](../tests/JamesThew.Tests/ContestTests.cs) | 8 comprehensive unit and integration tests for Phase 5A contest workflows |
+| New | [tests/JamesThew.Tests/ContestBrowserE2ETests.cs](../tests/JamesThew.Tests/ContestBrowserE2ETests.cs) | Repeatable Playwright Chromium browser E2E test covering the 10-step contest lifecycle |
+| Updated | [JamesThew/Data/ApplicationDbContext.cs](../JamesThew/Data/ApplicationDbContext.cs) | Registered `DbSet<Contest>` with unique slug index, status/date indexes, and user relationship |
+| Updated | [JamesThew/Program.cs](../JamesThew/Program.cs) | Registered `IContestService` in DI container |
+| Updated | [JamesThew/Controllers/AdminController.cs](../JamesThew/Controllers/AdminController.cs) | Added contest list, create, edit, publish, unpublish, close, archive, and restore actions |
+| Updated | [JamesThew/Controllers/ContestsController.cs](../JamesThew/Controllers/ContestsController.cs) | Updated public `Index` and `Detail` actions querying `IContestService` |
+| Updated | [JamesThew/Data/ContentSeeder.cs](../JamesThew/Data/ContentSeeder.cs) | Added idempotent contest seed data (open, upcoming, past, and draft contests) |
+| Updated | [JamesThew/Views/Admin/Index.cshtml](../JamesThew/Views/Admin/Index.cshtml) | Activated Contests management card with live count metrics |
+| Updated | [JamesThew/Views/Announcements/Index.cshtml](../JamesThew/Views/Announcements/Index.cshtml) | Aligned announcements view with active seasonal competitions link |
+| Updated | [tests/JamesThew.Tests/FoundationTests.cs](../tests/JamesThew.Tests/FoundationTests.cs) | Added `Contests` table to expected database tables schema check |
+| Updated | [docs/TASKS.md](../docs/TASKS.md) | Documented Phase 5A completion, open decisions, and status matrix updates |
+| Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Documented Phase 5A verification results, scenario coverage, and changed-file inventory |
+| Updated | [README.md](../README.md) | Updated Phase 5A capabilities, contest routes, and test status |
+
 
 
 

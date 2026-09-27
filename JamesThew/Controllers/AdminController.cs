@@ -16,7 +16,8 @@ public class AdminController(
     IFeedbackService feedbackService,
     IContributionService contributionService,
     IAdminContentService adminContentService,
-    IMediaService mediaService) : Controller
+    IMediaService mediaService,
+    IContestService contestService) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index()
@@ -30,6 +31,8 @@ public class AdminController(
         var mediaData = await mediaService.GetMediaLibraryAsync();
         ViewBag.MediaItemsCount = mediaData.TotalCount;
         ViewBag.MediaTotalSize = mediaData.FormattedTotalSize;
+        ViewBag.TotalContestsCount = await contestService.GetTotalContestsCountAsync();
+        ViewBag.ActiveOpenContestsCount = await contestService.GetActiveOpenCountAsync();
         return View();
     }
 
@@ -445,5 +448,160 @@ public class AdminController(
     {
         var items = await mediaService.GetPickerMediaAsync(search);
         return Json(new { items });
+    }
+
+    // ==========================================
+    // Phase 5A: Contest Management
+    // ==========================================
+
+    [HttpGet("contests")]
+    public async Task<IActionResult> Contests(ContestStatus? status, ContestType? type, bool showArchived = false)
+    {
+        var model = await contestService.GetAdminContestsAsync(status, type, showArchived);
+        return View(model);
+    }
+
+    [HttpGet("contests/new")]
+    public async Task<IActionResult> NewContest()
+    {
+        var availableMedia = await mediaService.GetPickerMediaAsync();
+        var model = new AdminContestEditViewModel
+        {
+            OpensAt = DateTime.UtcNow,
+            ClosesAt = DateTime.UtcNow.AddDays(30),
+            AvailableMedia = availableMedia
+        };
+        return View("ContestEditor", model);
+    }
+
+    [HttpPost("contests/new")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateContest(AdminContestEditViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            model.AvailableMedia = await mediaService.GetPickerMediaAsync();
+            return View("ContestEditor", model);
+        }
+
+        var adminUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "admin";
+        var (success, message, contestId) = await contestService.CreateContestAsync(model, adminUserId);
+
+        if (!success)
+        {
+            ModelState.AddModelError(string.Empty, message);
+            model.AvailableMedia = await mediaService.GetPickerMediaAsync();
+            return View("ContestEditor", model);
+        }
+
+        TempData["SuccessMessage"] = message;
+        return RedirectToAction(nameof(Contests));
+    }
+
+    [HttpGet("contests/{id:int}/edit")]
+    public async Task<IActionResult> EditContest(int id)
+    {
+        var model = await contestService.GetAdminContestByIdAsync(id);
+        if (model == null)
+        {
+            return NotFound();
+        }
+
+        model.AvailableMedia = await mediaService.GetPickerMediaAsync();
+        return View("ContestEditor", model);
+    }
+
+    [HttpPost("contests/{id:int}/edit")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateContest(int id, AdminContestEditViewModel model)
+    {
+        if (id != model.Id)
+        {
+            return BadRequest();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            model.AvailableMedia = await mediaService.GetPickerMediaAsync();
+            return View("ContestEditor", model);
+        }
+
+        var adminUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "admin";
+        var (success, message) = await contestService.UpdateContestAsync(model, adminUserId);
+
+        if (!success)
+        {
+            ModelState.AddModelError(string.Empty, message);
+            model.AvailableMedia = await mediaService.GetPickerMediaAsync();
+            return View("ContestEditor", model);
+        }
+
+        TempData["SuccessMessage"] = message;
+        return RedirectToAction(nameof(Contests));
+    }
+
+    [HttpPost("contests/{id:int}/publish")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> PublishContest(int id)
+    {
+        var (success, message) = await contestService.ChangeStatusAsync(id, ContestStatus.Published);
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(Contests));
+    }
+
+    [HttpPost("contests/{id:int}/unpublish")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UnpublishContest(int id)
+    {
+        var (success, message) = await contestService.ChangeStatusAsync(id, ContestStatus.Draft);
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(Contests));
+    }
+
+    [HttpPost("contests/{id:int}/close")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CloseContest(int id)
+    {
+        var (success, message) = await contestService.ChangeStatusAsync(id, ContestStatus.Closed);
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(Contests));
+    }
+
+    [HttpPost("contests/{id:int}/archive")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ArchiveContest(int id)
+    {
+        var (success, message) = await contestService.ArchiveContestAsync(id);
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(Contests));
+    }
+
+    [HttpPost("contests/{id:int}/restore")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RestoreContest(int id)
+    {
+        var (success, message) = await contestService.RestoreContestAsync(id);
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(Contests));
     }
 }

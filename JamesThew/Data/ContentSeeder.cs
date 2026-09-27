@@ -9,6 +9,7 @@ public static class ContentSeeder
     {
         await SeedFaqItemsAsync(db);
         await SeedEditorialContentAsync(db);
+        await SeedContestsAsync(db);
     }
 
     private static async Task SeedFaqItemsAsync(ApplicationDbContext db)
@@ -377,6 +378,103 @@ public static class ContentSeeder
         }
     }
 
+    private static async Task SeedContestsAsync(ApplicationDbContext db)
+    {
+        var contests = new ContestSeedDto[]
+        {
+            new()
+            {
+                Title = "Autumn Heritage Stew Showdown",
+                Slug = "autumn-heritage-stew-showdown",
+                Summary = "Showcase your best slow-cooked, rich autumnal stew recipe using seasonal root vegetables and hearty cuts.",
+                DescriptionAndRules = "Chef James Thew invites all registered members to submit their signature slow-cooked stew recipes. Whether beef bourguignon, lamb tagine, or hearty vegan bean stew, dishes must be thoroughly tested for home kitchen execution.\n\nRules & Criteria:\n1. Recipe must serve 4-6 portions.\n2. Total prep and cooking instructions must be clearly itemized.\n3. Evaluation will be based on depth of flavor, balance of aromatics, and clarity of kitchen instructions.\n4. Only authenticated members may submit entries during the open window.",
+                Type = ContestType.Recipe,
+                Status = ContestStatus.Published,
+                PrizeDescription = "Chef James Thew Feature Article & Masterclass Culinary Trophy",
+                ImageUrl = "/images/recipes/classic-roast-chicken.jpg",
+                OpensAtUtc = DateTime.UtcNow.AddDays(-7),
+                ClosesAtUtc = DateTime.UtcNow.AddDays(14)
+            },
+            new()
+            {
+                Title = "Zero-Waste Kitchen Knife & Prep Wisdom",
+                Slug = "zero-waste-kitchen-knife-and-prep-wisdom",
+                Summary = "Share your top professional knife maintenance, trimming, or scrap-saving technique to reduce kitchen waste.",
+                DescriptionAndRules = "Efficiency and knife proficiency define the foundation of culinary artistry. Share a concise, actionable kitchen tip on blade sharpening, butchery scrap stock usage, or vegetable trimmings preservation.\n\nRules & Criteria:\n1. Tips must be practical, safe, and verifiable.\n2. Must focus on knife handling, blade honing, or culinary waste prevention.\n3. Concise submissions under 500 words are preferred.",
+                Type = ContestType.Tip,
+                Status = ContestStatus.Published,
+                PrizeDescription = "Featured Community Spotlight & Professional Chef Apron",
+                ImageUrl = "",
+                OpensAtUtc = DateTime.UtcNow.AddDays(3),
+                ClosesAtUtc = DateTime.UtcNow.AddDays(24)
+            },
+            new()
+            {
+                Title = "Summer Artisanal Seafood Showcase",
+                Slug = "summer-artisanal-seafood-showcase",
+                Summary = "Celebrating sustainable coastal cuisine, light citrus marinades, and pan-seared seafood perfection.",
+                DescriptionAndRules = "This seasonal competition celebrated the freshest marine bounty with emphasis on delicate heat control and acidic balance.\n\nContest is concluded. Submissions are closed and winner announcements have been finalized.",
+                Type = ContestType.Recipe,
+                Status = ContestStatus.Published,
+                PrizeDescription = "Gold Culinary Distinction & Published Recipe Spotlight",
+                ImageUrl = "/images/recipes/seafood-risotto.jpg",
+                OpensAtUtc = DateTime.UtcNow.AddDays(-45),
+                ClosesAtUtc = DateTime.UtcNow.AddDays(-15)
+            },
+            new()
+            {
+                Title = "Winter Pastry Secrets [Draft Challenge]",
+                Slug = "winter-pastry-secrets-draft-challenge",
+                Summary = "Upcoming internal editorial challenge testing laminated dough techniques and flakiness secrets.",
+                DescriptionAndRules = "Draft competition specifications under internal editorial review by Chef James Thew. Not yet available for public entry.",
+                Type = ContestType.Tip,
+                Status = ContestStatus.Draft,
+                PrizeDescription = "Baking Master Distinction",
+                ImageUrl = "",
+                OpensAtUtc = DateTime.UtcNow.AddDays(30),
+                ClosesAtUtc = DateTime.UtcNow.AddDays(60)
+            }
+        };
+
+        foreach (var dto in contests)
+        {
+            var existing = await db.Contests.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Slug == dto.Slug);
+            if (existing is null)
+            {
+                db.Contests.Add(new Contest
+                {
+                    Title = dto.Title,
+                    Slug = dto.Slug,
+                    Summary = dto.Summary,
+                    DescriptionAndRules = dto.DescriptionAndRules,
+                    Type = dto.Type,
+                    Status = dto.Status,
+                    PrizeDescription = dto.PrizeDescription,
+                    ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl) ? null : dto.ImageUrl,
+                    OpensAtUtc = dto.OpensAtUtc,
+                    ClosesAtUtc = dto.ClosesAtUtc,
+                    CreatedAtUtc = DateTime.UtcNow,
+                    UpdatedAtUtc = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                existing.Title = dto.Title;
+                existing.Summary = dto.Summary;
+                existing.DescriptionAndRules = dto.DescriptionAndRules;
+                existing.Type = dto.Type;
+                existing.Status = dto.Status;
+                existing.PrizeDescription = dto.PrizeDescription;
+                existing.ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl) ? null : dto.ImageUrl;
+                existing.OpensAtUtc = dto.OpensAtUtc;
+                existing.ClosesAtUtc = dto.ClosesAtUtc;
+                existing.UpdatedAtUtc = DateTime.UtcNow;
+            }
+        }
+
+        await db.SaveChangesAsync();
+    }
+
     private sealed class RecipeSeedDto
     {
         public string Title { get; init; } = string.Empty;
@@ -399,5 +497,19 @@ public static class ContentSeeder
         public ContentVisibility Visibility { get; init; }
         public string ImageUrl { get; init; } = string.Empty;
         public string Body { get; init; } = string.Empty;
+    }
+
+    private sealed class ContestSeedDto
+    {
+        public string Title { get; init; } = string.Empty;
+        public string Slug { get; init; } = string.Empty;
+        public string Summary { get; init; } = string.Empty;
+        public string DescriptionAndRules { get; init; } = string.Empty;
+        public ContestType Type { get; init; }
+        public ContestStatus Status { get; init; }
+        public string? PrizeDescription { get; init; }
+        public string? ImageUrl { get; init; }
+        public DateTime OpensAtUtc { get; init; }
+        public DateTime ClosesAtUtc { get; init; }
     }
 }

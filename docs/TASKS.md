@@ -209,6 +209,40 @@ Phase 4 Step 1 successfully implemented and verified:
       - Isolated browser QA fixture (`BrowserTestServer`): hosts dedicated in-process Kestrel instance on dynamic loopback port, operates on an ephemeral dedicated test database (`JamesThew_BrowserQA_{runId}`) with auto-migration and seeded test accounts, redirects test uploads to a temporary folder (`Path.GetTempPath()`), and drops database/temp folder upon completion. Never touches the active development database or `wwwroot/uploads/editorial/`.
     - `dotnet ef migrations has-pending-model-changes` verified clean: 0 pending model changes.
 
+### Actual scoped completion - Phase 5A: Admin-Managed Contests & Public Read-Only Discovery
+
+Phase 5A successfully implemented and verified:
+- **Contest Domain & Model**:
+  - `Contest` entity with `ContestType` (`Recipe`, `Tip`), `ContestStatus` (`Draft`, `Published`, `Closed`, `Archived`), and dynamically computed `TimelinePhase` (`Upcoming`, `Open`, `Ended`).
+  - Unique index on `Slug`, query indexes on `Status`, `OpensAtUtc`, `ClosesAtUtc`, and optional restrict FK to `ApplicationUser`.
+  - Migration `20260927212751_Phase5AContests` generated and applied to `JamesThew_Development`; confirmed 0 pending model changes.
+- **Service Layer (`IContestService` / `ContestService`)**:
+  - Kebab-case slug generation with automatic numeric collision suffixing (`-2`, `-3`).
+  - Strict UTC date order validation (`ClosesAtUtc > OpensAtUtc`).
+  - Status transition workflows: `Publish`, `Unpublish` (Draft), `Close`, `Archive` (soft-delete), and `Restore`.
+  - Query filtering by timeline phase and contest type; public queries strictly enforce `DeletedAtUtc == null && Status == ContestStatus.Published`.
+- **Admin Contest Management (`/admin/contests`)**:
+  - Role-protected with `[Authorize(Roles = "Admin")]` and antiforgery tokens.
+  - Interactive contest dashboard with multi-dimensional status tabs (All, Published, Open Now, Upcoming, Drafts, Closed, Archived) and category filters.
+  - Editor forms (`/admin/contests/new`, `/admin/contests/{id}/edit`) with title, custom slug, teaser summary, multiline description & rules, prize description, UTC start/end pickers, category radios, status radios, and integrated Media Picker Modal (`_MediaPickerModal.cshtml`).
+  - Admin Portal (`/admin`) dashboard updated with Contests metric card (live count of active and total contests).
+- **Public Contest Discovery (`/contests`, `/contests/{slug}`)**:
+  - Open read-only discovery for public visitors and guests; responsive grid with visual timeline badges (`Open Now`, `Upcoming`, `Closed`).
+  - Detail page (`/contests/{slug}`) with breadcrumbs, full guidelines & rules (preserving line formatting), submission timeline facts, award distinction, and member participation notice with sign-in/register links.
+  - Draft & archived privacy: Draft and archived contests return HTTP 404 on direct slug lookups for public guests and members.
+- **Announcements Integration (`/announcements`)**:
+  - Aligned to announce seasonal winners within existing PRD scope without inventing a generic site-wide CMS announcement engine; directs visitors to explore active competitions at `/contests`.
+- **Explicit Open Decisions for Phase 5B / Future** (Kept independent of Phase 5A):
+  1. *Entry limit per member*: Whether a member may submit only 1 entry per contest or multiple revisions/entries.
+  2. *Membership tier eligibility*: Whether contest entry requires any registered member account or an approved active paid subscription ($10/mo, $100/yr).
+  3. *Judging rules & workflow*: Whether scoring follows a multi-criteria rubric (flavor, technique, presentation) or qualitative editorial winner selection by Chef James Thew.
+  4. *Prize fulfillment*: Whether winners receive a simulated monetary award, masterclass diploma, or permanent Hall of Fame spotlight badge.
+- **Testing & Verification**:
+  - 113/113 tests passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`).
+  - 8 new unit/integration tests in `ContestTests.cs` (admin creation, custom slugs, collision suffixing, invalid date rejection, draft privacy 404, close/archive/restore transitions, antiforgery rejection, non-admin role denial).
+  - Playwright Chromium browser E2E test in `ContestBrowserE2ETests.cs` (10-step full lifecycle test using isolated loopback server and ephemeral test DB).
+  - `dotnet ef migrations has-pending-model-changes` verified clean: 0 pending model changes.
+
 | Item | Current status / evidence |
 |---|---|
 | T-11 | Complete (Phase 3A): Demo plan requests ($10 monthly, $100 yearly), pending queue, admin approval/rejection, activation window, zero real gateway |
@@ -219,8 +253,9 @@ Phase 4 Step 1 successfully implemented and verified:
 | T-15 feedback moderation | Complete (Phase 3C): Admin feedback review/notes workflow, Reviewed status, private member history notes, 0 public leakage |
 | T-13 editorial CRUD | Complete (Phase 4 Step 1): Admin recipe & tip list, create, edit, unpublish (soft delete), restore, auto-slug collisions, and subscription lock preservation |
 | T-13 media management | Complete (Phase 4 Step 2): Admin media library (`/admin/media`), upload validation, magic bytes check, safe storage (`/uploads/editorial/`), recipe/tip form integration, safe deletion unlinking, orphan prevention, and Playwright Chromium E2E QA |
+| T-16 | Complete (Phase 5A): Admin contest management (create/edit/publish/close/archive), auto-slug resolution, date validation, and public read-only discovery at /contests |
 | T-10 | Auth complete in Phase 1; Profile edit deferred |
-| Phase 4 Step 2 verification | Build 0 warnings/0 errors; 85/85 tests pass; Playwright Chromium 10/10 scenarios pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
+| Phase 5A verification | Build 0 warnings/0 errors; 113/113 tests pass; Playwright Chromium 10/10 scenarios pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
