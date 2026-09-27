@@ -88,8 +88,27 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+if (!builder.Configuration.GetValue<bool>("DisableHttpsRedirection"))
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
+
+var customUploadPath = builder.Configuration["Media:UploadPath"];
+if (!string.IsNullOrWhiteSpace(customUploadPath))
+{
+    if (!Directory.Exists(customUploadPath))
+    {
+        Directory.CreateDirectory(customUploadPath);
+    }
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(customUploadPath),
+        RequestPath = "/uploads/editorial"
+    });
+}
+
 app.UseRouting();
 
 app.UseAuthentication();

@@ -206,6 +206,7 @@ Phase 4 Step 1 successfully implemented and verified:
       - Enforced upload precedence: direct uploaded `ImageFile` overrides manual/picker URL and `RemoveImage`; `RemoveImage` clears URL; manual/picker URL preserved when no file uploaded.
       - Prevented orphan files: validated `ModelState.IsValid` before saving file to disk; if database save fails, newly uploaded file is deleted immediately.
       - Robust URL matching: both relative and rooted image paths supported in media usage count and deletion unlinking.
+      - Isolated browser QA fixture (`BrowserTestServer`): hosts dedicated in-process Kestrel instance on dynamic loopback port, operates on an ephemeral dedicated test database (`JamesThew_BrowserQA_{runId}`) with auto-migration and seeded test accounts, redirects test uploads to a temporary folder (`Path.GetTempPath()`), and drops database/temp folder upon completion. Never touches the active development database or `wwwroot/uploads/editorial/`.
     - `dotnet ef migrations has-pending-model-changes` verified clean: 0 pending model changes.
 
 | Item | Current status / evidence |

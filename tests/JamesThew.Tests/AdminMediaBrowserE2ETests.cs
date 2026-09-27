@@ -5,33 +5,13 @@ namespace JamesThew.Tests;
 
 public class AdminMediaBrowserE2ETests
 {
-    private const string BaseUrl = "https://localhost:7054";
-
     private static readonly byte[] ValidPngBytes = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
-
-    private static async Task<bool> IsServerRunningAsync()
-    {
-        try
-        {
-            using var handler = new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, _, _, _) => true };
-            using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(2) };
-            var response = await client.GetAsync(BaseUrl);
-            return response.IsSuccessStatusCode;
-        }
-        catch
-        {
-            return false;
-        }
-    }
 
     [Fact]
     public async Task Phase4_Step2_Automated_Browser_Media_Management_Lifecycle()
     {
-        if (!await IsServerRunningAsync())
-        {
-            // Dev server is not running during offline test run; live browser QA runs against active dev server.
-            return;
-        }
+        var server = new BrowserTestServer();
+        await server.InitializeAsync();
 
         var runId = Guid.NewGuid().ToString("N")[..6].ToLowerInvariant();
         var tempImageFileName = $"qa-dish-{runId}.png";
@@ -52,14 +32,14 @@ public class AdminMediaBrowserE2ETests
         var adminContext = await browser.NewContextAsync(new BrowserNewContextOptions
         {
             IgnoreHTTPSErrors = true,
-            BaseURL = BaseUrl
+            BaseURL = server.ServerAddress
         });
         var adminPage = await adminContext.NewPageAsync();
 
         var guestContext = await browser.NewContextAsync(new BrowserNewContextOptions
         {
             IgnoreHTTPSErrors = true,
-            BaseURL = BaseUrl
+            BaseURL = server.ServerAddress
         });
         var guestPage = await guestContext.NewPageAsync();
 
@@ -78,7 +58,7 @@ public class AdminMediaBrowserE2ETests
             var memberContext = await browser.NewContextAsync(new BrowserNewContextOptions
             {
                 IgnoreHTTPSErrors = true,
-                BaseURL = BaseUrl
+                BaseURL = server.ServerAddress
             });
             var memberPage = await memberContext.NewPageAsync();
 
@@ -329,18 +309,7 @@ public class AdminMediaBrowserE2ETests
                 try { File.Delete(tempImagePath); } catch { }
             }
 
-            try
-            {
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "JamesThew", "wwwroot", "uploads", "editorial");
-                if (Directory.Exists(uploadDir))
-                {
-                    foreach (var file in Directory.GetFiles(uploadDir, $"*qa-dish-{runId}*"))
-                    {
-                        try { File.Delete(file); } catch { }
-                    }
-                }
-            }
-            catch { }
+            await server.DisposeAsync();
         }
     }
 }

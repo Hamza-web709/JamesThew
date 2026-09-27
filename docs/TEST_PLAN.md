@@ -510,6 +510,7 @@ Scope: Admin Media Management for editorial content (`/admin/media`), secure upl
 | Updated | [.gitignore](../.gitignore) | Ignored runtime uploaded media under `wwwroot/uploads/**` while preserving `.gitkeep` |
 | New | [tests/JamesThew.Tests/AdminMediaTests.cs](../tests/JamesThew.Tests/AdminMediaTests.cs) | 20 comprehensive integration tests for media authorization, upload validation, path traversal, recipe/tip integration, and safe deletion policy |
 | New | [tests/JamesThew.Tests/AdminMediaBrowserE2ETests.cs](../tests/JamesThew.Tests/AdminMediaBrowserE2ETests.cs) | Repeatable Playwright Chromium browser E2E test covering the 10-step media management lifecycle |
+| New | [tests/JamesThew.Tests/BrowserTestServer.cs](../tests/JamesThew.Tests/BrowserTestServer.cs) | Dedicated test server fixture running in-process Kestrel on loopback port with isolated test DB and ephemeral upload directory |
 | Updated | [docs/TASKS.md](../docs/TASKS.md) | Documented Phase 4 Step 2 completion, status matrix updates, and verification evidence |
 | Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Documented Phase 4 Step 2 verification results, scenario coverage, and changed-file inventory |
 | Updated | [README.md](../README.md) | Updated Phase 4 Step 2 completed capabilities, media routes, and test status |

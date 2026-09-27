@@ -5,9 +5,11 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
+using Microsoft.Extensions.Configuration;
+
 namespace JamesThew.Services;
 
-public class MediaService(ApplicationDbContext db, IWebHostEnvironment env) : IMediaService
+public class MediaService(ApplicationDbContext db, IWebHostEnvironment env, IConfiguration? config = null) : IMediaService
 {
     public const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
     public const string UploadsRelativePath = "/uploads/editorial";
@@ -27,6 +29,16 @@ public class MediaService(ApplicationDbContext db, IWebHostEnvironment env) : IM
 
     public string GetPhysicalUploadPath()
     {
+        var configuredPath = config?["Media:UploadPath"];
+        if (!string.IsNullOrWhiteSpace(configuredPath))
+        {
+            if (!Directory.Exists(configuredPath))
+            {
+                Directory.CreateDirectory(configuredPath);
+            }
+            return configuredPath;
+        }
+
         var webRoot = env.WebRootPath;
         if (string.IsNullOrWhiteSpace(webRoot))
         {

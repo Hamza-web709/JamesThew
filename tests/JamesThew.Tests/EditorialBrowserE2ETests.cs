@@ -5,62 +5,44 @@ namespace JamesThew.Tests;
 
 public class EditorialBrowserE2ETests
 {
-    private const string BaseUrl = "https://localhost:7054";
-
-    private static async Task<bool> IsServerRunningAsync()
-    {
-        try
-        {
-            using var handler = new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, _, _, _) => true };
-            using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(2) };
-            var response = await client.GetAsync(BaseUrl);
-            return response.IsSuccessStatusCode;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
     [Fact]
     public async Task Phase4_Step1_Automated_Browser_QA_Full_Lifecycle()
     {
-        if (!await IsServerRunningAsync())
-        {
-            // Dev server is not running during offline test run; live browser QA is verified when dev server is active.
-            return;
-        }
+        var server = new BrowserTestServer();
+        await server.InitializeAsync();
 
-        var runId = Guid.NewGuid().ToString("N")[..6].ToLowerInvariant();
-        var uniqueRecipeTitle = "Herb Butter Roast Chicken " + runId;
-        var expectedRecipeSlug = "herb-butter-roast-chicken-" + runId;
-        var updatedRecipeTitle = "Herb Butter & Garlic Roast Chicken " + runId;
-        var draftTipTitle = "Draft Emulsion Technique " + runId;
-        var draftTipSlug = "draft-emulsion-technique-" + runId;
-        var membersOnlyTitle = "Royal Black Truffle Wellington " + runId;
-        var membersOnlySlug = "royal-black-truffle-wellington-" + runId;
-
-        using var playwright = await Playwright.CreateAsync();
-        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        try
         {
-            Headless = true
-        });
+            var runId = Guid.NewGuid().ToString("N")[..6].ToLowerInvariant();
+            var uniqueRecipeTitle = "Herb Butter Roast Chicken " + runId;
+            var expectedRecipeSlug = "herb-butter-roast-chicken-" + runId;
+            var updatedRecipeTitle = "Herb Butter & Garlic Roast Chicken " + runId;
+            var draftTipTitle = "Draft Emulsion Technique " + runId;
+            var draftTipSlug = "draft-emulsion-technique-" + runId;
+            var membersOnlyTitle = "Royal Black Truffle Wellington " + runId;
+            var membersOnlySlug = "royal-black-truffle-wellington-" + runId;
 
-        // 1. Admin Context & Login
-        var adminContext = await browser.NewContextAsync(new BrowserNewContextOptions
-        {
-            IgnoreHTTPSErrors = true,
-            BaseURL = BaseUrl
-        });
-        var adminPage = await adminContext.NewPageAsync();
+            using var playwright = await Playwright.CreateAsync();
+            await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+            {
+                Headless = true
+            });
 
-        // 2. Guest Context for verifying unauthenticated public behavior
-        var guestContext = await browser.NewContextAsync(new BrowserNewContextOptions
-        {
-            IgnoreHTTPSErrors = true,
-            BaseURL = BaseUrl
-        });
-        var guestPage = await guestContext.NewPageAsync();
+            // 1. Admin Context & Login
+            var adminContext = await browser.NewContextAsync(new BrowserNewContextOptions
+            {
+                IgnoreHTTPSErrors = true,
+                BaseURL = server.ServerAddress
+            });
+            var adminPage = await adminContext.NewPageAsync();
+
+            // 2. Guest Context for verifying unauthenticated public behavior
+            var guestContext = await browser.NewContextAsync(new BrowserNewContextOptions
+            {
+                IgnoreHTTPSErrors = true,
+                BaseURL = server.ServerAddress
+            });
+            var guestPage = await guestContext.NewPageAsync();
 
         // -------------------------------------------------------------
         // Step 1: Login as admin
@@ -286,5 +268,10 @@ public class EditorialBrowserE2ETests
         await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var feedbackHeading = await adminPage.Locator("h1").InnerTextAsync();
         Assert.Contains("Member Feedback Moderation", feedbackHeading);
+        }
+        finally
+        {
+            await server.DisposeAsync();
+        }
     }
 }
