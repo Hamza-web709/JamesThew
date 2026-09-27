@@ -10,36 +10,28 @@ public class ContestService(ApplicationDbContext db) : IContestService
 {
     public async Task<PublicContestListViewModel> GetPublicContestsAsync(ContestTimelinePhase? phase = null, ContestType? type = null)
     {
-        var now = DateTime.UtcNow;
-
-        // Public can only view non-deleted, published contests
+        // Public visitors can view non-deleted published and closed contests (draft and archived remain private)
         var query = db.Contests
             .AsNoTracking()
-            .Where(c => c.DeletedAtUtc == null && c.Status == ContestStatus.Published);
+            .Where(c => c.DeletedAtUtc == null && (c.Status == ContestStatus.Published || c.Status == ContestStatus.Closed));
 
         if (type.HasValue)
         {
             query = query.Where(c => c.Type == type.Value);
         }
 
-        var allPublished = await query.ToListAsync();
+        var allPublic = await query.ToListAsync();
 
-        var totalPublished = allPublished.Count;
-        var openNowCount = allPublished.Count(c => now >= c.OpensAtUtc && now <= c.ClosesAtUtc);
-        var upcomingCount = allPublished.Count(c => now < c.OpensAtUtc);
-        var endedCount = allPublished.Count(c => now > c.ClosesAtUtc);
+        var totalPublic = allPublic.Count;
+        var openNowCount = allPublic.Count(c => c.TimelinePhase == ContestTimelinePhase.Open);
+        var upcomingCount = allPublic.Count(c => c.TimelinePhase == ContestTimelinePhase.Upcoming);
+        var endedCount = allPublic.Count(c => c.TimelinePhase == ContestTimelinePhase.Ended);
 
-        var filtered = allPublished.AsEnumerable();
+        var filtered = allPublic.AsEnumerable();
 
         if (phase.HasValue)
         {
-            filtered = phase.Value switch
-            {
-                ContestTimelinePhase.Open => filtered.Where(c => now >= c.OpensAtUtc && now <= c.ClosesAtUtc),
-                ContestTimelinePhase.Upcoming => filtered.Where(c => now < c.OpensAtUtc),
-                ContestTimelinePhase.Ended => filtered.Where(c => now > c.ClosesAtUtc),
-                _ => filtered
-            };
+            filtered = filtered.Where(c => c.TimelinePhase == phase.Value);
         }
 
         // Order: Active Open first (ending soonest), then Upcoming (opening soonest), then Ended (most recent first)
@@ -50,7 +42,7 @@ public class ContestService(ApplicationDbContext db) : IContestService
                 ContestTimelinePhase.Upcoming => 2,
                 _ => 3
             })
-            .ThenBy(c => c.TimelinePhase == ContestTimelinePhase.Open ? c.ClosesAtUtc : c.OpensAtUtc)
+            .ThenBy(c => c.TimelinePhase == ContestTimelinePhase.Open ? c.ClosesAtUtc : (c.TimelinePhase == ContestTimelinePhase.Upcoming ? c.OpensAtUtc : c.ClosesAtUtc))
             .Select(c => new ContestCardDto
             {
                 Id = c.Id,
@@ -72,7 +64,7 @@ public class ContestService(ApplicationDbContext db) : IContestService
             Contests = ordered,
             PhaseFilter = phase,
             TypeFilter = type,
-            TotalPublishedCount = totalPublished,
+            TotalPublishedCount = totalPublic,
             OpenNowCount = openNowCount,
             UpcomingCount = upcomingCount,
             EndedCount = endedCount
@@ -86,7 +78,7 @@ public class ContestService(ApplicationDbContext db) : IContestService
 
         var contest = await db.Contests
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Slug == slug && c.DeletedAtUtc == null && c.Status == ContestStatus.Published);
+            .FirstOrDefaultAsync(c => c.Slug == slug && c.DeletedAtUtc == null && (c.Status == ContestStatus.Published || c.Status == ContestStatus.Closed));
 
         if (contest == null)
             return null;

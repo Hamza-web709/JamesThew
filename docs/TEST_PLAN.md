@@ -522,15 +522,17 @@ Scope: Admin-managed recipe/tip contests and public read-only discovery. Support
 | Evidence | Actual result |
 |---|---|
 | Build | Solution build succeeded, 0 warnings / 0 errors (`dotnet build JamesThew.slnx`) |
-| Test suite run | 113 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) across Foundation, PublicContent, Subscription, ContributionAndFeedback, Moderation, EditorialContentCrud, EditorialBrowserE2E, AdminMedia, AdminMediaBrowserE2E, ContestTests, ContestBrowserE2E, and BrowserTestSafetyGuard test classes |
+| Test suite run | 115 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) across Foundation, PublicContent, Subscription, ContributionAndFeedback, Moderation, EditorialContentCrud, EditorialBrowserE2E, AdminMedia, AdminMediaBrowserE2E, ContestTests, ContestBrowserE2E, and BrowserTestSafetyGuard test classes |
 | Migration check | `dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj` verified clean: 0 pending model changes |
 | Browser E2E QA | 10 Playwright Chromium lifecycle scenarios verified against isolated loopback server: admin login, open `/admin/contests`, create published recipe contest, verify public listing and detail, draft tip creation, confirm draft hidden from public catalog and direct slug returns 404, edit contest updates public view, invalid date order rejection in admin form, and non-admin write/access rejection |
-| Guest discovery | Public visitors browse all published contests read-only with category filtering (All, Recipes, Tips) and timeline tabs (All, Open Now, Upcoming, Past) |
+| Guest discovery | Public visitors browse all published and closed contests read-only with category filtering (All, Recipes, Tips) and timeline tabs (All, Open Now, Upcoming, Past) |
 | Contest detail | Detailed contest page displays category badge, timeline status indicator, full description & rules with preserved whitespace/linebreaks, award information, and clear member eligibility / participation guidance |
-| Draft & Archived privacy | Draft and archived contests return HTTP 404 for public guests and members on direct slug lookup; completely excluded from public listing |
+| Closed contest visibility | Admin-closed contests transition to `ContestStatus.Closed` with `TimelinePhase = Ended`; they remain publicly discoverable under the "Past Contests" tab and return HTTP 200 OK on direct slug lookups with clear "Submissions Concluded" notices |
+| Draft & Archived privacy | Draft and archived contests return HTTP 404 for public guests and members on direct slug lookup; completely excluded from public listings |
+| Date boundary evaluation | Deterministic `GetTimelinePhase(asOfUtc)` asserts exact instant transitions: `asOfUtc == OpensAtUtc` (Open), `asOfUtc == ClosesAtUtc` (Open), `asOfUtc < OpensAtUtc` (Upcoming), `asOfUtc > ClosesAtUtc` (Ended), and `Status == Closed` (Ended) |
 | Slug deduplication | Duplicate title or slug input automatically appends numeric suffixes (`-2`, `-3`), preventing collision errors and database constraint exceptions |
 | Date validation | Closing date before opening date is rejected with friendly validation error; UTC date consistency enforced |
-| Admin authorization | Non-admin requests to `/admin/contests` redirect to `/account/login` (guests) or `/account/access-denied` (members) |
+| Admin authorization | Non-admin requests to `/admin/contests` and status actions (`publish`, `unpublish`, `close`, `archive`, `restore`) redirect to `/account/login` (guests) or `/account/access-denied` (members) |
 | Antiforgery protection | Admin POST endpoints reject requests without a valid `__RequestVerificationToken` (HTTP 400) |
 | Non-interference | Browser QA uses `BrowserTestServer` on ephemeral test database; active development DB (`JamesThew_Development`) and uploads remain unmodified |
 

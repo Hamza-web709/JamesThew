@@ -220,9 +220,9 @@ Phase 5A successfully implemented and verified:
   - Kebab-case slug generation with automatic numeric collision suffixing (`-2`, `-3`).
   - Strict UTC date order validation (`ClosesAtUtc > OpensAtUtc`).
   - Status transition workflows: `Publish`, `Unpublish` (Draft), `Close`, `Archive` (soft-delete), and `Restore`.
-  - Query filtering by timeline phase and contest type; public queries strictly enforce `DeletedAtUtc == null && Status == ContestStatus.Published`.
+  - Public visibility rule: Published and Closed contests are publicly browseable (`Closed` contests appear under the "Past Contests" tab with `TimelinePhase = Ended` and return 200 OK on direct slug lookups with concluded notices). Draft and Archived contests remain strictly private (excluded from public listings and return 404 on direct URL).
 - **Admin Contest Management (`/admin/contests`)**:
-  - Role-protected with `[Authorize(Roles = "Admin")]` and antiforgery tokens.
+  - Role-protected with `[Authorize(Roles = "Admin")]` and antiforgery tokens. Non-admin write/status requests rejected.
   - Interactive contest dashboard with multi-dimensional status tabs (All, Published, Open Now, Upcoming, Drafts, Closed, Archived) and category filters.
   - Editor forms (`/admin/contests/new`, `/admin/contests/{id}/edit`) with title, custom slug, teaser summary, multiline description & rules, prize description, UTC start/end pickers, category radios, status radios, and integrated Media Picker Modal (`_MediaPickerModal.cshtml`).
   - Admin Portal (`/admin`) dashboard updated with Contests metric card (live count of active and total contests).
@@ -238,8 +238,8 @@ Phase 5A successfully implemented and verified:
   3. *Judging rules & workflow*: Whether scoring follows a multi-criteria rubric (flavor, technique, presentation) or qualitative editorial winner selection by Chef James Thew.
   4. *Prize fulfillment*: Whether winners receive a simulated monetary award, masterclass diploma, or permanent Hall of Fame spotlight badge.
 - **Testing & Verification**:
-  - 113/113 tests passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`).
-  - 8 new unit/integration tests in `ContestTests.cs` (admin creation, custom slugs, collision suffixing, invalid date rejection, draft privacy 404, close/archive/restore transitions, antiforgery rejection, non-admin role denial).
+  - 115/115 tests passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`).
+  - 10 unit/integration tests in `ContestTests.cs` (admin creation, custom slugs, collision suffixing, invalid date rejection, draft privacy 404, close/archive/restore transitions with public past tab / detail 200 assertions, date boundary calculations via `GetTimelinePhase`, antiforgery rejection, non-admin role denial across all status endpoints).
   - Playwright Chromium browser E2E test in `ContestBrowserE2ETests.cs` (10-step full lifecycle test using isolated loopback server and ephemeral test DB).
   - `dotnet ef migrations has-pending-model-changes` verified clean: 0 pending model changes.
 
@@ -255,7 +255,7 @@ Phase 5A successfully implemented and verified:
 | T-13 media management | Complete (Phase 4 Step 2): Admin media library (`/admin/media`), upload validation, magic bytes check, safe storage (`/uploads/editorial/`), recipe/tip form integration, safe deletion unlinking, orphan prevention, and Playwright Chromium E2E QA |
 | T-16 | Complete (Phase 5A): Admin contest management (create/edit/publish/close/archive), auto-slug resolution, date validation, and public read-only discovery at /contests |
 | T-10 | Auth complete in Phase 1; Profile edit deferred |
-| Phase 5A verification | Build 0 warnings/0 errors; 113/113 tests pass; Playwright Chromium 10/10 scenarios pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
+| Phase 5A verification | Build 0 warnings/0 errors; 115/115 tests pass; Playwright Chromium 10/10 scenarios pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|

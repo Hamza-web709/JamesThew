@@ -326,6 +326,23 @@ public class ContestTests(FoundationFixture fixture)
         var closedContest = await db2.Contests.FindAsync(contest.Id);
         Assert.Equal(ContestStatus.Closed, closedContest?.Status);
 
+        // Closed contest MUST remain publicly browseable under Past Contests and direct URL
+        var guestClient = fixture.NewClient();
+        var allContestsHtml = await guestClient.GetStringAsync("/contests");
+        Assert.Contains(title, allContestsHtml);
+
+        var pastContestsHtml = await guestClient.GetStringAsync("/contests?phase=Ended");
+        Assert.Contains(title, pastContestsHtml);
+
+        var openContestsHtml = await guestClient.GetStringAsync("/contests?phase=Open");
+        Assert.DoesNotContain(title, openContestsHtml);
+
+        var closedDetailRes = await guestClient.GetAsync($"/contests/{contest.Slug}");
+        Assert.Equal(HttpStatusCode.OK, closedDetailRes.StatusCode);
+        var closedDetailHtml = await closedDetailRes.Content.ReadAsStringAsync();
+        Assert.Contains("Submissions Concluded", closedDetailHtml);
+        Assert.Contains("This contest is now closed to new submissions", closedDetailHtml);
+
         // Archive contest
         var token2 = await Token(adminClient, "/admin/contests");
         var archiveRes = await adminClient.PostAsync($"/admin/contests/{contest.Id}/archive", new FormUrlEncodedContent(new Dictionary<string, string>
@@ -339,8 +356,10 @@ public class ContestTests(FoundationFixture fixture)
         Assert.Equal(ContestStatus.Archived, archivedContest?.Status);
         Assert.NotNull(archivedContest?.DeletedAtUtc);
 
-        // Archived contest is inaccessible publicly
-        var guestClient = fixture.NewClient();
+        // Archived contest is inaccessible publicly from catalog and direct URL returns 404
+        var afterArchiveHtml = await guestClient.GetStringAsync("/contests");
+        Assert.DoesNotContain(title, afterArchiveHtml);
+
         var guestRes = await guestClient.GetAsync($"/contests/{contest.Slug}");
         Assert.Equal(HttpStatusCode.NotFound, guestRes.StatusCode);
 
@@ -356,6 +375,40 @@ public class ContestTests(FoundationFixture fixture)
         var restoredContest = await db4.Contests.FindAsync(contest.Id);
         Assert.Null(restoredContest?.DeletedAtUtc);
         Assert.Equal(ContestStatus.Draft, restoredContest?.Status);
+    }
+
+    [Fact]
+    public void DateBoundary_OpeningAndClosingInstants_AreCalculatedCorrectly()
+    {
+        var fixedOpens = new DateTime(2026, 10, 1, 12, 0, 0, DateTimeKind.Utc);
+        var fixedCloses = new DateTime(2026, 10, 15, 12, 0, 0, DateTimeKind.Utc);
+
+        var contest = new Contest
+        {
+            Status = ContestStatus.Published,
+            OpensAtUtc = fixedOpens,
+            ClosesAtUtc = fixedCloses
+        };
+
+        // 1. One tick before opening -> Upcoming
+        Assert.Equal(ContestTimelinePhase.Upcoming, contest.GetTimelinePhase(fixedOpens.AddTicks(-1)));
+
+        // 2. Exactly at opening instant -> Open
+        Assert.Equal(ContestTimelinePhase.Open, contest.GetTimelinePhase(fixedOpens));
+
+        // 3. During open window -> Open
+        Assert.Equal(ContestTimelinePhase.Open, contest.GetTimelinePhase(fixedOpens.AddDays(3)));
+
+        // 4. Exactly at closing instant -> Open
+        Assert.Equal(ContestTimelinePhase.Open, contest.GetTimelinePhase(fixedCloses));
+
+        // 5. One tick after closing instant -> Ended
+        Assert.Equal(ContestTimelinePhase.Ended, contest.GetTimelinePhase(fixedCloses.AddTicks(1)));
+
+        // 6. Manually Closed by admin during active dates -> Ended, IsActiveOpen = false
+        contest.Status = ContestStatus.Closed;
+        Assert.Equal(ContestTimelinePhase.Ended, contest.GetTimelinePhase(fixedOpens.AddDays(3)));
+        Assert.False(contest.IsActiveOpen);
     }
 
     [Fact]
@@ -390,6 +443,30 @@ public class ContestTests(FoundationFixture fixture)
             memberPostRes.StatusCode == HttpStatusCode.Forbidden ||
             (memberPostRes.StatusCode == HttpStatusCode.Redirect && memberPostRes.Headers.Location?.OriginalString.Contains("/account/access-denied", StringComparison.OrdinalIgnoreCase) == true),
             $"Expected 403 Forbidden or access-denied redirect, got {memberPostRes.StatusCode} with location {memberPostRes.Headers.Location}");
+    }
+
+    [Fact]
+    public async Task NonAdmin_CannotExecuteStatusActions_RedirectsAppropriately()
+    {
+        var guestClient = fixture.NewClient();
+        var memberClient = fixture.NewClient();
+        await RegisterAndLogin(memberClient, NewEmail(), NewPassword());
+
+        var endpoints = new[] { "publish", "unpublish", "close", "archive", "restore" };
+        foreach (var action in endpoints)
+        {
+            // Guest -> redirects to login
+            var guestRes = await guestClient.PostAsync($"/admin/contests/1/{action}", new FormUrlEncodedContent(new Dictionary<string, string>()));
+            Assert.Equal(HttpStatusCode.Redirect, guestRes.StatusCode);
+            Assert.Contains("/account/login", guestRes.Headers.Location?.OriginalString, StringComparison.OrdinalIgnoreCase);
+
+            // Member -> redirects to access-denied or 403
+            var memberRes = await memberClient.PostAsync($"/admin/contests/1/{action}", new FormUrlEncodedContent(new Dictionary<string, string>()));
+            Assert.True(
+                memberRes.StatusCode == HttpStatusCode.Forbidden ||
+                (memberRes.StatusCode == HttpStatusCode.Redirect && memberRes.Headers.Location?.OriginalString.Contains("/account/access-denied", StringComparison.OrdinalIgnoreCase) == true),
+                $"Expected 403 or access-denied redirect for member on action {action}, got {memberRes.StatusCode}");
+        }
     }
 
     [Fact]

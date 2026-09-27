@@ -44,17 +44,16 @@ public class Contest
     [ForeignKey(nameof(CreatedByUserId))]
     public ApplicationUser? CreatedByUser { get; set; }
 
-    [NotMapped]
-    public ContestTimelinePhase TimelinePhase
+    public ContestTimelinePhase GetTimelinePhase(DateTime asOfUtc)
     {
-        get
-        {
-            var now = DateTime.UtcNow;
-            if (now < OpensAtUtc) return ContestTimelinePhase.Upcoming;
-            if (now <= ClosesAtUtc) return ContestTimelinePhase.Open;
-            return ContestTimelinePhase.Ended;
-        }
+        if (Status == ContestStatus.Closed) return ContestTimelinePhase.Ended;
+        if (asOfUtc < OpensAtUtc) return ContestTimelinePhase.Upcoming;
+        if (asOfUtc <= ClosesAtUtc) return ContestTimelinePhase.Open;
+        return ContestTimelinePhase.Ended;
     }
+
+    [NotMapped]
+    public ContestTimelinePhase TimelinePhase => GetTimelinePhase(DateTime.UtcNow);
 
     [NotMapped]
     public bool IsActiveOpen => Status == ContestStatus.Published &&
