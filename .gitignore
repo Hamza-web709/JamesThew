@@ -1,0 +1,18 @@
+.vs/
+**/bin/
+**/obj/
+**/TestResults/
+*.user
+*.suo
+*.mdf
+*.ldf
+*.bak
+.env
+.env.*
+**/appsettings.Local.json
+**/secrets.json
+artifacts/
+
+# Private original specifications remain on this laptop.
+/JamesThew.com.pdf
+/JamesThew/JamesThew.com.pdf

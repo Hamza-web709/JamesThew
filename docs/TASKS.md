@@ -1,0 +1,146 @@
+# JamesThew.com - Phased Task Plan
+
+## Execution contract
+
+Yeh implementation backlog hai. Latest user instruction se sirf scoped Phase 1 execute hui: database/Identity/account authentication. Baqi feature tasks Not started hain; actual status neeche hai. T-01 ka source/document baseline tayyar hai; latest user assumptions incorporated hain. Remaining faculty details aur screen review alag pending hain. [PRD](PRD.md) requirement authority aur Open Decisions rakhta hai; [TEST_PLAN](TEST_PLAN.md) expected evidence define karta hai. Har Task ID stable rahe; completion par date, evidence aur actual Git commit baad mein add ho.
+
+Har task ki row mein scope, dependencies, acceptance aur verification hai. `G` ka matlab neeche common phase gate hai. REQ references coverage dikhate hain, implementation complete hone ka claim nahi. Har phase ke baad build, relevant tests, browser check aur Git checkpoint planned hain. Planning phase mein build/browser application tests N/A hain, kyunke app execute/change nahi ki ja rahi.
+
+## ASP.NET Core MVC phase boundaries
+
+Latest user instruction ne Phase 1 authorize ki hai. Is phase mein sirf Identity foundation aur minimal account/admin views bane; future business entities/workflows abhi create nahi karne. Existing starter Phase 1 mein reuse/assess ho chuka hai; duplicate project create nahi hua. Har MVC feature mein route/controller -> service/policy -> view model -> Razor view -> applicable tests ka vertical flow complete ho.
+
+| Phase | MVC-specific output, future | Entry / exit boundary |
+|---|---|---|
+| 0 Planning | Approved assumptions, remaining version decisions, wireframes aur traceability | Planning baseline available; remaining faculty details tracked |
+| 1 Foundation | Existing MVC host, DI/config, Identity-only DbContext/migration, roles, registration/login/logout aur safe local admin seed | Acceptance passed: build/schema/tests and trusted-HTTPS Member/Admin browser checks; Phase 1 Git checkpoint authorized |
+| 2 Public read-only website | Home/Recipes/Tips/FAQ controllers, read services, public view models, Razor shared layout/search/detail | Guest public reads; protected action sirf login prompt; feedback submission Phase 3 |
+| 3 Identity and membership | Profile editing/Membership controllers/views, admin manual demo approval, member-only feedback endpoints/forms; authentication Phase 1 mein complete | No gateway; pending approval cannot unlock member features; role/access tests |
+| 4 Content and moderation | Admin area content controllers/views; member contributions; Pending approval queue; public publication | Published + Free after admin approval; pending hidden except owner/admin |
+| 5 Contests and winners | Admin contest/review/result pages, member entry form/service, public contest/result views | Guest entry blocked; only admin manages winners/results |
+| 6 UI polish | Razor partial consistency, responsive CSS/JS, selected optional motion | Keyboard/reduced-motion/browser evidence |
+| 7 Local verification | Local fresh setup, EF migration/restore rehearsal, regression evidence, accurate README commands | Reproducible local academic demo; hosting not required |
+| 8 Submission | Reports, source/docs/backup package, checkpoint and final readiness | Private academic schedule; no automatic email/send |
+
+T-02 ka unresolved form/recipient/rubric work foundation ko blanket block nahi karta. Phase 1 ki local version compatibility verify aur implementation authorization fulfill ho chuki hai; forms/recipient final submission se pehle required hain. Approved guest/payment/moderation policies dobara approval ka intezar nahi karengi.
+
+Task IDs stable rakhe gaye hain: T-09 ab Phase 3 mein T-10/T-11 ke baad hai kyunke feedback member-only ho gaya hai. Numeric ID ke bajaye phase aur dependency order follow karein. Har phase ka G tamam us phase ke tasks complete hone ke baad apply hoga.
+
+## Phase 0 - Planning/design
+
+| Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
+|---|---|---|---|---|
+| T-01 / REQ-001, REQ-021, REQ-023, REQ-027 | Sources, 27 requirements aur six docs baseline | None | 10 PDF pages covered; inventory, proposals, open decisions distinct | Source-page review, links/REQ cross-check; user review pending |
+| T-02 / REQ-002, REQ-011, REQ-017, REQ-019, REQ-024, REQ-025, REQ-026, REQ-027 | Resolved assumptions record; remaining OD details track | T-01 | Payment/guest/moderation/working dates resolved; local versions, missing forms aur contest details status separately recorded | Dated actual response/reference attach; no assumed approval |
+| T-03 / REQ-001, REQ-003, REQ-004, REQ-005, REQ-020, REQ-023 | Key-page wireframes/state inventory approve | T-01; policy screens T-02 | Mobile/desktop home, detail, membership, entry, profile, admin sketches reviewed | DESIGN checklist, keyboard order walkthrough; G0 |
+
+G0: Markdown review + traceability + source hash check. Application build/tests/browser N/A; proposed screen review applies. Original planning inspection mein Git repository nahi thi. Ab Phase 1 mein Git initialize hua; commit create nahi hua.
+
+## Phase 1 - Foundation
+
+### Actual scoped completion
+
+User ki latest scope purane broad T-05/T-06 domain plan ko narrow karti hai: sirf ApplicationUser + built-in Identity tables. T-10 ka register/login/logout hissa Phase 1 mein explicitly moved; profile edit later. Payment/subscription, recipes/tips, feedback, contributions aur contests ki entities/seeds/migrations intentionally deferred hain.
+
+| Item | Current status / evidence |
+|---|---|
+| T-04 | Complete for local scope: net10.0 preserved; SDK 10.0.401, runtime/packages 10.0.12; Git initialized, ignore rules; Phase 1 acceptance checkpoint |
+| T-05 | Complete for narrowed foundation: SQL Server LocalDB, Identity-only migration, Member/Admin policies, account auth; broader domain schema deferred |
+| T-06 | Complete for foundation checks: idempotent roles, Development-only one-shot admin seeder, isolated fresh migration and real SQL backup/restore tests; future domain fixtures deferred |
+| T-10 authentication portion | Complete: registration/login/logout, server validation, lockout, CSRF and role enforcement; profile editing and membership still Not started |
+| Foundation verification | Build 0 warnings/errors; 19/19 integration tests pass; migration applied and no model drift; evidence in TEST_PLAN |
+| Browser/Git checkpoint | 27 September acceptance review: trusted HTTPS, registration/login/logout, Member account access and Member denial from Admin passed in Codex browser. Chosen-credential Admin seed, login, Admin/account access and logout also passed. Bootstrap password removed from User Secrets. Original acceptance inventory contained 110 files; public preparation excludes the two locally retained PDFs, leaving 108 tracked files. User-chosen author identity configured only in this repository; exact checkpoint commit is recorded in Git history. |
+
+27 September acceptance review found a missing navbar target ID in `Views/Shared/_Layout.cshtml`; fixed and rebuilt, with 19/19 integration tests and no pending model changes. No confirmed auth/role/seeding/migration security defect found in the scoped source review. Exact current inventory and review limits are recorded in TEST_PLAN. Phase 2 remains Not started.
+
+Rozana backups operational obligation hain; automatic schedule install nahi hua. User ko apne chosen local admin credentials User Secrets mein set karne hain; koi default credential nahi banaya gaya. [README](../README.md) mein verified migration/run/seed commands hain.
+
+
+| Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
+|---|---|---|---|---|
+| T-04 / REQ-021, REQ-027 | Local approved runtime/packages, existing MVC starter assessment, DI/config aur Git setup | T-02 local version subset, T-03 aur next implementation instruction | Versions pinned/documented; meaningful code comments rule; source preservation | Restore/build approved environment par; baseline smoke; G |
+| T-05 / REQ-002, REQ-005, REQ-006, REQ-007, REQ-010, REQ-017, REQ-019 | Identity-only EF Core DbContext/ApplicationUser/migration, Member/Admin roles/policies, account authentication | T-04 | Blank SQL DB migrate; unique email, Identity relationships and role boundaries verified; business aggregates deferred | Relational DB integration checks, invalid relationships fail |
+| T-06 / REQ-021, REQ-022, REQ-023 | Role seed, explicit local admin bootstrap, isolated backup/restore evidence; future content seeds deferred | T-05 | Idempotent roles/admin seed; no hardcoded credentials; Identity backup restores; daily operation documented | Fresh restore and fixture comparison; dated backup log; G |
+
+## Phase 2 - Public read-only MVC website
+
+| Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
+|---|---|---|---|---|
+| T-07 / REQ-001, REQ-020 | Shared responsive layout, James home, all seven FAQ answers | T-03, T-06 | Required menu/home details; FAQ aligned with policy | TC-001, TC-020; no-JS and keyboard nav |
+| T-08 / REQ-003, REQ-004, REQ-008 | Recipe/tip read + authorized search policies | T-06, T-07 | Free guest access; protected paid body; correct result counts | TC-003/004/008 anonymous and seeded identities, direct URL/cache tests; G |
+
+## Phase 3 - Identity, manual demo membership aur member feedback
+
+| Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
+|---|---|---|---|---|
+| T-10 / REQ-002, REQ-005 | Registration/login/logout DONE in Phase 1; profile edit and membership integration remain | T-05, T-07 | Own profile only; role fields ignored; pending != paid | TC-002/005 duplicate/login/profile tampering |
+| T-11 / REQ-002, REQ-004 | Membership controller/views, demo plan request, admin approval/rejection, activation/expiry | T-02, T-10 | $10 monthly/$100 yearly demo labels; Pending until admin approval; rejected/expired excluded; no gateway | Admin-only approval/rejection, replay/idempotency/expiry and amount-tamper tests |
+| T-12 / REQ-003, REQ-004, REQ-005, REQ-008 | Full guest/member/admin access integration | T-08, T-11 | UI and direct endpoints consistent; expiry updates access | Full authorization matrix; paid image/cache checks; G |
+| T-09 / REQ-013, REQ-015 | Member-only recipe/site FeedbackController, view models aur Razor forms | T-08, T-10, T-11 | Login + active member required; guest POST reject/no record; accessible recipe check; receipt | TC-013/015 anonymous denial, malformed input, CSRF aur duplicate tests; G |
+
+## Phase 4 - Content management
+
+| Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
+|---|---|---|---|---|
+| T-13 / REQ-006, REQ-007, REQ-008, REQ-009 | Admin recipe/tip CRUD, visibility, validated media if approved | T-12 | Ingredients/steps valid; tips CRUD; free/paid changes enforce | TC-006 to TC-009; invalid uploads and concurrency |
+| T-14 / REQ-010, REQ-011, REQ-012 | Member submission/dashboard, admin contribution approval queue, public community catalog | T-13, T-02 | Both types Pending; own edits/deletes; admin approval publishes Free to guest/member; member self-publish blocked | TC-010/011/012 using members A/B |
+| T-15 / REQ-013, REQ-014, REQ-015 | Admin feedback inbox, approved moderation queues | T-09, T-14 | All received recipe feedback visible; private account data protected | TC-014 and pending/approved/rejected transitions; G |
+
+## Phase 5 - Contests aur announcements
+
+| Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
+|---|---|---|---|---|
+| T-16 / REQ-016, REQ-017 | Admin contests create/archive; public list/detail | T-12, T-02 | Rules/type/window displayed; removed contest closed to new entries | TC-016, server time/invalid window/role tests |
+| T-17 / REQ-017, REQ-018 | Member-only MVC recipe/tip entry forms/services and admin review | T-16, T-14 | Guest GET/POST entry blocked; active member login required; complete snapshots and admin review | TC-017/018; anonymous denial, duplicate/type/window/member ownership |
+| T-18 / REQ-019 | Winner choice, atomic announcement, archive display | T-17 | Valid reviewed same-contest winner; public result | TC-019 concurrency/cross-contest/zero-entry tests; G |
+
+## Phase 6 - Polish
+
+| Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
+|---|---|---|---|---|
+| T-19 / REQ-001, REQ-003, REQ-005, REQ-017, REQ-020, REQ-023 | All pages/states responsive, accessibility, approved assets | T-15, T-18 | DESIGN states covered; licensed images; keyboard/touch paths work | Mobile/tablet/desktop, contrast, zoom, form errors |
+| T-20 / REQ-001, REQ-017, REQ-023 | Optional selected motion, reduced-motion and performance budgets | T-19 | Content visible without JS/motion; lightweight animation | TEST_PLAN cross-cutting checks, actual performance evidence; G |
+
+## Phase 7 - Testing aur release readiness
+
+| Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
+|---|---|---|---|---|
+| T-21 / REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-012, REQ-013, REQ-014, REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-020 | Functional/security E2E regression aur defect repair | T-20 | TC-001 to TC-020 pass or documented accepted exception | Guest/member/admin evidence; fix ke baad affected regression |
+| T-22 / REQ-021, REQ-022, REQ-023, REQ-027 | Local fresh setup, migrations, restore aur academic-demo rehearsal; optional hosting excluded from gate | T-21 | Approved machine par reproducible setup; backup restore; accurate README | TC-021/022/023/027, actual commands record; G |
+
+## Phase 8 - Reports aur submission
+
+Yeh phase ki reporting tasks calendar se bhi trigger hongi; status mail ko final build tak delay na karein. Current planning day par jo kaam actually hua ho wahi report mein ho.
+
+| Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
+|---|---|---|---|---|
+| T-23 / REQ-024, REQ-025 | Status report 1 aur review attachment | T-01; schedule/recipient T-02 | Actual progress, blockers, next work; correct subject | Confirmed date/recipient, attachment checklist; sending separately authorized |
+| T-24 / REQ-024, REQ-025 | Status report 2 aur updated review | T-23; confirmed milestone | Actual completion/gaps and test state accurate | Report diff, remaining risks, dispatch evidence only if actually sent |
+| T-25 / REQ-021, REQ-023, REQ-025, REQ-026 | Synopsis + complete final report, original feedback form, source package | T-22, T-24; forms from T-02 | All 13 report items + source + original form present; format verified | TEST_PLAN final checklist; clean package opens on another machine |
+| T-26 / REQ-022, REQ-024, REQ-025, REQ-026, REQ-027 | Final readiness review and authorized submission | T-25 | Confirmed channel/date; final backup; no secrets; actual delivery receipt if sent | Package hash/version, G, recipient/file/readback check; no automatic send in this plan |
+
+## Common phase gate G
+
+1. Approved stack par clean build; applicable unit/integration tests. Test command actual repository banne par README mein record ho.
+2. Phase ke relevant pages browser mein real seeded data ke saath; no-JS fallback where applicable, failed/empty states aur representative keyboard/mobile path.
+3. Requirement evidence update; failed check unresolved ho to phase complete mark na karein. PDF p7 comments/logic review aur daily backup check.
+4. Source diff review, secrets check, readable Git checkpoint. Git initialize hua ho tab actual commit; fictional hash nahi.
+
+## Selected working reporting milestones
+
+Source: local specification p9 requires two status reports at 10-day intervals from project start; projects shorter than 30 days use the 7-10 day / three-days-before-end rule. Exact academic dates are retained privately.
+
+| Milestone | Relative milestone | Expected evidence |
+|---|---|---|
+| Status report 1 / T-23 | Start + 10 days | Actual progress description + review document; STATUS: prefix |
+| Status report 2 / T-24 | Start + 20 days | Updated review, completed/pending work aur blockers |
+| Internal submission/checkpoint | Private checkpoint | Local demo readiness, draft source/docs package, open-defect and missing-form list; unready work honestly record |
+| Final academic due / T-26 | Private final deadline | Verified local package, source/report/form/backup evidence; actual delivery only after authorized send |
+
+Yeh user-approved working schedule hai, jab tak faculty otherwise confirm na kare. Faculty ka different end date ya counting rule aaye to dono status milestones recalculate karein. Exact time/timezone, recipient, format aur delivery process OD-04/06 ke remaining particulars hain. Hosting optional hai aur checkpoint/final acceptance ka mandatory item nahi. PDF koi specific email address, ZIP name, Excel template ya hosting URL nahi deta.
+
+Report mein date, actual completed Task/REQ IDs, current work, blockers/DOUBT items, next actions aur attached review document ho. Final deliverables list [TEST_PLAN](TEST_PLAN.md) mein single checklist ke taur par maintained hai. Email ke subject prefixes source ke mutabiq hon; no draft ko sent proof na samjhein.
+
+## Future one-phase-per-prompt execution
+
+Sirf jab user implementation explicitly authorize kare, Codex ya Antigravity ko approved phase ID dein: current docs parho -> dependency/decision readiness verify -> us phase ke tasks implement -> applicable G -> changed files aur actual test results report -> agle phase se pehle user instruction. Order: Phase 0 approvals, 1 foundation, 2 public, 3 membership, 4 content, 5 contests, 6 polish, 7 verification, 8 final packaging. T-23/T-24 calendar ke mutabiq parallel reporting obligations hain. Phase 1 ke scoped outputs implement ho chuke hain; next Phase 2 user ke agle instruction par. Payment aur contests ka work abhi start nahi hua.
