@@ -172,8 +172,26 @@ Phase 4 Step 1 successfully implemented and verified:
 - Verification:
   - 63 passed, 0 failed, 0 skipped (52 previous + 11 new focused integration tests in `EditorialContentCrudTests.cs`).
   - `dotnet ef migrations has-pending-model-changes` verified clean: 0 pending model changes.
-- Deferred Phase 4 Work:
-  - Full file upload / media management system (storing binary files, media gallery picker, thumbnail generation) is deferred to the next step; image references currently use existing static asset paths.
+- Phase 4 Step 2 Implementation (Admin Media Management):
+  - Admin-only media library under `/admin/media` with visual gallery, search, total files/storage metrics, copy URL, and safe delete workflow.
+  - Robust file upload validation:
+    - Permitted formats: JPEG (`.jpg`, `.jpeg`), PNG (`.png`), WebP (`.webp`).
+    - Permitted MIME types: `image/jpeg`, `image/pjpeg`, `image/png`, `image/webp`.
+    - Deep file header / magic bytes verification (JPEG `FF D8 FF`, PNG `89 50 4E 47 0D 0A 1A 0A`, WebP `RIFF....WEBP`). Rejects executables, scripts, PDFs, and SVGs.
+    - File size cap: 5 MB (5,242,880 bytes).
+    - Path traversal defense: validates raw and canonical paths, strips malicious path components, and blocks directory jumping (`..`, `/`, `\`).
+    - Deterministic sanitization & unique naming: `{sanitizedBase}_{guid:N[..8]}{ext}`.
+    - Storage location: physical `wwwroot/uploads/editorial/`, web URL `/uploads/editorial/{filename}`.
+  - Recipe & Tip authoring integration:
+    - Forms updated with `enctype="multipart/form-data"`.
+    - Integrated direct file upload alongside "Select from Media Library" modal (`_MediaPickerModal.cshtml`) and manual URL input.
+    - Image replacement and removal supported; "Remove Image" button clears reference cleanly.
+  - Safe Deletion Policy:
+    - Strictly scoped to files within `wwwroot/uploads/editorial`. Protected seed assets in `/images/` cannot be touched.
+    - Automatic reference unlinking: When an uploaded image is safely removed from disk, all referencing `ContentItem.ImageUrl` values are atomically set to `null` in the database, ensuring public recipe/tip pages render without broken image tags.
+  - Verification:
+    - 84 passed, 0 failed, 0 skipped (64 previous + 20 new integration tests in `AdminMediaTests.cs`).
+    - `dotnet ef migrations has-pending-model-changes` verified clean: 0 pending model changes.
 
 | Item | Current status / evidence |
 |---|---|
@@ -184,8 +202,9 @@ Phase 4 Step 1 successfully implemented and verified:
 | T-14 moderation portion | Complete (Phase 3C): Admin approve/reject workflows, atomical Free publication, public catalog appearance, 404 on rejection, rejection reason in member dashboard |
 | T-15 feedback moderation | Complete (Phase 3C): Admin feedback review/notes workflow, Reviewed status, private member history notes, 0 public leakage |
 | T-13 editorial CRUD | Complete (Phase 4 Step 1): Admin recipe & tip list, create, edit, unpublish (soft delete), restore, auto-slug collisions, and subscription lock preservation |
+| T-13 media management | Complete (Phase 4 Step 2): Admin media library (`/admin/media`), upload validation, magic bytes check, safe storage (`/uploads/editorial/`), recipe/tip form integration, and safe deletion unlinking |
 | T-10 | Auth complete in Phase 1; Profile edit deferred |
-| Phase 4 Step 1 verification | Build 0 warnings/0 errors; 63/63 integration tests pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
+| Phase 4 Step 2 verification | Build 0 warnings/0 errors; 84/84 integration tests pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|

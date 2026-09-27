@@ -468,6 +468,48 @@ Scope: Admin Editorial Content CRUD for existing content types (`Recipe` and `Ti
 | Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Documented Phase 4 Step 1 verification results, scenario coverage, and changed-file inventory |
 | Updated | [README.md](../README.md) | Updated Phase 4 Step 1 completed capabilities, route documentation, and test status |
 
+## Phase 4 Step 2 actual verification - 27 September 2026
+
+Scope: Admin Media Management for editorial content (`/admin/media`), secure upload validation (extensions, MIME types, magic bytes, 5 MB file size limit), path traversal defense, unique filename generation, safe storage under `wwwroot/uploads/editorial`, recipe/tip form integration (direct upload, media picker modal, manual URL, remove/unlink), and safe deletion policy with automated database unlinking.
+
+| Evidence | Actual result |
+|---|---|
+| Build | Solution build succeeded, 0 warnings / 0 errors (`dotnet build JamesThew.slnx`) |
+| Integration test suite | 84 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) across Foundation, PublicContent, Subscription, ContributionAndFeedback, Moderation, EditorialContentCrud, EditorialBrowserE2E, and AdminMedia test classes |
+| Migration check | `dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj` verified clean: 0 pending model changes |
+| Guest admin denial | Unauthenticated requests to `/admin/media`, `/admin/media/picker`, `/admin/media/upload`, and `/admin/media/delete` redirect to `/account/login` (302) |
+| Member admin denial | Authenticated regular members are denied access to all media admin endpoints and redirect to `/account/access-denied` (302) |
+| Valid image upload | Admin uploads JPEG, PNG, and WebP images; MIME and magic bytes headers verified; unique filename generated (`{sanitizedBase}_{guid:N[..8]}{ext}`); file stored under `wwwroot/uploads/editorial/` and returns public `/uploads/editorial/...` URL |
+| Invalid file rejection | Executables (`.exe`), shell scripts (`.sh`), vector graphics (`.svg`), PDFs, and plain text files with spoofed `.jpg` extensions are rejected with clear error feedback; 0 files written to disk |
+| Oversized file rejection | Uploads exceeding 5 MB (5,242,880 bytes) are rejected with size limit message |
+| Path traversal rejection | Path traversal attempts in upload filenames (`../../traversal.jpg`, `..\..\win.ini`) and delete requests (`../../appsettings.json`, `/etc/passwd`) are detected and rejected; canonical upload directory boundary strictly enforced |
+| Recipe & Tip form integration | Admin can upload a new dish image directly or select an uploaded asset from the interactive media picker modal (`_MediaPickerModal.cshtml`); preview updates instantly |
+| Public page rendering | Recipes and tips referencing uploaded media render `<img>` tags cleanly on `/recipes`, `/recipes/{slug}`, `/tips`, `/tips/{slug}`, and `/` |
+| Image removal non-regression | Admin checks "Remove Image" (or submits empty image reference); database updates `ImageUrl = null`; public pages render 200 OK cleanly without broken image tags |
+| Safe deletion policy | Admin deletes media file from `/admin/media`; referencing `ContentItem.ImageUrl` values are atomically set to `null`; physical file deleted from disk; public detail pages render cleanly |
+
+### Phase 4 Step 2 changed-file inventory
+
+| Status | File path | Description |
+|---|---|---|
+| New | [JamesThew/ViewModels/MediaViewModels.cs](../JamesThew/ViewModels/MediaViewModels.cs) | View models for media library (`MediaLibraryViewModel`, `MediaItemDto`, `MediaItemUsageDto`, `MediaUploadInputModel`) |
+| Updated | [JamesThew/ViewModels/AdminEditorialViewModels.cs](../JamesThew/ViewModels/AdminEditorialViewModels.cs) | Added `ImageFile` and `RemoveImage` properties to `AdminRecipeEditViewModel` and `AdminTipEditViewModel` |
+| New | [JamesThew/Services/IMediaService.cs](../JamesThew/Services/IMediaService.cs) | Service interface for media library, image upload, safe deletion, and picker retrieval |
+| New | [JamesThew/Services/MediaService.cs](../JamesThew/Services/MediaService.cs) | Service implementation with MIME/magic-bytes validation, path traversal defense, unique naming, and safe deletion unlinking |
+| Updated | [JamesThew/Program.cs](../JamesThew/Program.cs) | Registered `IMediaService` and enabled `app.UseStaticFiles()` for dynamic runtime upload serving |
+| Updated | [JamesThew/Controllers/AdminController.cs](../JamesThew/Controllers/AdminController.cs) | Added media endpoints (`/admin/media`, `/admin/media/upload`, `/admin/media/delete`, `/admin/media/picker`) and integrated file upload handling in recipe/tip create/edit actions |
+| New | [JamesThew/Views/Admin/Media.cshtml](../JamesThew/Views/Admin/Media.cshtml) | Admin media library gallery view with upload modal, search, usage badges, copy link, and safe deletion confirmation |
+| New | [JamesThew/Views/Admin/_MediaPickerModal.cshtml](../JamesThew/Views/Admin/_MediaPickerModal.cshtml) | Reusable modal for selecting images directly from media library in recipe and tip forms |
+| Updated | [JamesThew/Views/Admin/RecipeForm.cshtml](../JamesThew/Views/Admin/RecipeForm.cshtml) | Updated recipe form with `multipart/form-data`, file input, live preview, and media picker modal |
+| Updated | [JamesThew/Views/Admin/TipForm.cshtml](../JamesThew/Views/Admin/TipForm.cshtml) | Updated tip form with `multipart/form-data`, file input, live preview, and media picker modal |
+| Updated | [JamesThew/Views/Admin/Index.cshtml](../JamesThew/Views/Admin/Index.cshtml) | Added Media Library navigation card with file count and total storage size metrics |
+| Updated | [JamesThew/Views/Admin/Content.cshtml](../JamesThew/Views/Admin/Content.cshtml) | Added quick link to Media Library in editorial catalog toolbar |
+| Updated | [.gitignore](../.gitignore) | Ignored runtime uploaded media under `wwwroot/uploads/**` while preserving `.gitkeep` |
+| New | [tests/JamesThew.Tests/AdminMediaTests.cs](../tests/JamesThew.Tests/AdminMediaTests.cs) | 20 comprehensive integration tests for media authorization, upload validation, path traversal, recipe/tip integration, and safe deletion policy |
+| Updated | [docs/TASKS.md](../docs/TASKS.md) | Documented Phase 4 Step 2 completion, status matrix updates, and verification evidence |
+| Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Documented Phase 4 Step 2 verification results, scenario coverage, and changed-file inventory |
+| Updated | [README.md](../README.md) | Updated Phase 4 Step 2 completed capabilities, media routes, and test status |
+
 
 
 

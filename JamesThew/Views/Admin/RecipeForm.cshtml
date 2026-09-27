@@ -14,7 +14,7 @@
     </p>
 </div>
 
-<form action="@(isNew ? "/admin/content/recipes/new" : $"/admin/content/recipes/{Model.Id}/edit")" method="post">
+<form action="@(isNew ? "/admin/content/recipes/new" : $"/admin/content/recipes/{Model.Id}/edit")" method="post" enctype="multipart/form-data">
     @Html.AntiForgeryToken()
 
     <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 mb-4" role="alert"></div>
@@ -46,7 +46,7 @@
                         <span asp-validation-for="Slug" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label asp-for="Summary" class="form-label fw-bold">Gastronomic Teaser / Summary <span class="text-danger">*</span></label>
                         <textarea asp-for="Summary" rows="3" class="form-control" placeholder="A rich, mouthwatering summary describing the flavor profile, technique, and presentation of the dish..."></textarea>
                         <div class="form-text text-muted small">
@@ -55,13 +55,56 @@
                         <span asp-validation-for="Summary" class="text-danger small"></span>
                     </div>
 
+                    <hr class="my-4" />
+
+                    <!-- Media Reference Section -->
                     <div class="mb-0">
-                        <label asp-for="ImageUrl" class="form-label fw-bold">Dish Image URL / Asset Reference</label>
-                        <input asp-for="ImageUrl" class="form-control" placeholder="e.g. /images/duck-breast.jpg or https://..." />
-                        <div class="form-text text-muted small">
-                            Static image path or external HTTPS URL. (Full media upload library will be introduced in the next phase).
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold mb-0">&#128444; Recipe Dish Photography</label>
+                            <button type="button" class="jt-btn jt-btn-outline jt-btn-sm" data-bs-toggle="modal" data-bs-target="#mediaPickerModal">
+                                &#128444; Select from Media Library
+                            </button>
                         </div>
-                        <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+
+                        <!-- Current/Selected Image Preview -->
+                        <div class="mb-3 p-3 bg-light rounded-3 border @(string.IsNullOrWhiteSpace(Model.ImageUrl) ? "d-none" : "d-flex") align-items-center gap-3" id="currentImagePreviewContainer">
+                            <img src="@Model.ImageUrl" alt="Recipe Preview" class="rounded border object-fit-cover flex-shrink-0" style="width: 80px; height: 80px;" id="currentImagePreview" />
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="fw-bold small text-dark">Active Image Reference:</div>
+                                <div class="font-monospace small text-muted text-break" id="currentImageUrlText">@Model.ImageUrl</div>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="btnClearImage" onclick="clearSelectedImage()">
+                                    Remove Image
+                                </button>
+                            </div>
+                        </div>
+
+                        <input type="hidden" asp-for="ImageUrl" id="hiddenImageUrl" />
+                        <input type="hidden" asp-for="RemoveImage" id="hiddenRemoveImage" value="false" />
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="ImageFile" class="form-label small fw-bold">Upload New Image</label>
+                                <input asp-for="ImageFile" type="file" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.webp" id="imageFileInput" />
+                                <div class="form-text text-muted small">
+                                    JPEG, PNG, WebP (max 5 MB).
+                                </div>
+                                <span asp-validation-for="ImageFile" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Or Enter Asset URL</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" placeholder="/uploads/editorial/... or /images/..." id="manualImageUrlInput" value="@Model.ImageUrl" oninput="updateManualUrl(this.value)" />
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#mediaPickerModal">
+                                        Browse
+                                    </button>
+                                </div>
+                                <div class="form-text text-muted small">
+                                    Choose existing upload or custom asset.
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -186,6 +229,8 @@
         </div>
     </div>
 </form>
+
+<partial name="_MediaPickerModal" />
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

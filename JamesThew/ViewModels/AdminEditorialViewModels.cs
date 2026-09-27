@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using JamesThew.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace JamesThew.ViewModels;
 
@@ -55,6 +56,10 @@ public class AdminRecipeEditViewModel
     [StringLength(300, ErrorMessage = "Image URL cannot exceed 300 characters.")]
     public string? ImageUrl { get; set; }
 
+    public IFormFile? ImageFile { get; set; }
+
+    public bool RemoveImage { get; set; }
+
     [Range(1, 100, ErrorMessage = "Servings must be between 1 and 100.")]
     public int? Servings { get; set; }
 
@@ -96,6 +101,10 @@ public class AdminTipEditViewModel
 
     [StringLength(300, ErrorMessage = "Image URL cannot exceed 300 characters.")]
     public string? ImageUrl { get; set; }
+
+    public IFormFile? ImageFile { get; set; }
+
+    public bool RemoveImage { get; set; }
 
     [Required(ErrorMessage = "Tip body instruction is required.")]
     [StringLength(6000, MinimumLength = 20, ErrorMessage = "Tip body must be between 20 and 6000 characters.")]

@@ -15,7 +15,8 @@ public class AdminController(
     ISubscriptionService subscriptionService,
     IFeedbackService feedbackService,
     IContributionService contributionService,
-    IAdminContentService adminContentService) : Controller
+    IAdminContentService adminContentService,
+    IMediaService mediaService) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index()
@@ -26,6 +27,9 @@ public class AdminController(
         var editorialData = await adminContentService.GetEditorialContentListAsync();
         ViewBag.EditorialRecipesCount = editorialData.RecipesCount;
         ViewBag.EditorialTipsCount = editorialData.TipsCount;
+        var mediaData = await mediaService.GetMediaLibraryAsync();
+        ViewBag.MediaItemsCount = mediaData.TotalCount;
+        ViewBag.MediaTotalSize = mediaData.FormattedTotalSize;
         return View();
     }
 
@@ -145,6 +149,21 @@ public class AdminController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> NewRecipe(AdminRecipeEditViewModel model)
     {
+        if (model.RemoveImage)
+        {
+            model.ImageUrl = null;
+        }
+        else if (model.ImageFile is not null && model.ImageFile.Length > 0)
+        {
+            var uploadResult = await mediaService.UploadImageAsync(model.ImageFile);
+            if (!uploadResult.Success)
+            {
+                ModelState.AddModelError("ImageFile", uploadResult.Message);
+                return View("RecipeForm", model);
+            }
+            model.ImageUrl = uploadResult.Url;
+        }
+
         if (!ModelState.IsValid)
             return View("RecipeForm", model);
 
@@ -180,6 +199,21 @@ public class AdminController(
     public async Task<IActionResult> EditRecipe(int id, AdminRecipeEditViewModel model)
     {
         model.Id = id;
+        if (model.RemoveImage)
+        {
+            model.ImageUrl = null;
+        }
+        else if (model.ImageFile is not null && model.ImageFile.Length > 0)
+        {
+            var uploadResult = await mediaService.UploadImageAsync(model.ImageFile);
+            if (!uploadResult.Success)
+            {
+                ModelState.AddModelError("ImageFile", uploadResult.Message);
+                return View("RecipeForm", model);
+            }
+            model.ImageUrl = uploadResult.Url;
+        }
+
         if (!ModelState.IsValid)
             return View("RecipeForm", model);
 
@@ -207,6 +241,21 @@ public class AdminController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> NewTip(AdminTipEditViewModel model)
     {
+        if (model.RemoveImage)
+        {
+            model.ImageUrl = null;
+        }
+        else if (model.ImageFile is not null && model.ImageFile.Length > 0)
+        {
+            var uploadResult = await mediaService.UploadImageAsync(model.ImageFile);
+            if (!uploadResult.Success)
+            {
+                ModelState.AddModelError("ImageFile", uploadResult.Message);
+                return View("TipForm", model);
+            }
+            model.ImageUrl = uploadResult.Url;
+        }
+
         if (!ModelState.IsValid)
             return View("TipForm", model);
 
@@ -242,6 +291,21 @@ public class AdminController(
     public async Task<IActionResult> EditTip(int id, AdminTipEditViewModel model)
     {
         model.Id = id;
+        if (model.RemoveImage)
+        {
+            model.ImageUrl = null;
+        }
+        else if (model.ImageFile is not null && model.ImageFile.Length > 0)
+        {
+            var uploadResult = await mediaService.UploadImageAsync(model.ImageFile);
+            if (!uploadResult.Success)
+            {
+                ModelState.AddModelError("ImageFile", uploadResult.Message);
+                return View("TipForm", model);
+            }
+            model.ImageUrl = uploadResult.Url;
+        }
+
         if (!ModelState.IsValid)
             return View("TipForm", model);
 
@@ -283,5 +347,63 @@ public class AdminController(
             TempData["ErrorMessage"] = message;
 
         return RedirectToAction(nameof(Content));
+    }
+
+    // ==========================================
+    // Phase 4 Step 2: Media Management
+    // ==========================================
+
+    [HttpGet("media")]
+    public async Task<IActionResult> Media(string? search)
+    {
+        var model = await mediaService.GetMediaLibraryAsync(search);
+        return View(model);
+    }
+
+    [HttpPost("media/upload")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadMedia([FromForm] MediaUploadInputModel input)
+    {
+        if (input.File == null || input.File.Length == 0)
+        {
+            TempData["ErrorMessage"] = "Please select an image file to upload.";
+            return RedirectToAction(nameof(Media));
+        }
+
+        var (success, message, url, fileName) = await mediaService.UploadImageAsync(input.File);
+        if (success)
+        {
+            TempData["SuccessMessage"] = $"Image '{fileName}' successfully uploaded.";
+        }
+        else
+        {
+            TempData["ErrorMessage"] = message;
+        }
+
+        return RedirectToAction(nameof(Media));
+    }
+
+    [HttpPost("media/delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteMedia([FromForm] string fileName)
+    {
+        var (success, message, _) = await mediaService.DeleteMediaAsync(fileName);
+        if (success)
+        {
+            TempData["SuccessMessage"] = message;
+        }
+        else
+        {
+            TempData["ErrorMessage"] = message;
+        }
+
+        return RedirectToAction(nameof(Media));
+    }
+
+    [HttpGet("media/picker")]
+    public async Task<IActionResult> MediaPicker(string? search)
+    {
+        var items = await mediaService.GetPickerMediaAsync(search);
+        return Json(new { items });
     }
 }

@@ -1,0 +1,188 @@
+<div class="modal fade" id="mediaPickerModal" tabindex="-1" aria-labelledby="mediaPickerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title jt-serif" id="mediaPickerModalLabel">&#128444; Select from Media Library</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3 d-flex gap-2">
+                    <input type="text" id="mediaPickerSearch" class="form-control form-control-sm" placeholder="Filter by filename..." oninput="filterMediaPicker(this.value)" />
+                    <a asp-action="Media" target="_blank" class="jt-btn jt-btn-outline jt-btn-sm text-nowrap">+ Upload New in Library</a>
+                </div>
+
+                <div id="mediaPickerLoading" class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+                    <div class="small">Loading media assets...</div>
+                </div>
+
+                <div id="mediaPickerEmpty" class="text-center py-4 text-muted d-none">
+                    <p class="mb-2">No media assets found in library.</p>
+                    <a asp-action="Media" target="_blank" class="jt-btn jt-btn-primary jt-btn-sm">Go to Media Library to Upload</a>
+                </div>
+
+                <div id="mediaPickerGrid" class="row row-cols-2 row-cols-md-3 g-3 d-none">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="jt-btn jt-btn-outline jt-btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let mediaPickerAssets = [];
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const pickerModal = document.getElementById('mediaPickerModal');
+        if (pickerModal) {
+            pickerModal.addEventListener('show.bs.modal', function () {
+                loadMediaPickerAssets();
+            });
+        }
+    });
+
+    function loadMediaPickerAssets() {
+        const loading = document.getElementById('mediaPickerLoading');
+        const empty = document.getElementById('mediaPickerEmpty');
+        const grid = document.getElementById('mediaPickerGrid');
+
+        if (!loading || !grid) return;
+
+        loading.classList.remove('d-none');
+        empty.classList.add('d-none');
+        grid.classList.add('d-none');
+
+        fetch('/admin/media/picker')
+            .then(res => res.json())
+            .then(data => {
+                loading.classList.add('d-none');
+                mediaPickerAssets = data.items || [];
+                renderMediaPickerGrid(mediaPickerAssets);
+            })
+            .catch(err => {
+                loading.classList.add('d-none');
+                empty.innerHTML = '<span class="text-danger">Failed to load media assets.</span>';
+                empty.classList.remove('d-none');
+            });
+    }
+
+    function filterMediaPicker(query) {
+        if (!query) {
+            renderMediaPickerGrid(mediaPickerAssets);
+            return;
+        }
+        const q = query.toLowerCase();
+        const filtered = mediaPickerAssets.filter(item => 
+            (item.fileName && item.fileName.toLowerCase().includes(q)) ||
+            (item.url && item.url.toLowerCase().includes(q))
+        );
+        renderMediaPickerGrid(filtered);
+    }
+
+    function renderMediaPickerGrid(items) {
+        const empty = document.getElementById('mediaPickerEmpty');
+        const grid = document.getElementById('mediaPickerGrid');
+        if (!grid || !empty) return;
+
+        grid.innerHTML = '';
+        if (items.length === 0) {
+            grid.classList.add('d-none');
+            empty.classList.remove('d-none');
+            return;
+        }
+
+        empty.classList.add('d-none');
+        grid.classList.remove('d-none');
+
+        items.forEach(item => {
+            const col = document.createElement('div');
+            col.className = 'col';
+            col.innerHTML = `
+                <div class="card h-100 border rounded-3 overflow-hidden shadow-sm d-flex flex-column">
+                    <img src="${item.url}" alt="${item.fileName}" class="w-100 object-fit-cover" style="height: 120px;" loading="lazy" />
+                    <div class="p-2 d-flex flex-column justify-content-between flex-grow-1">
+                        <div>
+                            <div class="small fw-bold text-truncate" title="${item.fileName}">${item.fileName}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">${item.formattedSize}</div>
+                        </div>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary w-100 py-1" style="font-size: 0.8rem;" onclick="selectMediaUrl('${item.url}')">
+                                Select Image
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(col);
+        });
+    }
+
+    function selectMediaUrl(url) {
+        const hiddenUrl = document.getElementById('hiddenImageUrl');
+        const manualInput = document.getElementById('manualImageUrlInput');
+        const removeFlag = document.getElementById('hiddenRemoveImage');
+        const previewContainer = document.getElementById('currentImagePreviewContainer');
+        const previewImg = document.getElementById('currentImagePreview');
+        const urlText = document.getElementById('currentImageUrlText');
+
+        if (hiddenUrl) hiddenUrl.value = url;
+        if (manualInput) manualInput.value = url;
+        if (removeFlag) removeFlag.value = "false";
+
+        if (previewImg) previewImg.src = url;
+        if (urlText) urlText.innerText = url;
+        if (previewContainer) {
+            previewContainer.classList.remove('d-none');
+            previewContainer.classList.add('d-flex');
+        }
+
+        const modalEl = document.getElementById('mediaPickerModal');
+        if (modalEl && typeof bootstrap !== 'undefined') {
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) modalInstance.hide();
+        }
+    }
+
+    function updateManualUrl(url) {
+        const hiddenUrl = document.getElementById('hiddenImageUrl');
+        const removeFlag = document.getElementById('hiddenRemoveImage');
+        const previewContainer = document.getElementById('currentImagePreviewContainer');
+        const previewImg = document.getElementById('currentImagePreview');
+        const urlText = document.getElementById('currentImageUrlText');
+
+        if (hiddenUrl) hiddenUrl.value = url;
+        if (removeFlag) removeFlag.value = "false";
+
+        if (url && url.trim().length > 0) {
+            if (previewImg) previewImg.src = url;
+            if (urlText) urlText.innerText = url;
+            if (previewContainer) {
+                previewContainer.classList.remove('d-none');
+                previewContainer.classList.add('d-flex');
+            }
+        } else {
+            clearSelectedImage();
+        }
+    }
+
+    function clearSelectedImage() {
+        const hiddenUrl = document.getElementById('hiddenImageUrl');
+        const manualInput = document.getElementById('manualImageUrlInput');
+        const removeFlag = document.getElementById('hiddenRemoveImage');
+        const previewContainer = document.getElementById('currentImagePreviewContainer');
+        const fileInput = document.getElementById('imageFileInput');
+
+        if (hiddenUrl) hiddenUrl.value = '';
+        if (manualInput) manualInput.value = '';
+        if (removeFlag) removeFlag.value = 'true';
+        if (fileInput) fileInput.value = '';
+
+        if (previewContainer) {
+            previewContainer.classList.remove('d-flex');
+            previewContainer.classList.add('d-none');
+        }
+    }
+</script>

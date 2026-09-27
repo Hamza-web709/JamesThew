@@ -16,3 +16,7 @@ artifacts/
 # Private original specifications remain on this laptop.
 /JamesThew.com.pdf
 /JamesThew/JamesThew.com.pdf
+
+# Runtime media uploads
+**/wwwroot/uploads/**
+!**/wwwroot/uploads/.gitkeep

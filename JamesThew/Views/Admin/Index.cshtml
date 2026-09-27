@@ -5,6 +5,8 @@
     var pendingContributions = (int)(ViewBag.PendingContributionsCount ?? 0);
     var editorialRecipes = (int)(ViewBag.EditorialRecipesCount ?? 0);
     var editorialTips = (int)(ViewBag.EditorialTipsCount ?? 0);
+    var mediaItems = (int)(ViewBag.MediaItemsCount ?? 0);
+    var mediaSize = (string)(ViewBag.MediaTotalSize ?? "0 B");
 }
 
 <div class="mb-4">
@@ -38,6 +40,29 @@
                 </div>
                 <a asp-action="Content" class="jt-btn jt-btn-primary jt-btn-sm w-100 text-center">
                     Manage Catalog &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Media Library Card (Phase 4 Step 2) -->
+    <div class="col-md-6 col-lg-4">
+        <div class="p-4 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fs-2">&#128444;</span>
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-3 py-2">
+                        @mediaItems Files &bull; @mediaSize
+                    </span>
+                </div>
+                <h2 class="h5 jt-serif mb-2">Media Library</h2>
+                <p class="small text-muted mb-3">
+                    Upload and manage high-resolution photography and culinary visuals for editorial recipes and tips.
+                </p>
+            </div>
+            <div>
+                <a asp-action="Media" class="jt-btn jt-btn-outline jt-btn-sm w-100 text-center">
+                    Media Gallery &rarr;
                 </a>
             </div>
         </div>

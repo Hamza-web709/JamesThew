@@ -4,26 +4,40 @@ James Thew ki recipes, cooking tips, paid membership, feedback aur contests ke A
 
 ## Current Phase
 
-**Phase 4 Step 1: Admin Editorial Content CRUD complete, build aur 63 integration tests pass.**
-- Phase 4 Step 1 Editorial Content Management:
+**Phase 4 Step 2: Admin Media Management complete, build aur 84 integration tests pass.**
+- Phase 4 Step 2 Admin Media Management:
+  - Admin Media Library under `/admin/media` with visual gallery grid, live total files/storage metrics, copy URL, and safe delete workflow.
+  - Secure File Upload Engine:
+    - Supported formats: JPEG (`.jpg`, `.jpeg`), PNG (`.png`), WebP (`.webp`).
+    - MIME and magic bytes header inspection (JPEG `FF D8 FF`, PNG `89 50 4E 47`, WebP `RIFF....WEBP`). Rejects SVGs, executables, scripts, and spoofed files.
+    - File size cap: 5 MB (5,242,880 bytes).
+    - Path traversal defense: validates raw and canonical paths, strips directory jumping tokens (`..`, `/`, `\`).
+    - Cryptographically unique filenames: `{sanitizedBase}_{guid:N[..8]}{ext}`.
+    - Stored under `wwwroot/uploads/editorial/`, served via `/uploads/editorial/{filename}`.
+  - Recipe & Tip Authoring Integration:
+    - Forms support direct file uploads alongside the interactive "Select from Media Library" modal (`_MediaPickerModal.cshtml`) and manual URL input.
+    - Image replacement and removal: "Remove Image" unlinks image reference cleanly without breaking public views.
+  - Safe Deletion Policy:
+    - Restricted strictly to `wwwroot/uploads/editorial`. Seed assets (`/images/`) cannot be deleted.
+    - Automatic database unlinking: When an uploaded image is deleted, all referencing `ContentItem.ImageUrl` values are atomically set to `null` in the database, preventing broken image tags on public recipe and tip pages.
+- Phase 4 Step 1 Editorial Content CRUD:
   - Admin catalog dashboard at `/admin/content` for official Chef James Thew recipes (`ContentKind.Recipe`) and cooking tips (`ContentKind.Tip`).
-  - Strict Origin Isolation: Editorial items authored via editorial CRUD are marked `ContentOrigin.Editorial`, strictly keeping them isolated from community-contributed items (`ContentOrigin.Community`).
-  - Creation & Editing: `/admin/content/recipes/new`, `/admin/content/recipes/{id}/edit`, `/admin/content/tips/new`, `/admin/content/tips/{id}/edit`. Full support for multiline ingredients, ordered steps, technique body, access tiers (`Free` vs `MembersOnly`), and publication status (`Published` vs `Draft`).
-  - Automatic Slug Generation & Collision Resolution: Clean kebab-case URL slugs generated from title, with automatic numeric suffixing (`-2`, `-3`) on collision to prevent database errors.
-  - Soft Deletion & Restore Policy: Unpublishing moves content to soft-deleted state (`DeletedAtUtc = now`) with explicit confirmation modal. Content immediately drops out of public catalogs, search, and direct slug lookups (returning 404). Items can be restored from `/admin/content?showDeleted=true`.
-  - Security & Locks: Admin-only policy enforcement (`[Authorize(Policy = AppPolicies.AdminOnly)]`), CSRF antiforgery tokens, server-side validation, and preservation of Members-Only paywalls.
+  - Strict Origin Isolation: Editorial items marked `ContentOrigin.Editorial`, isolated from community-contributed items (`ContentOrigin.Community`).
+  - Creation & Editing: `/admin/content/recipes/new`, `/admin/content/recipes/{id}/edit`, `/admin/content/tips/new`, `/admin/content/tips/{id}/edit`. Multiline ingredients, ordered steps, technique body, access tiers (`Free` vs `MembersOnly`), and publication status (`Published` vs `Draft`).
+  - Automatic Slug Generation & Collision Resolution: Clean kebab-case URL slugs generated from title, with automatic numeric suffixing (`-2`, `-3`) on collision.
+  - Soft Deletion & Restore Policy: Unpublishing moves content to soft-deleted state (`DeletedAtUtc = now`) with confirmation modal. Direct slug lookups return 404. Items restorable from `/admin/content?showDeleted=true`.
 - Phase 3 Membership, Moderation & Intake:
   - Phase 3A: Manual demo subscription approval ($10/mo, $100/yr), approval queue at `/admin/subscriptions`.
   - Phase 3B: Member feedback intake (`/feedback`) and community recipe/tip submission intake (`/contributions`).
   - Phase 3C: Admin moderation of member feedback (`/admin/feedback`) and community contributions (`/admin/contributions`).
 - Database: EF Core migrations applied to `JamesThew_Development`, 0 pending model changes.
-- Test Suite: 63 passed, 0 failed, 0 skipped (19 Foundation + 7 PublicContent + 6 Subscription + 10 Contribution & Feedback + 10 Moderation + 11 EditorialContentCrud tests).
+- Test Suite: 84 passed, 0 failed, 0 skipped (Foundation, PublicContent, Subscription, Contribution & Feedback, Moderation, EditorialContentCrud, EditorialBrowserE2E, AdminMedia tests).
 
 ## Next Phase
 
-Next step **Phase 4 Step 2: Media Management System & Contests (Phase 5)**:
-- Full file upload and media library management for recipes and cooking tips (local storage/static file serving with MIME and size validation).
-- Phase 5: Recipe and tip cooking contests, submissions intake, judging, and winner announcements.
+Next step **Phase 5: Contests & Announcements**:
+- Recipe and tip cooking competitions, submission intake, rules/criteria display.
+- Winner selection, atomic announcements, and competition archive display.
 
 ## Documents aur sources
 
