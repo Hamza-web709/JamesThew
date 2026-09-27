@@ -4,21 +4,26 @@ James Thew ki recipes, cooking tips, paid membership, feedback aur contests ke A
 
 ## Current Phase
 
-**Phase 3: Identity, manual demo membership approval, member feedback, and content contribution intake complete (Phase 3A + Phase 3B), build aur 42 integration tests pass.**
-- Phase 3A Manual Subscription Approval: Demo pricing strictly $10 monthly (`SubscriptionPlan.Monthly`) and $100 yearly (`SubscriptionPlan.Yearly`). Member requests pending approval; Admin approves/rejects with notes at `/admin/subscriptions`. Approved members unlock full recipes and cooking tips; pending/rejected/guest visitors see locked preview boxes (`Cache-Control: no-cache, no-store, must-revalidate`). Admin role retains universal bypass.
-- Phase 3B Member Feedback (`/feedback`): Authenticated member feedback intake with category selection, 1-5 rating, and message validation. Personal feedback history log. Guests challenged/redirected to login. Submitted feedback is stored privately as `Pending` and strictly withheld from public pages.
-- Phase 3B Member Contributions (`/contributions`): Authenticated members can submit recipes (`/contributions/recipe/new`) with title, summary, servings, prep/cook times, multiline ingredients and steps, and notes; and cooking tips (`/contributions/tip/new`) with technique body and notes.
-- Strict Content Isolation: All community submissions are stored as `Origin = Community` and `PublicationStatus = Pending`. They do NOT appear in the public recipe catalog, tips catalog, search, home featured cards, or direct slug routes (which return 404).
-- Admin Read-Only Review: `/admin/feedback` and `/admin/contributions` provide comprehensive read-only review queues with submitter info, ratings, full ingredients/steps, and tip bodies. Admin dashboard (`/admin`) features dynamic counters.
-- Database: EF Core migrations `20260927143304_Phase3AMembershipSubscriptions` and `20260927150554_Phase3BMemberFeedbackAndContributions` applied to `JamesThew_Development`, 0 pending model changes.
-- Test Suite: 42 passed, 0 failed, 0 skipped (19 Foundation + 7 PublicContent + 6 Subscription + 10 Contribution & Feedback in `ContributionAndFeedbackTests.cs`).
+**Phase 4 Step 1: Admin Editorial Content CRUD complete, build aur 63 integration tests pass.**
+- Phase 4 Step 1 Editorial Content Management:
+  - Admin catalog dashboard at `/admin/content` for official Chef James Thew recipes (`ContentKind.Recipe`) and cooking tips (`ContentKind.Tip`).
+  - Strict Origin Isolation: Editorial items authored via editorial CRUD are marked `ContentOrigin.Editorial`, strictly keeping them isolated from community-contributed items (`ContentOrigin.Community`).
+  - Creation & Editing: `/admin/content/recipes/new`, `/admin/content/recipes/{id}/edit`, `/admin/content/tips/new`, `/admin/content/tips/{id}/edit`. Full support for multiline ingredients, ordered steps, technique body, access tiers (`Free` vs `MembersOnly`), and publication status (`Published` vs `Draft`).
+  - Automatic Slug Generation & Collision Resolution: Clean kebab-case URL slugs generated from title, with automatic numeric suffixing (`-2`, `-3`) on collision to prevent database errors.
+  - Soft Deletion & Restore Policy: Unpublishing moves content to soft-deleted state (`DeletedAtUtc = now`) with explicit confirmation modal. Content immediately drops out of public catalogs, search, and direct slug lookups (returning 404). Items can be restored from `/admin/content?showDeleted=true`.
+  - Security & Locks: Admin-only policy enforcement (`[Authorize(Policy = AppPolicies.AdminOnly)]`), CSRF antiforgery tokens, server-side validation, and preservation of Members-Only paywalls.
+- Phase 3 Membership, Moderation & Intake:
+  - Phase 3A: Manual demo subscription approval ($10/mo, $100/yr), approval queue at `/admin/subscriptions`.
+  - Phase 3B: Member feedback intake (`/feedback`) and community recipe/tip submission intake (`/contributions`).
+  - Phase 3C: Admin moderation of member feedback (`/admin/feedback`) and community contributions (`/admin/contributions`).
+- Database: EF Core migrations applied to `JamesThew_Development`, 0 pending model changes.
+- Test Suite: 63 passed, 0 failed, 0 skipped (19 Foundation + 7 PublicContent + 6 Subscription + 10 Contribution & Feedback + 10 Moderation + 11 EditorialContentCrud tests).
 
 ## Next Phase
 
-Next phase **Phase 4: Content management aur editorial moderation** hai:
-- Admin recipe and cooking tip CRUD operations.
-- Admin review, approval, publishing, and rejection workflow for pending community contributions (publishing community recipes/tips as Free content).
-- Admin feedback inbox moderation and archiving actions.
+Next step **Phase 4 Step 2: Media Management System & Contests (Phase 5)**:
+- Full file upload and media library management for recipes and cooking tips (local storage/static file serving with MIME and size validation).
+- Phase 5: Recipe and tip cooking contests, submissions intake, judging, and winner announcements.
 
 ## Documents aur sources
 

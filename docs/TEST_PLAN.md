@@ -429,5 +429,45 @@ Scope: Admin moderation of member feedback and community content contributions (
 | Updated | [README.md](../README.md) | Updated Phase 3 completed capabilities, route documentation, and testing status |
 | New | [tests/JamesThew.Tests/ModerationTests.cs](../tests/JamesThew.Tests/ModerationTests.cs) | 10 integration tests covering moderation authorization, transitions, public catalog appearance, 404 isolation, and member feedback visibility |
 
+## Phase 4 Step 1 actual verification - 27 September 2026
+
+Scope: Admin Editorial Content CRUD for existing content types (`Recipe` and `Tip`). Antiforgery-protected POST actions, view model server-side validation, duplicate slug automatic collision resolution, unpublish/soft-delete and restore policy with confirmation modal, guest/member access rejection, public visibility synchronization, and subscription-locked body protection preservation.
+
+| Evidence | Actual result |
+|---|---|
+| Build | Solution build succeeded, 0 warnings / 0 errors (`dotnet build JamesThew.slnx`) |
+| Integration test suite | 63 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) across Foundation, PublicContent, Subscription, ContributionAndFeedback, Moderation, and EditorialContentCrud test classes |
+| Migration check | `dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj` verified clean: 0 pending model changes |
+| Guest admin denial | Unauthenticated requests to `/admin/content`, `/admin/content/recipes/new`, `/admin/content/tips/new`, and POST mutations redirect to `/account/login` (302) |
+| Member admin denial | Authenticated regular member requests to editorial admin endpoints are forbidden and redirect to `/account/access-denied` (302) |
+| Recipe creation & public view | Admin creates Free published recipe; immediately appears in `/recipes` catalog and `/recipes/{slug}` returns 200 OK with full ingredients and steps |
+| Recipe editing & live sync | Admin updates recipe title, preparation time, and ingredients; updates immediately reflect on public slug route |
+| Tip creation & editing | Admin creates and edits cooking tip; tip immediately accessible on `/tips` catalog and `/tips/{slug}` returns 200 OK with full technique body |
+| Draft isolation | Admin creates recipe with `PublicationStatus = Draft`; item appears in `/admin/content?status=Draft`, strictly omitted from `/recipes`, and direct slug route returns 404 Not Found |
+| Duplicate slug collision | Creating two items with identical titles generates unique slugs (e.g. `classic-roast-duck` and `classic-roast-duck-2`), preventing crashes and database key collisions |
+| Soft-delete unpublish & restore | Admin removes editorial item via `POST /admin/content/{id}/remove`; item is soft-deleted (`DeletedAtUtc = now`), unpublishes immediately from catalog, and direct slug route returns 404; admin restores via `POST /admin/content/{id}/restore` and item re-appears publicly |
+| Server-side validation | Submitting blank required fields (Title, Summary, Ingredients, Steps, Body) returns 200 OK with clear validation error summaries and preserves user input |
+| Members-Only lock preservation | Members-Only recipes authored by Admin render teaser summary and locked subscription box for guests (`Cache-Control: no-cache`), while approved members unlock full recipe |
+| Community moderation non-regression | Editorial CRUD strictly filters on `Origin == ContentOrigin.Editorial`; community contributions (`Origin == ContentOrigin.Community`) cannot be modified/removed via editorial endpoints and community moderation queues remain isolated |
+
+### Phase 4 Step 1 changed-file inventory
+
+| Status | File path | Description |
+|---|---|---|
+| New | [JamesThew/ViewModels/AdminEditorialViewModels.cs](../JamesThew/ViewModels/AdminEditorialViewModels.cs) | View models for editorial content listing, recipe creation/editing, and tip creation/editing with validation |
+| New | [JamesThew/Services/IAdminContentService.cs](../JamesThew/Services/IAdminContentService.cs) | Service contract for editorial content retrieval, recipe saving, tip saving, soft-delete, and restore |
+| New | [JamesThew/Services/AdminContentService.cs](../JamesThew/Services/AdminContentService.cs) | Service implementation for editorial CRUD, automatic slug collision resolution, multiline parsing, and soft delete/restore |
+| Updated | [JamesThew/Program.cs](../JamesThew/Program.cs) | Registered `IAdminContentService` with DI container |
+| Updated | [JamesThew/Controllers/AdminController.cs](../JamesThew/Controllers/AdminController.cs) | Added editorial content actions: `/admin/content`, `/admin/content/recipes/new`, `/admin/content/recipes/{id}/edit`, `/admin/content/tips/new`, `/admin/content/tips/{id}/edit`, `/admin/content/{id}/remove`, `/admin/content/{id}/restore` |
+| Updated | [JamesThew/Views/Admin/Index.cshtml](../JamesThew/Views/Admin/Index.cshtml) | Added Editorial Content card to admin dashboard with live counts and quick action links |
+| New | [JamesThew/Views/Admin/Content.cshtml](../JamesThew/Views/Admin/Content.cshtml) | Editorial catalog view with KPI metrics, kind/tier/status filters, removed toggle, and removal confirmation modal |
+| New | [JamesThew/Views/Admin/RecipeForm.cshtml](../JamesThew/Views/Admin/RecipeForm.cshtml) | Editorial recipe authoring/edit form with multiline ingredients/steps and access tier controls |
+| New | [JamesThew/Views/Admin/TipForm.cshtml](../JamesThew/Views/Admin/TipForm.cshtml) | Editorial cooking tip authoring/edit form with full technique body and access tier controls |
+| New | [tests/JamesThew.Tests/EditorialContentCrudTests.cs](../tests/JamesThew.Tests/EditorialContentCrudTests.cs) | 11 integration tests covering admin authorization, CRUD, duplicate slugs, draft isolation, soft-delete/restore, and community non-regression |
+| Updated | [docs/TASKS.md](../docs/TASKS.md) | Documented Phase 4 Step 1 completion, status matrix updates, and test results |
+| Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Documented Phase 4 Step 1 verification results, scenario coverage, and changed-file inventory |
+| Updated | [README.md](../README.md) | Updated Phase 4 Step 1 completed capabilities, route documentation, and test status |
+
+
 
 

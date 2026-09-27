@@ -1,0 +1,192 @@
+@model JamesThew.ViewModels.AdminRecipeEditViewModel
+@{
+    var isNew = Model.IsNew;
+    ViewData["Title"] = (isNew ? "Create New Recipe" : $"Edit Recipe - {Model.Title}") + " - JamesThew Admin";
+}
+
+<div class="mb-4 pb-3 border-bottom">
+    <a asp-action="Content" class="text-decoration-none text-muted small">&larr; Back to Editorial Content Catalog</a>
+    <h1 class="h2 jt-serif mt-2 mb-1">@(isNew ? "Create New Editorial Recipe" : "Edit Editorial Recipe")</h1>
+    <p class="text-muted small mb-0">
+        @(isNew 
+            ? "Publish a new signature dish to Chef James Thew's culinary repertoire." 
+            : $"Modifying existing recipe record #{Model.Id} (/{Model.Slug}).")
+    </p>
+</div>
+
+<form action="@(isNew ? "/admin/content/recipes/new" : $"/admin/content/recipes/{Model.Id}/edit")" method="post">
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 mb-4" role="alert"></div>
+
+    <div class="row g-4">
+        <!-- Main Content Column -->
+        <div class="col-lg-8">
+            <!-- Card 1: Recipe Identity -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title jt-serif mb-0">&#127859; Recipe Details</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-bold">Recipe Title <span class="text-danger">*</span></label>
+                        <input asp-for="Title" class="form-control" placeholder="e.g. Pan-Seared Duck Breast with Cherry Reduction" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Slug" class="form-label fw-bold">URL Slug (Optional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text text-muted bg-light">/recipes/</span>
+                            <input asp-for="Slug" class="form-control font-monospace" placeholder="pan-seared-duck-breast" />
+                        </div>
+                        <div class="form-text text-muted small">
+                            Leave blank to auto-generate a clean URL slug from the title. Collisions will be resolved automatically.
+                        </div>
+                        <span asp-validation-for="Slug" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Summary" class="form-label fw-bold">Gastronomic Teaser / Summary <span class="text-danger">*</span></label>
+                        <textarea asp-for="Summary" rows="3" class="form-control" placeholder="A rich, mouthwatering summary describing the flavor profile, technique, and presentation of the dish..."></textarea>
+                        <div class="form-text text-muted small">
+                            This summary is displayed on search results, recipe cards, and as the public preview for members-only items.
+                        </div>
+                        <span asp-validation-for="Summary" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-0">
+                        <label asp-for="ImageUrl" class="form-label fw-bold">Dish Image URL / Asset Reference</label>
+                        <input asp-for="ImageUrl" class="form-control" placeholder="e.g. /images/duck-breast.jpg or https://..." />
+                        <div class="form-text text-muted small">
+                            Static image path or external HTTPS URL. (Full media upload library will be introduced in the next phase).
+                        </div>
+                        <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Culinary Specifications & Method -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title jt-serif mb-0">&#129379; Ingredients &amp; Method Instructions</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label asp-for="Servings" class="form-label fw-bold">Servings</label>
+                            <input asp-for="Servings" type="number" min="1" max="100" class="form-control" placeholder="e.g. 4" />
+                            <span asp-validation-for="Servings" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="PrepMinutes" class="form-label fw-bold">Prep Time (minutes)</label>
+                            <input asp-for="PrepMinutes" type="number" min="0" max="1440" class="form-control" placeholder="e.g. 20" />
+                            <span asp-validation-for="PrepMinutes" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="CookMinutes" class="form-label fw-bold">Cook Time (minutes)</label>
+                            <input asp-for="CookMinutes" type="number" min="0" max="1440" class="form-control" placeholder="e.g. 35" />
+                            <span asp-validation-for="CookMinutes" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="IngredientsText" class="form-label fw-bold">
+                            Ingredients List <span class="text-danger">*</span>
+                        </label>
+                        <textarea asp-for="IngredientsText" rows="7" class="form-control font-monospace" placeholder="2 duck breasts, scored skin&#10;1 cup fresh tart cherries, pitted&#10;2 tbsp aged balsamic vinegar&#10;1 sprig fresh thyme&#10;Flaky sea salt & freshly cracked black pepper"></textarea>
+                        <div class="form-text text-muted small">
+                            <strong>Format:</strong> Enter one ingredient per line. Each line creates an ingredient item.
+                        </div>
+                        <span asp-validation-for="IngredientsText" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-0">
+                        <label asp-for="StepsText" class="form-label fw-bold">
+                            Preparation &amp; Cooking Steps <span class="text-danger">*</span>
+                        </label>
+                        <textarea asp-for="StepsText" rows="8" class="form-control font-monospace" placeholder="Score the duck breast skin in a fine diamond crosshatch pattern without piercing the meat.&#10;Season generously with sea salt and place skin-side down in a cold stainless steel pan.&#10;Slowly bring heat to medium-low, rendering out the fat until the skin turns deep golden and crisp (approx 12-14 mins).&#10;Flip and cook for 3-4 minutes until medium-rare, then rest on a warm board for 8 minutes before carving."></textarea>
+                        <div class="form-text text-muted small">
+                            <strong>Format:</strong> Enter one step per line (or paragraph). Steps will be automatically numbered in order.
+                        </div>
+                        <span asp-validation-for="StepsText" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar / Publishing Settings Column -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title jt-serif mb-0">&#128203; Publication &amp; Access</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Access Tier -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold mb-2">Access Tier</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" asp-for="Visibility" value="@JamesThew.Models.ContentVisibility.Free" id="visibilityFree" />
+                            <label class="form-check-label" for="visibilityFree">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Free Public</span>
+                                <div class="small text-muted">Accessible to all website visitors and guests without login.</div>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" asp-for="Visibility" value="@JamesThew.Models.ContentVisibility.MembersOnly" id="visibilityMembersOnly" />
+                            <label class="form-check-label" for="visibilityMembersOnly">
+                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">&#128274; Members-Only</span>
+                                <div class="small text-muted">Protected behind subscription paywall. Guests see locked teaser preview.</div>
+                            </label>
+                        </div>
+                        <span asp-validation-for="Visibility" class="text-danger small"></span>
+                    </div>
+
+                    <hr />
+
+                    <!-- Publication Status -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold mb-2">Publication Status</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" asp-for="PublicationStatus" value="@JamesThew.Models.PublicationStatus.Published" id="statusPublished" />
+                            <label class="form-check-label" for="statusPublished">
+                                <span class="badge bg-success">Published</span>
+                                <div class="small text-muted">Live immediately on public catalog and search results.</div>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" asp-for="PublicationStatus" value="@JamesThew.Models.PublicationStatus.Draft" id="statusDraft" />
+                            <label class="form-check-label" for="statusDraft">
+                                <span class="badge bg-secondary">Draft</span>
+                                <div class="small text-muted">Hidden from public catalog; direct URLs return 404.</div>
+                            </label>
+                        </div>
+                        <span asp-validation-for="PublicationStatus" class="text-danger small"></span>
+                    </div>
+
+                    <hr />
+
+                    <!-- Form Submission Actions -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="jt-btn jt-btn-primary">
+                            @(isNew ? "Publish Recipe" : "Save Changes")
+                        </button>
+                        <a asp-action="Content" class="jt-btn jt-btn-outline text-center">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guidelines Callout -->
+            <div class="card border-0 bg-light rounded-4 p-3 small text-muted">
+                <div class="fw-bold text-dark mb-1">&#128218; Editorial Standard:</div>
+                <p class="mb-1">Editorial content is officially authored by Chef James Thew. It is separated from community submissions and is never affected by member moderation queues.</p>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -3,19 +3,48 @@
     var pendingSubscriptions = (int)(ViewBag.PendingSubscriptionsCount ?? 0);
     var pendingFeedback = (int)(ViewBag.PendingFeedbackCount ?? 0);
     var pendingContributions = (int)(ViewBag.PendingContributionsCount ?? 0);
+    var editorialRecipes = (int)(ViewBag.EditorialRecipesCount ?? 0);
+    var editorialTips = (int)(ViewBag.EditorialTipsCount ?? 0);
 }
 
 <div class="mb-4">
     <span class="jt-brand-tag">Administration</span>
     <h1 class="mb-2">Culinary Portal Administration</h1>
     <p class="text-muted">
-        Manage membership subscriptions, customer feedback, recipe and tip contributions, and culinary operations.
+        Manage editorial recipes and cooking tips, membership subscriptions, customer feedback, and community contributions.
     </p>
 </div>
 
 <div class="row g-4 mb-5">
+    <!-- Editorial Content Card (Phase 4) -->
+    <div class="col-md-6 col-lg-4">
+        <div class="p-4 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fs-2">&#127859;</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2">
+                        @editorialRecipes Recipes &bull; @editorialTips Tips
+                    </span>
+                </div>
+                <h2 class="h5 jt-serif mb-2">Editorial Content</h2>
+                <p class="small text-muted mb-3">
+                    Author, edit, publish, or unpublish official Chef James Thew masterclass recipes and cooking tips.
+                </p>
+            </div>
+            <div>
+                <div class="d-flex gap-2 mb-2">
+                    <a asp-action="NewRecipe" class="jt-btn jt-btn-outline jt-btn-sm flex-fill text-center">+ Recipe</a>
+                    <a asp-action="NewTip" class="jt-btn jt-btn-outline jt-btn-sm flex-fill text-center">+ Tip</a>
+                </div>
+                <a asp-action="Content" class="jt-btn jt-btn-primary jt-btn-sm w-100 text-center">
+                    Manage Catalog &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Subscriptions Card -->
-    <div class="col-md-6 col-lg-3">
+    <div class="col-md-6 col-lg-4">
         <div class="p-4 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
             <div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -35,7 +64,7 @@
                 </p>
             </div>
             <div>
-                <a asp-action="Subscriptions" class="jt-btn jt-btn-primary jt-btn-sm w-100 text-center">
+                <a asp-action="Subscriptions" class="jt-btn jt-btn-outline jt-btn-sm w-100 text-center">
                     Manage &rarr;
                 </a>
             </div>
@@ -43,7 +72,7 @@
     </div>
 
     <!-- Member Feedback Card -->
-    <div class="col-md-6 col-lg-3">
+    <div class="col-md-6 col-lg-4">
         <div class="p-4 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
             <div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -71,7 +100,7 @@
     </div>
 
     <!-- Content Intake Card -->
-    <div class="col-md-6 col-lg-3">
+    <div class="col-md-6 col-lg-4">
         <div class="p-4 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
             <div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -99,7 +128,7 @@
     </div>
 
     <!-- Contests Card (Phase 5) -->
-    <div class="col-md-6 col-lg-3">
+    <div class="col-md-6 col-lg-4">
         <div class="p-4 bg-light rounded-4 border h-100 d-flex flex-column justify-content-between text-muted">
             <div>
                 <div class="d-flex justify-content-between align-items-center mb-3">

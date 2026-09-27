@@ -14,7 +14,8 @@ namespace JamesThew.Controllers;
 public class AdminController(
     ISubscriptionService subscriptionService,
     IFeedbackService feedbackService,
-    IContributionService contributionService) : Controller
+    IContributionService contributionService,
+    IAdminContentService adminContentService) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index()
@@ -22,6 +23,9 @@ public class AdminController(
         ViewBag.PendingSubscriptionsCount = await subscriptionService.GetPendingCountAsync();
         ViewBag.PendingFeedbackCount = await feedbackService.GetPendingFeedbackCountAsync();
         ViewBag.PendingContributionsCount = await contributionService.GetPendingContributionCountAsync();
+        var editorialData = await adminContentService.GetEditorialContentListAsync();
+        ViewBag.EditorialRecipesCount = editorialData.RecipesCount;
+        ViewBag.EditorialTipsCount = editorialData.TipsCount;
         return View();
     }
 
@@ -118,5 +122,166 @@ public class AdminController(
             TempData["ErrorMessage"] = message;
 
         return RedirectToAction(nameof(Contributions));
+    }
+
+    // ==========================================
+    // Phase 4: Editorial Content CRUD
+    // ==========================================
+
+    [HttpGet("content")]
+    public async Task<IActionResult> Content(ContentKind? kind, ContentVisibility? visibility, PublicationStatus? status, bool showDeleted = false)
+    {
+        var model = await adminContentService.GetEditorialContentListAsync(kind, visibility, status, showDeleted);
+        return View(model);
+    }
+
+    [HttpGet("content/recipes/new")]
+    public IActionResult NewRecipe()
+    {
+        return View("RecipeForm", new AdminRecipeEditViewModel());
+    }
+
+    [HttpPost("content/recipes/new")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> NewRecipe(AdminRecipeEditViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return View("RecipeForm", model);
+
+        var adminUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+        var adminDisplayName = User.Identity?.Name ?? "James Thew";
+
+        var (success, message, id, slug) = await adminContentService.SaveRecipeAsync(model, adminUserId, adminDisplayName);
+        if (!success)
+        {
+            ModelState.AddModelError(string.Empty, message);
+            return View("RecipeForm", model);
+        }
+
+        TempData["SuccessMessage"] = message;
+        return RedirectToAction(nameof(Content), new { kind = ContentKind.Recipe });
+    }
+
+    [HttpGet("content/recipes/{id:int}/edit")]
+    public async Task<IActionResult> EditRecipe(int id)
+    {
+        var model = await adminContentService.GetRecipeForEditAsync(id);
+        if (model is null)
+        {
+            TempData["ErrorMessage"] = $"Editorial recipe #{id} was not found.";
+            return RedirectToAction(nameof(Content));
+        }
+
+        return View("RecipeForm", model);
+    }
+
+    [HttpPost("content/recipes/{id:int}/edit")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditRecipe(int id, AdminRecipeEditViewModel model)
+    {
+        model.Id = id;
+        if (!ModelState.IsValid)
+            return View("RecipeForm", model);
+
+        var adminUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+        var adminDisplayName = User.Identity?.Name ?? "James Thew";
+
+        var (success, message, _, _) = await adminContentService.SaveRecipeAsync(model, adminUserId, adminDisplayName);
+        if (!success)
+        {
+            ModelState.AddModelError(string.Empty, message);
+            return View("RecipeForm", model);
+        }
+
+        TempData["SuccessMessage"] = message;
+        return RedirectToAction(nameof(Content), new { kind = ContentKind.Recipe });
+    }
+
+    [HttpGet("content/tips/new")]
+    public IActionResult NewTip()
+    {
+        return View("TipForm", new AdminTipEditViewModel());
+    }
+
+    [HttpPost("content/tips/new")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> NewTip(AdminTipEditViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return View("TipForm", model);
+
+        var adminUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+        var adminDisplayName = User.Identity?.Name ?? "James Thew";
+
+        var (success, message, id, slug) = await adminContentService.SaveTipAsync(model, adminUserId, adminDisplayName);
+        if (!success)
+        {
+            ModelState.AddModelError(string.Empty, message);
+            return View("TipForm", model);
+        }
+
+        TempData["SuccessMessage"] = message;
+        return RedirectToAction(nameof(Content), new { kind = ContentKind.Tip });
+    }
+
+    [HttpGet("content/tips/{id:int}/edit")]
+    public async Task<IActionResult> EditTip(int id)
+    {
+        var model = await adminContentService.GetTipForEditAsync(id);
+        if (model is null)
+        {
+            TempData["ErrorMessage"] = $"Editorial tip #{id} was not found.";
+            return RedirectToAction(nameof(Content));
+        }
+
+        return View("TipForm", model);
+    }
+
+    [HttpPost("content/tips/{id:int}/edit")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditTip(int id, AdminTipEditViewModel model)
+    {
+        model.Id = id;
+        if (!ModelState.IsValid)
+            return View("TipForm", model);
+
+        var adminUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+        var adminDisplayName = User.Identity?.Name ?? "James Thew";
+
+        var (success, message, _, _) = await adminContentService.SaveTipAsync(model, adminUserId, adminDisplayName);
+        if (!success)
+        {
+            ModelState.AddModelError(string.Empty, message);
+            return View("TipForm", model);
+        }
+
+        TempData["SuccessMessage"] = message;
+        return RedirectToAction(nameof(Content), new { kind = ContentKind.Tip });
+    }
+
+    [HttpPost("content/{id:int}/remove")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveContent(int id)
+    {
+        var (success, message) = await adminContentService.SoftDeleteContentAsync(id);
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(Content));
+    }
+
+    [HttpPost("content/{id:int}/restore")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RestoreContent(int id)
+    {
+        var (success, message) = await adminContentService.RestoreContentAsync(id);
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(Content));
     }
 }

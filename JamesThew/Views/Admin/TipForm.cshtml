@@ -1,0 +1,163 @@
+@model JamesThew.ViewModels.AdminTipEditViewModel
+@{
+    var isNew = Model.IsNew;
+    ViewData["Title"] = (isNew ? "Create New Cooking Tip" : $"Edit Tip - {Model.Title}") + " - JamesThew Admin";
+}
+
+<div class="mb-4 pb-3 border-bottom">
+    <a asp-action="Content" class="text-decoration-none text-muted small">&larr; Back to Editorial Content Catalog</a>
+    <h1 class="h2 jt-serif mt-2 mb-1">@(isNew ? "Create New Cooking Tip" : "Edit Cooking Tip")</h1>
+    <p class="text-muted small mb-0">
+        @(isNew 
+            ? "Share an essential culinary technique or kitchen secret from Chef James Thew." 
+            : $"Modifying existing tip record #{Model.Id} (/{Model.Slug}).")
+    </p>
+</div>
+
+<form action="@(isNew ? "/admin/content/tips/new" : $"/admin/content/tips/{Model.Id}/edit")" method="post">
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 mb-4" role="alert"></div>
+
+    <div class="row g-4">
+        <!-- Main Content Column -->
+        <div class="col-lg-8">
+            <!-- Card 1: Tip Identity -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title jt-serif mb-0">&#128161; Technique &amp; Advice Details</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-bold">Tip Title <span class="text-danger">*</span></label>
+                        <input asp-for="Title" class="form-control" placeholder="e.g. The Science of Pan Sauces: Fond, Deglazing & Emulsification" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Slug" class="form-label fw-bold">URL Slug (Optional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text text-muted bg-light">/tips/</span>
+                            <input asp-for="Slug" class="form-control font-monospace" placeholder="science-of-pan-sauces" />
+                        </div>
+                        <div class="form-text text-muted small">
+                            Leave blank to auto-generate from the title. Collisions will be resolved automatically.
+                        </div>
+                        <span asp-validation-for="Slug" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Summary" class="form-label fw-bold">Gastronomic Teaser / Summary <span class="text-danger">*</span></label>
+                        <textarea asp-for="Summary" rows="3" class="form-control" placeholder="A concise professional insight summarizing what the cook will master in this tip..."></textarea>
+                        <div class="form-text text-muted small">
+                            Shown on tip index cards and as the public preview for members-only tips.
+                        </div>
+                        <span asp-validation-for="Summary" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-0">
+                        <label asp-for="ImageUrl" class="form-label fw-bold">Tip Image URL / Asset Reference</label>
+                        <input asp-for="ImageUrl" class="form-control" placeholder="e.g. /images/tips/pan-sauce.jpg or https://..." />
+                        <div class="form-text text-muted small">
+                            Static image path or external HTTPS URL.
+                        </div>
+                        <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Full Method & Instruction Guide -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title jt-serif mb-0">&#128221; Master Guide &amp; Instructions</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-0">
+                        <label asp-for="Body" class="form-label fw-bold">
+                            Detailed Technique Body <span class="text-danger">*</span>
+                        </label>
+                        <textarea asp-for="Body" rows="12" class="form-control font-monospace" placeholder="Explain the culinary technique step-by-step. Include pro-tips, temperature guidance, sensory cues, and common mistakes to avoid..."></textarea>
+                        <div class="form-text text-muted small">
+                            Provide complete instructions. For members-only tips, this entire body is protected behind the subscription paywall.
+                        </div>
+                        <span asp-validation-for="Body" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar / Access & Publication Settings Column -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title jt-serif mb-0">&#128203; Publication &amp; Access</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Access Tier -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold mb-2">Access Tier</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" asp-for="Visibility" value="@JamesThew.Models.ContentVisibility.Free" id="tipVisibilityFree" />
+                            <label class="form-check-label" for="tipVisibilityFree">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Free Public</span>
+                                <div class="small text-muted">Accessible to all visitors without account.</div>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" asp-for="Visibility" value="@JamesThew.Models.ContentVisibility.MembersOnly" id="tipVisibilityMembersOnly" />
+                            <label class="form-check-label" for="tipVisibilityMembersOnly">
+                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">&#128274; Members-Only</span>
+                                <div class="small text-muted">Locked behind subscription. Non-subscribers see summary preview.</div>
+                            </label>
+                        </div>
+                        <span asp-validation-for="Visibility" class="text-danger small"></span>
+                    </div>
+
+                    <hr />
+
+                    <!-- Publication Status -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold mb-2">Publication Status</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" asp-for="PublicationStatus" value="@JamesThew.Models.PublicationStatus.Published" id="tipStatusPublished" />
+                            <label class="form-check-label" for="tipStatusPublished">
+                                <span class="badge bg-success">Published</span>
+                                <div class="small text-muted">Live immediately on tips catalog and search results.</div>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" asp-for="PublicationStatus" value="@JamesThew.Models.PublicationStatus.Draft" id="tipStatusDraft" />
+                            <label class="form-check-label" for="tipStatusDraft">
+                                <span class="badge bg-secondary">Draft</span>
+                                <div class="small text-muted">Hidden from public; direct URL returns 404.</div>
+                            </label>
+                        </div>
+                        <span asp-validation-for="PublicationStatus" class="text-danger small"></span>
+                    </div>
+
+                    <hr />
+
+                    <!-- Form Submission Actions -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="jt-btn jt-btn-primary">
+                            @(isNew ? "Publish Tip" : "Save Changes")
+                        </button>
+                        <a asp-action="Content" class="jt-btn jt-btn-outline text-center">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guidelines Callout -->
+            <div class="card border-0 bg-light rounded-4 p-3 small text-muted">
+                <div class="fw-bold text-dark mb-1">&#128218; Editorial Standard:</div>
+                <p class="mb-1">Editorial tips are published under Chef James Thew's authority. Community-submitted cooking tips stay in the Community Content Moderation intake.</p>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

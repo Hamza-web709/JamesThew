@@ -139,7 +139,41 @@ Phase 3C successfully implemented and verified:
 - Member transparency:
   - Member contributions dashboard (`/contributions`) displays live links for `Published` items and editorial rejection reasons for `Rejected` items.
 - Testing: 52 passed, 0 failed, 0 skipped (19 Foundation + 7 PublicContent + 6 Subscription + 10 Contribution & Feedback + 10 Moderation tests in `ModerationTests.cs`).
-- Note: Phase 4 will implement Admin editorial content CRUD (creating/editing James's own masterclasses), media uploads, and contest management (Phase 5).
+
+### Actual scoped completion - Phase 4 Step 1: Admin Editorial Content CRUD
+
+Phase 4 Step 1 successfully implemented and verified:
+- Editorial Content Types:
+  - Official Chef James Thew masterclass recipes (`ContentKind.Recipe`) and cooking tips (`ContentKind.Tip`).
+  - Strict isolation: All items authored via editorial CRUD are marked `ContentOrigin.Editorial`, strictly keeping them separate from member community contributions (`ContentOrigin.Community`).
+- Admin Editorial Management (`/admin/content`):
+  - Catalog dashboard with live metrics: active items count, recipe count, tip count, published count, draft count, and removed count.
+  - Multi-dimensional filters: Content Kind (`All`, `Recipes`, `Tips`), Access Tier (`All`, `Free`, `MembersOnly`), Publication Status (`All`, `Published`, `Draft`), and Removed / Trash toggle (`showDeleted=true`).
+  - Dynamic navigation card on the Admin Portal dashboard (`/admin`) displaying live editorial counts and quick-create action links.
+- Recipe Authoring & Updating:
+  - Create endpoint (`GET/POST /admin/content/recipes/new`): title, custom slug, gastronomic summary, static image URL, servings, prep/cook times, multiline ingredients and ordered preparation steps, access tier (`Free` vs `MembersOnly`), and publication status (`Published` vs `Draft`).
+  - Edit endpoint (`GET/POST /admin/content/recipes/{id}/edit`): populates existing recipe details, preserves original slug if not modified, safely parses multiline changes, and saves timestamps.
+- Cooking Tip Authoring & Updating:
+  - Create endpoint (`GET/POST /admin/content/tips/new`): title, custom slug, summary teaser, static image URL, full technique/wisdom body, access tier, and publication status.
+  - Edit endpoint (`GET/POST /admin/content/tips/{id}/edit`): pre-populates existing technique body and metadata for streamlined editing.
+- Slug Management & Duplicate Collision Resolution:
+  - Clean kebab-case slug generation from title (`GenerateSlug`).
+  - Deterministic suffixing for collisions: If a slug already exists, automatically appends `-2`, `-3`, etc., avoiding collisions and race condition failures.
+- Unpublishing & Soft Deletion Policy:
+  - Destructive action confirmation: Modal dialog warns admin that unpublishing will immediately pull the content from public catalogs and cause direct links to return HTTP 404.
+  - `POST /admin/content/{id}/remove` sets `DeletedAtUtc = DateTime.UtcNow`.
+  - Item immediately disappears from public `/recipes`, `/tips`, search, and home featured cards. Direct visits to `/{kind}/{slug}` return HTTP 404.
+  - `POST /admin/content/{id}/restore` sets `DeletedAtUtc = null`, restoring public visibility and slug routes.
+- Security & Invariants:
+  - Guest and regular Member access to editorial admin endpoints is strictly denied (redirecting to `/account/login` or `/account/access-denied`).
+  - Anti-forgery validation (`[ValidateAntiForgeryToken]`) enforced on all mutation POST endpoints.
+  - Members-Only subscription locking is preserved: unauthenticated visitors see teaser summaries with locked subscription banners, while authorized subscribers unlock full ingredients, steps, and techniques.
+  - Community contribution moderation queues (`/admin/contributions`) and member intake endpoints remain completely untouched and isolated.
+- Verification:
+  - 63 passed, 0 failed, 0 skipped (52 previous + 11 new focused integration tests in `EditorialContentCrudTests.cs`).
+  - `dotnet ef migrations has-pending-model-changes` verified clean: 0 pending model changes.
+- Deferred Phase 4 Work:
+  - Full file upload / media management system (storing binary files, media gallery picker, thumbnail generation) is deferred to the next step; image references currently use existing static asset paths.
 
 | Item | Current status / evidence |
 |---|---|
@@ -149,8 +183,9 @@ Phase 3C successfully implemented and verified:
 | T-14 intake portion | Complete (Phase 3B): Member recipe and tip contribution forms, multiline ingredients/steps, strict Pending storage, complete public exclusion, and admin read-only review |
 | T-14 moderation portion | Complete (Phase 3C): Admin approve/reject workflows, atomical Free publication, public catalog appearance, 404 on rejection, rejection reason in member dashboard |
 | T-15 feedback moderation | Complete (Phase 3C): Admin feedback review/notes workflow, Reviewed status, private member history notes, 0 public leakage |
+| T-13 editorial CRUD | Complete (Phase 4 Step 1): Admin recipe & tip list, create, edit, unpublish (soft delete), restore, auto-slug collisions, and subscription lock preservation |
 | T-10 | Auth complete in Phase 1; Profile edit deferred |
-| Phase 3C verification | Build 0 warnings/0 errors; 52/52 integration tests pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
+| Phase 4 Step 1 verification | Build 0 warnings/0 errors; 63/63 integration tests pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
@@ -160,12 +195,15 @@ Phase 3C successfully implemented and verified:
 | T-09 / REQ-013, REQ-015 | Member-only recipe/site FeedbackController, view models aur Razor forms | T-08, T-10, T-11 | Login + active member required; guest POST reject/no record; accessible recipe check; receipt | Passed: TC-013/015; 3 new integration tests in ContributionAndFeedbackTests.cs; G |
 | T-14 / REQ-010, REQ-011 | Intake & Moderation: Member contribution forms, Pending storage, admin approve/reject, public publication, member dashboard | T-08, T-10, T-12 | Both types Pending; admin approval publishes Free; rejection displays reason; public isolation; member self-publish blocked | Passed: TC-010/011; 17 integration tests across ContributionAndFeedbackTests.cs and ModerationTests.cs; G |
 | T-15 / REQ-013, REQ-014 | Admin feedback moderation & review inbox | T-09, T-14 | Admin notes, status transitions, member history reflection, private from public | Passed: TC-014; integration tests in ModerationTests.cs; G |
+| T-13 / REQ-006, REQ-007, REQ-008, REQ-009 | Editorial Content CRUD: Admin recipe & tip create, edit, remove (soft-delete), restore, slug collision handling | T-12 | Multiline ingredients/steps; tip body; Free/Members-Only; Draft/Published; unique slug resolution; public visibility | Passed: TC-006 to TC-009; 11 new integration tests in EditorialContentCrudTests.cs; G |
 
 ## Phase 4 - Content management
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
-| T-13 / REQ-006, REQ-007, REQ-008, REQ-009 | Admin recipe/tip CRUD, visibility, validated media if approved | T-12 | Ingredients/steps valid; tips CRUD; free/paid changes enforce | TC-006 to TC-009; invalid uploads and concurrency |
+| T-13 / REQ-006, REQ-007, REQ-008, REQ-009 | Admin recipe/tip CRUD, visibility, validated media if approved | T-12 | Ingredients/steps valid; tips CRUD; free/paid changes enforce; soft-delete unpublish | TC-006 to TC-009; 11 integration tests in EditorialContentCrudTests.cs |
+| T-14 / REQ-010, REQ-011, REQ-012 | Member submission/dashboard, admin contribution approval queue, public community catalog | T-13, T-02 | Both types Pending; own edits/deletes; admin approval publishes Free to guest/member; member self-publish blocked | TC-010/011/012 using members A/B |
+| T-15 / REQ-013, REQ-014, REQ-015 | Admin feedback inbox, approved moderation queues | T-09, T-14 | All received recipe feedback visible; private account data protected | TC-014 and pending/approved/rejected transitions; G |
 | T-14 / REQ-010, REQ-011, REQ-012 | Member submission/dashboard, admin contribution approval queue, public community catalog | T-13, T-02 | Both types Pending; own edits/deletes; admin approval publishes Free to guest/member; member self-publish blocked | TC-010/011/012 using members A/B |
 | T-15 / REQ-013, REQ-014, REQ-015 | Admin feedback inbox, approved moderation queues | T-09, T-14 | All received recipe feedback visible; private account data protected | TC-014 and pending/approved/rejected transitions; G |
 
