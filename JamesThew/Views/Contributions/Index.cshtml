@@ -87,12 +87,21 @@
                                         else if (item.PublicationStatus == JamesThew.Models.PublicationStatus.Published)
                                         {
                                             <span class="jt-badge jt-badge-free">&#10004; Published</span>
+                                            <a href="@(item.Kind == JamesThew.Models.ContentKind.Recipe ? $"/recipes/{item.Slug}" : $"/tips/{item.Slug}")" class="small ms-2 text-success fw-bold text-decoration-none">
+                                                View Live &rarr;
+                                            </a>
                                         }
                                         else
                                         {
                                             <span class="jt-badge" style="background-color: #FEE2E2; color: #991B1B;">
-                                                @(item.PublicationStatus.ToString())
+                                                &#10006; Rejected
                                             </span>
+                                            @if (!string.IsNullOrWhiteSpace(item.RejectionReason))
+                                            {
+                                                <div class="small text-danger mt-1">
+                                                    <strong>Editorial Note:</strong> @item.RejectionReason
+                                                </div>
+                                            }
                                         }
                                     </td>
                                 </tr>

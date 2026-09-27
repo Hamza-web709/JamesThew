@@ -49,6 +49,7 @@ public class FeedbackService(ApplicationDbContext db) : IFeedbackService
                 Message = f.Message,
                 Rating = f.Rating,
                 Status = f.Status,
+                AdminNotes = f.AdminNotes,
                 CreatedAtUtc = f.CreatedAtUtc
             })
             .ToListAsync();
@@ -102,5 +103,25 @@ public class FeedbackService(ApplicationDbContext db) : IFeedbackService
     public async Task<int> GetPendingFeedbackCountAsync()
     {
         return await db.Feedbacks.CountAsync(f => f.Status == FeedbackStatus.Pending);
+    }
+
+    public async Task<(bool Success, string Message)> ModerateFeedbackAsync(int id, FeedbackStatus newStatus, string? adminNotes)
+    {
+        var feedback = await db.Feedbacks.FirstOrDefaultAsync(f => f.Id == id);
+        if (feedback is null)
+            return (false, $"Feedback item #{id} was not found.");
+
+        if (feedback.Status == newStatus)
+            return (false, $"Feedback item #{id} is already in status {newStatus}.");
+
+        feedback.Status = newStatus;
+        if (!string.IsNullOrWhiteSpace(adminNotes))
+        {
+            var trimmedNotes = adminNotes.Trim();
+            feedback.AdminNotes = trimmedNotes.Length > 500 ? trimmedNotes[..500] : trimmedNotes;
+        }
+
+        await db.SaveChangesAsync();
+        return (true, $"Feedback item #{id} successfully marked as {newStatus}.");
     }
 }

@@ -31,6 +31,7 @@ public class FeedbackHistoryItemDto
     public string Message { get; set; } = string.Empty;
     public int? Rating { get; set; }
     public FeedbackStatus Status { get; set; }
+    public string? AdminNotes { get; set; }
     public DateTime CreatedAtUtc { get; set; }
 }
 

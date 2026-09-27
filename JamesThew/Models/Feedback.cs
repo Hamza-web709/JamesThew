@@ -10,7 +10,9 @@ public enum FeedbackStatus
 {
     Pending = 1,
     Reviewed = 2,
-    Archived = 3
+    Archived = 3,
+    Approved = 4,
+    Rejected = 5
 }
 
 public class Feedback

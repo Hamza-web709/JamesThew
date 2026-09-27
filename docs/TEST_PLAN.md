@@ -387,4 +387,47 @@ Scope: Member feedback intake and member content contribution intake (recipes an
 | New | [JamesThew/Data/Migrations/20260927150554_Phase3BMemberFeedbackAndContributions.Designer.cs](../JamesThew/Data/Migrations/20260927150554_Phase3BMemberFeedbackAndContributions.Designer.cs) | EF Core migration designer file |
 | New | [tests/JamesThew.Tests/ContributionAndFeedbackTests.cs](../tests/JamesThew.Tests/ContributionAndFeedbackTests.cs) | 10 integration tests for feedback and contribution guest blocking, submission, pending exclusion, and admin view |
 
+## Phase 3C actual verification - 27 September 2026
+
+Scope: Admin moderation of member feedback and community content contributions (recipes & tips). Antiforgery-protected POST review actions, server-side validation, error handling for missing items and repeated submissions. Private feedback retention, public catalog appearance on approval, 404 isolation on rejection, rejection reason in member dashboard, and Members-Only paid lock preservation.
+
+| Evidence | Actual result |
+|---|---|
+| Build | Solution build succeeded, 0 warnings / 0 errors (`dotnet build JamesThew.slnx`) |
+| Integration test suite | 52 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) across Foundation, PublicContent, Subscription, ContributionAndFeedback, and Moderation test classes |
+| Migration check | `dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj` verified clean: 0 pending model changes |
+| Guest moderation denial | Unauthenticated POST requests to `/admin/feedback/{id}/moderate`, `/admin/contributions/{id}/approve`, and `/admin/contributions/{id}/reject` redirect to `/account/login` (302) |
+| Member moderation denial | Authenticated regular member POST requests to admin moderation endpoints are forbidden and redirect to `/account/access-denied` (302) |
+| Feedback review & notes | Admin marks feedback as `Reviewed` with administrator note; member sees `Reviewed` status badge and the admin note in their history; feedback remains completely private from guests |
+| Feedback edge cases | Moderating non-existent feedback ID or repeating identical status handled gracefully with informative warning alert |
+| Recipe approval & publication | Admin approves recipe contribution; atomically sets `PublicationStatus.Published` and `Visibility.Free`; recipe immediately appears in public catalog `/recipes` and slug route `/recipes/{slug}` returns 200 OK with complete ingredients and steps |
+| Recipe rejection & isolation | Admin rejects recipe contribution with reason; recipe is strictly omitted from public catalog and slug route returns 404; submitting member sees `Rejected` status and editorial feedback on `/contributions` |
+| Tip approval & publication | Admin approves cooking tip contribution; tip immediately appears in public catalog `/tips` and slug route returns 200 OK with full body |
+| Tip rejection & isolation | Admin rejects tip contribution with reason; tip remains hidden from public catalog and slug route returns 404 |
+| Contribution edge cases | Moderating non-existent contribution ID or repeating approval/rejection handled gracefully with warning alert |
+| Self-publishing blocked | Regular members cannot self-approve or elevate publication state; server-side values strictly enforced |
+| Members-Only protection | If approved contribution has `Visibility = MembersOnly`, locked box is strictly rendered for guests with no-cache header, while approved members and admins unlock full technique body |
+
+### Phase 3C changed-file inventory
+
+| Status | File path | Description |
+|---|---|---|
+| Updated | [JamesThew/Models/Feedback.cs](../JamesThew/Models/Feedback.cs) | Added `Approved` and `Rejected` values to `FeedbackStatus` enum |
+| Updated | [JamesThew/ViewModels/FeedbackViewModels.cs](../JamesThew/ViewModels/FeedbackViewModels.cs) | Added `AdminNotes` to `FeedbackHistoryItemDto` |
+| Updated | [JamesThew/ViewModels/ContributionViewModels.cs](../JamesThew/ViewModels/ContributionViewModels.cs) | Added `RejectionReason` and `Visibility` to `MemberContributionListItemDto` and `AdminContributionItemDto`; added `FilterStatus` to `AdminContributionListViewModel` |
+| Updated | [JamesThew/Services/IFeedbackService.cs](../JamesThew/Services/IFeedbackService.cs) | Added `ModerateFeedbackAsync` method contract |
+| Updated | [JamesThew/Services/FeedbackService.cs](../JamesThew/Services/FeedbackService.cs) | Implemented `ModerateFeedbackAsync` and mapped `AdminNotes` in member history |
+| Updated | [JamesThew/Services/IContributionService.cs](../JamesThew/Services/IContributionService.cs) | Added `ApproveContributionAsync`, `RejectContributionAsync`, and status filtering to `IContributionService` |
+| Updated | [JamesThew/Services/ContributionService.cs](../JamesThew/Services/ContributionService.cs) | Implemented `ApproveContributionAsync`, `RejectContributionAsync`, status filtering, and rejection reason mapping |
+| Updated | [JamesThew/Controllers/AdminController.cs](../JamesThew/Controllers/AdminController.cs) | Added `ModerateFeedback`, `ApproveContribution`, `RejectContribution` POST actions; updated `Contributions` GET to support status filtering |
+| Updated | [JamesThew/Views/Admin/Feedback.cshtml](../JamesThew/Views/Admin/Feedback.cshtml) | Added inline feedback review form, admin notes input, status tabs, and TempData alerts |
+| Updated | [JamesThew/Views/Admin/Contributions.cshtml](../JamesThew/Views/Admin/Contributions.cshtml) | Added Approve & Publish (Free) form, Reject form with reason, status filter pills, and live links |
+| Updated | [JamesThew/Views/Contributions/Index.cshtml](../JamesThew/Views/Contributions/Index.cshtml) | Displayed live link for published items and editorial rejection reason for rejected items |
+| Updated | [JamesThew/Views/Feedback/Index.cshtml](../JamesThew/Views/Feedback/Index.cshtml) | Displayed administrator notes and reviewed badge in member feedback history |
+| Updated | [docs/TASKS.md](../docs/TASKS.md) | Documented Phase 3C completion, status matrix updates, and test results |
+| Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Documented Phase 3C verification results, scenario coverage, and changed-file inventory |
+| Updated | [README.md](../README.md) | Updated Phase 3 completed capabilities, route documentation, and testing status |
+| New | [tests/JamesThew.Tests/ModerationTests.cs](../tests/JamesThew.Tests/ModerationTests.cs) | 10 integration tests covering moderation authorization, transitions, public catalog appearance, 404 isolation, and member feedback visibility |
+
+
 

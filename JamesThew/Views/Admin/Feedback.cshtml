@@ -1,13 +1,13 @@
 @model JamesThew.ViewModels.AdminFeedbackListViewModel
 @{
-    ViewData["Title"] = "Member Feedback Review - JamesThew Admin";
+    ViewData["Title"] = "Member Feedback Moderation - JamesThew Admin";
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom">
     <div>
         <a asp-action="Index" class="text-decoration-none text-muted small">&larr; Back to Admin Dashboard</a>
-        <h1 class="h2 jt-serif mt-2 mb-1">Member Feedback Intake</h1>
-        <p class="text-muted small mb-0">Read-only review of suggestions, recipe inquiries, and platform feedback submitted by members.</p>
+        <h1 class="h2 jt-serif mt-2 mb-1">Member Feedback Moderation</h1>
+        <p class="text-muted small mb-0">Review, add notes, and moderate member inquiries, suggestions, and feedback.</p>
     </div>
     <div class="mt-3 mt-md-0">
         <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2">
@@ -15,6 +15,21 @@
         </span>
     </div>
 </div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <strong>&#10004; Success:</strong> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <strong>&#9888; Error:</strong> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <div class="card border-0 shadow-sm rounded-4 mb-4">
     <div class="card-body p-3">
@@ -34,6 +49,11 @@
                     Reviewed
                 </a>
             </li>
+            <li class="nav-item">
+                <a asp-action="Feedback" asp-route-status="@JamesThew.Models.FeedbackStatus.Archived" class="nav-link @(Model.FilterStatus == JamesThew.Models.FeedbackStatus.Archived ? "active" : "")">
+                    Archived
+                </a>
+            </li>
         </ul>
     </div>
 </div>
@@ -50,13 +70,14 @@
                     <th>Rating</th>
                     <th>Message</th>
                     <th>Status</th>
+                    <th style="min-width: 140px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @if (Model.Items.Count == 0)
                 {
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
+                        <td colspan="8" class="text-center py-5 text-muted">
                             <div style="font-size: 2.5rem;" class="mb-2">&#128221;</div>
                             <p class="mb-0">No feedback items found matching this filter.</p>
                         </td>
@@ -90,8 +111,14 @@
                                     <span class="text-muted small">—</span>
                                 }
                             </td>
-                            <td style="max-width: 380px;">
+                            <td style="max-width: 320px;">
                                 <div class="small text-break">@item.Message</div>
+                                @if (!string.IsNullOrWhiteSpace(item.AdminNotes))
+                                {
+                                    <div class="small text-muted mt-1 p-1 bg-light rounded border">
+                                        <strong>Admin Note:</strong> @item.AdminNotes
+                                    </div>
+                                }
                             </td>
                             <td>
                                 @if (item.Status == JamesThew.Models.FeedbackStatus.Pending)
@@ -104,10 +131,53 @@
                                 {
                                     <span class="jt-badge jt-badge-free">Reviewed</span>
                                 }
+                                else if (item.Status == JamesThew.Models.FeedbackStatus.Approved)
+                                {
+                                    <span class="jt-badge jt-badge-free">Approved</span>
+                                }
+                                else if (item.Status == JamesThew.Models.FeedbackStatus.Rejected)
+                                {
+                                    <span class="jt-badge" style="background-color: #FEE2E2; color: #991B1B;">Rejected</span>
+                                }
                                 else
                                 {
                                     <span class="jt-badge" style="background-color: #F3F4F6; color: #4B5563;">Archived</span>
                                 }
+                            </td>
+                            <td>
+                                @if (item.Status == JamesThew.Models.FeedbackStatus.Pending)
+                                {
+                                    <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#mod-fb-@item.Id" aria-expanded="false" aria-controls="mod-fb-@item.Id">
+                                        Review &#9662;
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#mod-fb-@item.Id" aria-expanded="false" aria-controls="mod-fb-@item.Id">
+                                        Edit Note &#9662;
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                        <tr class="collapse bg-light" id="mod-fb-@item.Id">
+                            <td colspan="8" class="p-3">
+                                <div class="bg-white p-3 rounded-3 border">
+                                    <h6 class="jt-serif mb-2">Moderate Feedback #@item.Id</h6>
+                                    <form asp-action="ModerateFeedback" asp-route-id="@item.Id" method="post" class="row g-2 align-items-center">
+                                        @Html.AntiForgeryToken()
+                                        <div class="col-md-7">
+                                            <input type="text" name="adminNotes" value="@item.AdminNotes" class="form-control form-control-sm" placeholder="Optional administrator note..." maxlength="500" />
+                                        </div>
+                                        <div class="col-md-5 d-flex gap-2 justify-content-end">
+                                            <button type="submit" name="status" value="@JamesThew.Models.FeedbackStatus.Reviewed" class="btn btn-sm btn-success">
+                                                &#10004; Mark Reviewed
+                                            </button>
+                                            <button type="submit" name="status" value="@JamesThew.Models.FeedbackStatus.Archived" class="btn btn-sm btn-outline-secondary">
+                                                Archive
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }

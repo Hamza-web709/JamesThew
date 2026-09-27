@@ -133,6 +133,8 @@ public class ContributionService(ApplicationDbContext db) : IContributionService
                 Slug = c.Slug,
                 Summary = c.Summary,
                 PublicationStatus = c.PublicationStatus,
+                Visibility = c.Visibility,
+                RejectionReason = c.RejectionReason,
                 CreatedAtUtc = c.CreatedAtUtc,
                 Servings = c.Recipe != null ? c.Recipe.Servings : null,
                 PrepMinutes = c.Recipe != null ? c.Recipe.PrepMinutes : null,
@@ -149,7 +151,7 @@ public class ContributionService(ApplicationDbContext db) : IContributionService
         };
     }
 
-    public async Task<AdminContributionListViewModel> GetAdminContributionListAsync(ContentKind? kindFilter = null)
+    public async Task<AdminContributionListViewModel> GetAdminContributionListAsync(ContentKind? kindFilter = null, PublicationStatus? statusFilter = null)
     {
         var query = db.ContentItems
             .AsNoTracking()
@@ -167,6 +169,11 @@ public class ContributionService(ApplicationDbContext db) : IContributionService
             query = query.Where(c => c.Kind == kindFilter.Value);
         }
 
+        if (statusFilter.HasValue)
+        {
+            query = query.Where(c => c.PublicationStatus == statusFilter.Value);
+        }
+
         var items = await query
             .OrderByDescending(c => c.CreatedAtUtc)
             .Select(c => new AdminContributionItemDto
@@ -179,7 +186,10 @@ public class ContributionService(ApplicationDbContext db) : IContributionService
                 AuthorDisplayName = c.AuthorDisplayName,
                 AuthorEmail = c.AuthorUser != null ? (c.AuthorUser.Email ?? "") : "",
                 PublicationStatus = c.PublicationStatus,
+                Visibility = c.Visibility,
+                RejectionReason = c.RejectionReason,
                 CreatedAtUtc = c.CreatedAtUtc,
+                UpdatedAtUtc = c.UpdatedAtUtc,
                 Servings = c.Recipe != null ? c.Recipe.Servings : null,
                 PrepMinutes = c.Recipe != null ? c.Recipe.PrepMinutes : null,
                 CookMinutes = c.Recipe != null ? c.Recipe.CookMinutes : null,
@@ -197,6 +207,7 @@ public class ContributionService(ApplicationDbContext db) : IContributionService
         {
             Items = items,
             FilterKind = kindFilter,
+            FilterStatus = statusFilter,
             TotalCount = total,
             PendingCount = pending
         };
@@ -205,5 +216,48 @@ public class ContributionService(ApplicationDbContext db) : IContributionService
     public async Task<int> GetPendingContributionCountAsync()
     {
         return await db.ContentItems.CountAsync(c => c.Origin == ContentOrigin.Community && c.PublicationStatus == PublicationStatus.Pending && c.DeletedAtUtc == null);
+    }
+
+    public async Task<(bool Success, string Message)> ApproveContributionAsync(int id, ContentVisibility visibility = ContentVisibility.Free)
+    {
+        var item = await db.ContentItems
+            .FirstOrDefaultAsync(c => c.Id == id && c.Origin == ContentOrigin.Community && c.DeletedAtUtc == null);
+
+        if (item is null)
+            return (false, $"Contribution item #{id} was not found.");
+
+        if (item.PublicationStatus == PublicationStatus.Published)
+            return (false, $"Contribution '{item.Title}' is already published.");
+
+        item.PublicationStatus = PublicationStatus.Published;
+        item.Visibility = visibility;
+        item.RejectionReason = null;
+        item.UpdatedAtUtc = DateTime.UtcNow;
+
+        await db.SaveChangesAsync();
+        return (true, $"Contribution '{item.Title}' (#{id}) has been approved and published as {visibility}.");
+    }
+
+    public async Task<(bool Success, string Message)> RejectContributionAsync(int id, string? rejectionReason)
+    {
+        var item = await db.ContentItems
+            .FirstOrDefaultAsync(c => c.Id == id && c.Origin == ContentOrigin.Community && c.DeletedAtUtc == null);
+
+        if (item is null)
+            return (false, $"Contribution item #{id} was not found.");
+
+        if (item.PublicationStatus == PublicationStatus.Rejected)
+            return (false, $"Contribution '{item.Title}' is already rejected.");
+
+        var reason = string.IsNullOrWhiteSpace(rejectionReason)
+            ? "Submission does not meet community editorial standards."
+            : rejectionReason.Trim();
+
+        item.PublicationStatus = PublicationStatus.Rejected;
+        item.RejectionReason = reason.Length > 500 ? reason[..500] : reason;
+        item.UpdatedAtUtc = DateTime.UtcNow;
+
+        await db.SaveChangesAsync();
+        return (true, $"Contribution '{item.Title}' (#{id}) has been rejected.");
     }
 }

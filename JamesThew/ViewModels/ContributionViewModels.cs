@@ -60,6 +60,8 @@ public class MemberContributionListItemDto
     public string Slug { get; set; } = string.Empty;
     public string Summary { get; set; } = string.Empty;
     public PublicationStatus PublicationStatus { get; set; }
+    public ContentVisibility Visibility { get; set; }
+    public string? RejectionReason { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public int? Servings { get; set; }
     public int? PrepMinutes { get; set; }
@@ -78,6 +80,7 @@ public class AdminContributionListViewModel
 {
     public IReadOnlyList<AdminContributionItemDto> Items { get; set; } = [];
     public ContentKind? FilterKind { get; set; }
+    public PublicationStatus? FilterStatus { get; set; }
     public int TotalCount { get; set; }
     public int PendingCount { get; set; }
 }
@@ -92,7 +95,10 @@ public class AdminContributionItemDto
     public string AuthorDisplayName { get; set; } = string.Empty;
     public string AuthorEmail { get; set; } = string.Empty;
     public PublicationStatus PublicationStatus { get; set; }
+    public ContentVisibility Visibility { get; set; }
+    public string? RejectionReason { get; set; }
     public DateTime CreatedAtUtc { get; set; }
+    public DateTime? UpdatedAtUtc { get; set; }
     public int? Servings { get; set; }
     public int? PrepMinutes { get; set; }
     public int? CookMinutes { get; set; }

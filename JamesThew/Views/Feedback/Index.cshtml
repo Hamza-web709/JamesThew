@@ -140,7 +140,13 @@
                                         }
                                     </td>
                                     <td class="small" style="max-width: 320px;">
-                                        <div class="text-truncate">@item.Message</div>
+                                        <div class="text-break">@item.Message</div>
+                                        @if (!string.IsNullOrWhiteSpace(item.AdminNotes))
+                                        {
+                                            <div class="small text-muted mt-1 p-1 bg-light rounded border">
+                                                <strong>Admin Note:</strong> @item.AdminNotes
+                                            </div>
+                                        }
                                     </td>
                                     <td>
                                         @if (item.Status == JamesThew.Models.FeedbackStatus.Pending)
@@ -149,9 +155,13 @@
                                                 Pending Review
                                             </span>
                                         }
-                                        else if (item.Status == JamesThew.Models.FeedbackStatus.Reviewed)
+                                        else if (item.Status == JamesThew.Models.FeedbackStatus.Reviewed || item.Status == JamesThew.Models.FeedbackStatus.Approved)
                                         {
-                                            <span class="jt-badge jt-badge-free">Reviewed</span>
+                                            <span class="jt-badge jt-badge-free">&#10004; Reviewed</span>
+                                        }
+                                        else if (item.Status == JamesThew.Models.FeedbackStatus.Rejected)
+                                        {
+                                            <span class="jt-badge" style="background-color: #FEE2E2; color: #991B1B;">Rejected</span>
                                         }
                                         else
                                         {

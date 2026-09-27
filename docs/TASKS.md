@@ -119,7 +119,27 @@ Phase 3B successfully implemented and verified:
   - Admin dashboard (`/admin`) updated with dynamic counters for new feedback and pending intake.
   - Regular members accessing admin review pages receive access denied.
 - Testing: 42 passed, 0 failed, 0 skipped (19 Foundation + 7 PublicContent + 6 Subscription + 10 Contribution & Feedback tests in `ContributionAndFeedbackTests.cs`).
-- Note: Phase 4 will implement admin publishing, editorial CRUD, and moderation decisions; profile editing and contests remain deferred.
+
+### Actual scoped completion - Phase 3C: Admin Moderation of Member Feedback & Content Contributions
+
+Phase 3C successfully implemented and verified:
+- Feedback moderation workflow:
+  - `POST /admin/feedback/{id}/moderate` with antiforgery token, status selection (`Reviewed`, `Archived`, `Approved`, `Rejected`), and administrator notes.
+  - Feedback remains strictly private to author and admins; never published publicly or leaked to guests.
+  - Member feedback history at `/feedback` displays `Reviewed` status badge and administrator response notes.
+- Community contribution moderation workflow:
+  - `POST /admin/contributions/{id}/approve` with antiforgery token; atomically sets `PublicationStatus = Published`, `Visibility = Free` (default documented rule), clears rejection reason, and updates `UpdatedAtUtc`.
+  - `POST /admin/contributions/{id}/reject` with antiforgery token; sets `PublicationStatus = Rejected`, validates and records `RejectionReason` (up to 500 chars), and updates `UpdatedAtUtc`.
+  - Missing IDs, repeated approvals, and invalid status transitions handled gracefully with user-facing alerts and zero unhandled exceptions.
+- Content isolation and protection:
+  - Pending and Rejected contributions are strictly withheld from `/recipes`, `/tips`, home featured cards, public search, and direct slug lookups (`404 Not Found`).
+  - Approved Free contributions are immediately published to public catalogs, search, and direct slug routes with full ingredients, steps, and tip bodies.
+  - Members-Only protection preserved: if an approved contribution has `Visibility = MembersOnly`, locked box is strictly rendered for guests and unapproved members, while approved members and admins unlock full technique bodies.
+  - Submitting members cannot self-approve or elevate publication state.
+- Member transparency:
+  - Member contributions dashboard (`/contributions`) displays live links for `Published` items and editorial rejection reasons for `Rejected` items.
+- Testing: 52 passed, 0 failed, 0 skipped (19 Foundation + 7 PublicContent + 6 Subscription + 10 Contribution & Feedback + 10 Moderation tests in `ModerationTests.cs`).
+- Note: Phase 4 will implement Admin editorial content CRUD (creating/editing James's own masterclasses), media uploads, and contest management (Phase 5).
 
 | Item | Current status / evidence |
 |---|---|
@@ -127,8 +147,10 @@ Phase 3B successfully implemented and verified:
 | T-12 | Complete (Phase 3A): Content authorization matrix updated; approved members unlock paid content; pending/rejected/guest locked; admin bypasses |
 | T-09 | Complete (Phase 3B): Member-only recipe/site feedback submission forms, database storage, guest redirect, private history, and admin review |
 | T-14 intake portion | Complete (Phase 3B): Member recipe and tip contribution forms, multiline ingredients/steps, strict Pending storage, complete public exclusion, and admin read-only review |
+| T-14 moderation portion | Complete (Phase 3C): Admin approve/reject workflows, atomical Free publication, public catalog appearance, 404 on rejection, rejection reason in member dashboard |
+| T-15 feedback moderation | Complete (Phase 3C): Admin feedback review/notes workflow, Reviewed status, private member history notes, 0 public leakage |
 | T-10 | Auth complete in Phase 1; Profile edit deferred |
-| Phase 3B verification | Build 0 warnings/0 errors; 42/42 integration tests pass; migration applied and 0 model drift; evidence in TEST_PLAN |
+| Phase 3C verification | Build 0 warnings/0 errors; 52/52 integration tests pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
@@ -136,7 +158,8 @@ Phase 3B successfully implemented and verified:
 | T-11 / REQ-002, REQ-004 | Membership controller/views, demo plan request, admin approval/rejection, activation/expiry | T-02, T-10 | $10 monthly/$100 yearly demo labels; Pending until admin approval; rejected/expired excluded; no gateway | Passed: TC-002; 6 new integration tests in SubscriptionTests.cs, live HTTPS verified; G |
 | T-12 / REQ-003, REQ-004, REQ-005, REQ-008 | Full guest/member/admin access integration | T-08, T-11 | UI and direct endpoints consistent; approved members unlock paid content; pending/rejected locked | Passed: TC-003/004/008; direct recipe & tip authorization assertions, no-cache headers; G |
 | T-09 / REQ-013, REQ-015 | Member-only recipe/site FeedbackController, view models aur Razor forms | T-08, T-10, T-11 | Login + active member required; guest POST reject/no record; accessible recipe check; receipt | Passed: TC-013/015; 3 new integration tests in ContributionAndFeedbackTests.cs; G |
-| T-14 (intake) / REQ-010, REQ-011 | Member recipe & tip contribution intake forms, Pending storage, public exclusion, admin review | T-08, T-10 | Both types Pending; guest challenge; public catalog/search/home zero leakage; admin intake view | Passed: TC-010/011; 7 new integration tests in ContributionAndFeedbackTests.cs; G |
+| T-14 / REQ-010, REQ-011 | Intake & Moderation: Member contribution forms, Pending storage, admin approve/reject, public publication, member dashboard | T-08, T-10, T-12 | Both types Pending; admin approval publishes Free; rejection displays reason; public isolation; member self-publish blocked | Passed: TC-010/011; 17 integration tests across ContributionAndFeedbackTests.cs and ModerationTests.cs; G |
+| T-15 / REQ-013, REQ-014 | Admin feedback moderation & review inbox | T-09, T-14 | Admin notes, status transitions, member history reflection, private from public | Passed: TC-014; integration tests in ModerationTests.cs; G |
 
 ## Phase 4 - Content management
 

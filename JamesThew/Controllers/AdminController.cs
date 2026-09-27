@@ -74,10 +74,49 @@ public class AdminController(
         return View(model);
     }
 
-    [HttpGet("contributions")]
-    public async Task<IActionResult> Contributions(ContentKind? kind)
+    [HttpPost("feedback/{id:int}/moderate")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ModerateFeedback(int id, FeedbackStatus status, string? adminNotes)
     {
-        var model = await contributionService.GetAdminContributionListAsync(kind);
+        var (success, message) = await feedbackService.ModerateFeedbackAsync(id, status, adminNotes);
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(Feedback));
+    }
+
+    [HttpGet("contributions")]
+    public async Task<IActionResult> Contributions(ContentKind? kind, PublicationStatus? status)
+    {
+        var model = await contributionService.GetAdminContributionListAsync(kind, status);
         return View(model);
+    }
+
+    [HttpPost("contributions/{id:int}/approve")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApproveContribution(int id, ContentVisibility visibility = ContentVisibility.Free)
+    {
+        var (success, message) = await contributionService.ApproveContributionAsync(id, visibility);
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(Contributions));
+    }
+
+    [HttpPost("contributions/{id:int}/reject")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RejectContribution(int id, string? rejectionReason)
+    {
+        var (success, message) = await contributionService.RejectContributionAsync(id, rejectionReason);
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(Contributions));
     }
 }
