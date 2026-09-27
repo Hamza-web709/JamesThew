@@ -8,5 +8,7 @@ public class ApplicationUser : IdentityUser
     public string DisplayName { get; set; } = string.Empty;
 
     public ICollection<SubscriptionRequest> SubscriptionRequests { get; set; } = [];
+    public ICollection<Feedback> Feedbacks { get; set; } = [];
+    public ICollection<ContentItem> ContributedContentItems { get; set; } = [];
 }
 

@@ -16,5 +16,26 @@
         </a>
     </div>
 
-    <p class="small text-muted mb-0">Subscription approval, profile editing and member features are planned for later phases.</p>
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3 border h-100">
+                <h3 class="h6 mb-1">&#127859; My Contributions</h3>
+                <p class="small text-muted mb-3">Submit your personal recipes and cooking tips for editorial review.</p>
+                <a asp-controller="Contributions" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm">
+                    View Contributions &rarr;
+                </a>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3 border h-100">
+                <h3 class="h6 mb-1">&#128172; Member Feedback</h3>
+                <p class="small text-muted mb-3">Share observations, suggestions, and inquiries with the chef team.</p>
+                <a asp-controller="Feedback" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm">
+                    Submit Feedback &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <p class="small text-muted mb-0">Profile editing and contest participation are planned for subsequent phases.</p>
 </div>

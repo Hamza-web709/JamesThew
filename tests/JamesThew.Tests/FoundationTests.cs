@@ -77,13 +77,14 @@ public class FoundationTests(FoundationFixture fixture)
         {
             "__EFMigrationsHistory",
             "AspNetUsers", "AspNetRoles", "AspNetUserRoles", "AspNetUserClaims", "AspNetUserLogins", "AspNetUserTokens", "AspNetRoleClaims",
-            "ContentItems", "FaqItems", "Recipes", "RecipeIngredients", "RecipeSteps", "Tips", "SubscriptionRequests"
+            "ContentItems", "FaqItems", "Recipes", "RecipeIngredients", "RecipeSteps", "Tips", "SubscriptionRequests", "Feedbacks"
         };
         Assert.All(tables, name => Assert.Contains(name, expectedTables));
         Assert.Contains("ContentItems", tables);
         Assert.Contains("Recipes", tables);
         Assert.Contains("FaqItems", tables);
         Assert.Contains("SubscriptionRequests", tables);
+        Assert.Contains("Feedbacks", tables);
     }
 
     [Fact]

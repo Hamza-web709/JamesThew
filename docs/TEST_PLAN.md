@@ -333,3 +333,58 @@ Scope: Manual demo membership subscription requests ($10/mo, $100/yr), pending q
 | New | [JamesThew/Data/Migrations/20260927143304_Phase3AMembershipSubscriptions.Designer.cs](../JamesThew/Data/Migrations/20260927143304_Phase3AMembershipSubscriptions.Designer.cs) | EF Core migration designer file |
 | New | [tests/JamesThew.Tests/SubscriptionTests.cs](../tests/JamesThew.Tests/SubscriptionTests.cs) | 6 integration tests verifying guest denial, pending, approval, rejection, unlock, and admin bypass |
 
+## Phase 3B actual verification - 27 September 2026
+
+Scope: Member feedback intake and member content contribution intake (recipes and tips) with read-only admin review. Guests challenged/redirected to login. Submissions stored as `Pending` and strictly withheld from public recipe/tip catalogs, search, home teasers, and slug details. No auto-publishing; admin publishing/moderation actions deferred to Phase 4.
+
+| Evidence | Actual result |
+|---|---|
+| Build | Solution build succeeded, 0 warnings / 0 errors (`dotnet build JamesThew.slnx`) |
+| Integration test suite | 42 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) across Foundation, PublicContent, Subscription, and ContributionAndFeedback test classes |
+| Migration | `20260927150554_Phase3BMemberFeedbackAndContributions` applied to `JamesThew_Development`; 0 pending model changes |
+| Guest feedback challenge | Unauthenticated `POST /feedback/submit` redirects to `/Account/Login` with 302; guest GET displays guidance and login CTA |
+| Member feedback submission | Authenticated member can submit feedback with topic, rating, message; saved in DB as `Pending`; member views own history on `/feedback` |
+| Feedback privacy | Submitted feedback is strictly private and never exposed on public pages or to guest sessions |
+| Admin feedback review | Admin accesses `/admin/feedback`, views pending/reviewed feedback list with author details, rating, and message; regular member receives access denied |
+| Guest recipe contribution challenge | Unauthenticated `POST /contributions/recipe/new` redirects to `/Account/Login` with 302 |
+| Member recipe contribution | Authenticated member submits recipe with title, summary, servings, times, ingredients, steps, notes; saved with `Origin = Community`, `PublicationStatus = Pending` |
+| Pending recipe exclusion | Pending recipe does NOT appear in public catalog (`/recipes`), search (`/recipes?q=...`), home featured recipes, and direct slug route returns 404 |
+| Guest tip contribution challenge | Unauthenticated `POST /contributions/tip/new` redirects to `/Account/Login` with 302 |
+| Member tip contribution | Authenticated member submits cooking tip with title, summary, body, notes; saved with `Origin = Community`, `PublicationStatus = Pending` |
+| Pending tip exclusion | Pending tip does NOT appear in public catalog (`/tips`), search (`/tips?q=...`), and direct slug route returns 404 |
+| Admin content intake review | Admin accesses `/admin/contributions`, views full submitted recipe ingredients, steps, and tip bodies; regular member receives access denied |
+
+### Phase 3B changed-file inventory
+
+| Status | File path | Description |
+|---|---|---|
+| Updated | [JamesThew/Models/ApplicationUser.cs](../JamesThew/Models/ApplicationUser.cs) | Added Feedbacks and ContributedContentItems navigation collections |
+| Updated | [JamesThew/Models/ContentItem.cs](../JamesThew/Models/ContentItem.cs) | Added ContributorNotes property |
+| Updated | [JamesThew/Data/ApplicationDbContext.cs](../JamesThew/Data/ApplicationDbContext.cs) | Added Feedbacks DbSet, configured relationships, indexes, constraints |
+| Updated | [JamesThew/Data/Migrations/ApplicationDbContextModelSnapshot.cs](../JamesThew/Data/Migrations/ApplicationDbContextModelSnapshot.cs) | Updated EF Core model snapshot for Feedback and ContributorNotes |
+| Updated | [JamesThew/Program.cs](../JamesThew/Program.cs) | Registered IFeedbackService and IContributionService in DI |
+| Updated | [JamesThew/Controllers/FeedbackController.cs](../JamesThew/Controllers/FeedbackController.cs) | Implemented interactive feedback Index and Submit actions |
+| Updated | [JamesThew/Controllers/AdminController.cs](../JamesThew/Controllers/AdminController.cs) | Added Feedback and Contributions read-only review actions, updated dashboard counters |
+| Updated | [JamesThew/Views/Feedback/Index.cshtml](../JamesThew/Views/Feedback/Index.cshtml) | Interactive culinary feedback form, guest guidance card, user submission history |
+| Updated | [JamesThew/Views/Admin/Index.cshtml](../JamesThew/Views/Admin/Index.cshtml) | Added Member Feedback and Content Intake cards with dynamic pending badges |
+| Updated | [JamesThew/Views/Shared/_LoginPartial.cshtml](../JamesThew/Views/Shared/_LoginPartial.cshtml) | Added Contribute link for authenticated users |
+| Updated | [JamesThew/Views/Account/Status.cshtml](../JamesThew/Views/Account/Status.cshtml) | Added quick action cards linking to My Contributions and Member Feedback |
+| Updated | [tests/JamesThew.Tests/FoundationTests.cs](../tests/JamesThew.Tests/FoundationTests.cs) | Added Feedbacks table to schema test assertions |
+| New | [JamesThew/Models/Feedback.cs](../JamesThew/Models/Feedback.cs) | Feedback entity model with FeedbackKind and FeedbackStatus enums |
+| New | [JamesThew/ViewModels/FeedbackViewModels.cs](../JamesThew/ViewModels/FeedbackViewModels.cs) | View models & DTOs for feedback submission, history, and admin review |
+| New | [JamesThew/ViewModels/ContributionViewModels.cs](../JamesThew/ViewModels/ContributionViewModels.cs) | View models & DTOs for recipe & tip contributions and admin review |
+| New | [JamesThew/Services/IFeedbackService.cs](../JamesThew/Services/IFeedbackService.cs) | Feedback service contract |
+| New | [JamesThew/Services/FeedbackService.cs](../JamesThew/Services/FeedbackService.cs) | Feedback service implementation |
+| New | [JamesThew/Services/IContributionService.cs](../JamesThew/Services/IContributionService.cs) | Contribution service contract |
+| New | [JamesThew/Services/ContributionService.cs](../JamesThew/Services/ContributionService.cs) | Contribution service implementation with multiline parsing & slug generation |
+| New | [JamesThew/Controllers/ContributionsController.cs](../JamesThew/Controllers/ContributionsController.cs) | Member controller for contribution list and recipe/tip intake forms |
+| New | [JamesThew/Views/Contributions/Index.cshtml](../JamesThew/Views/Contributions/Index.cshtml) | Member contributions dashboard with status tracking and create buttons |
+| New | [JamesThew/Views/Contributions/NewRecipe.cshtml](../JamesThew/Views/Contributions/NewRecipe.cshtml) | Recipe contribution submission form with ingredients and steps intake |
+| New | [JamesThew/Views/Contributions/NewTip.cshtml](../JamesThew/Views/Contributions/NewTip.cshtml) | Cooking tip contribution submission form with technique body intake |
+| New | [JamesThew/Views/Admin/Feedback.cshtml](../JamesThew/Views/Admin/Feedback.cshtml) | Admin read-only feedback intake review view with status filters |
+| New | [JamesThew/Views/Admin/Contributions.cshtml](../JamesThew/Views/Admin/Contributions.cshtml) | Admin read-only content intake review view with kind filters and collapsible content |
+| New | [JamesThew/Data/Migrations/20260927150554_Phase3BMemberFeedbackAndContributions.cs](../JamesThew/Data/Migrations/20260927150554_Phase3BMemberFeedbackAndContributions.cs) | EF Core migration creating Feedbacks table and ContributorNotes column |
+| New | [JamesThew/Data/Migrations/20260927150554_Phase3BMemberFeedbackAndContributions.Designer.cs](../JamesThew/Data/Migrations/20260927150554_Phase3BMemberFeedbackAndContributions.Designer.cs) | EF Core migration designer file |
+| New | [tests/JamesThew.Tests/ContributionAndFeedbackTests.cs](../tests/JamesThew.Tests/ContributionAndFeedbackTests.cs) | 10 integration tests for feedback and contribution guest blocking, submission, pending exclusion, and admin view |
+
+

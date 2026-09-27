@@ -101,22 +101,42 @@ Phase 3A successfully implemented and verified:
 - Admin subscriptions management (`/admin/subscriptions`): Admin-only management table with status filtering tabs (All, Pending, Approved, Rejected), subscriber email/name, plan, amount ($10.00 / $100.00), timestamps, inline Approve and Reject actions with admin notes. Admin dashboard (`/admin`) updated with Subscriptions card and dynamic pending count badge.
 - Content access integration: Approved members now immediately unlock full recipe ingredients/steps and masterclass tip bodies; pending, rejected, and guest users continue to see locked preview boxes with `Cache-Control: no-cache, no-store, must-revalidate` headers. Admin role continues to bypass locked content.
 - Testing: 32 passed, 0 failed, 0 skipped (19 Foundation + 7 PublicContent + 6 Subscription in `tests/JamesThew.Tests/SubscriptionTests.cs`).
-- Note: Phase 3B (T-10 profile editing, T-09 member feedback submission) remains deferred for subsequent implementation.
+### Actual scoped completion - Phase 3B: Member Feedback & Content Contribution Intake
+
+Phase 3B successfully implemented and verified:
+- Feedback model & entity: `Feedback` model with `FeedbackKind` (Site, Recipe), `FeedbackStatus` (Pending, Reviewed, Archived), ratings, categories, and foreign keys to `ApplicationUser` and `Recipe`.
+- Content intake model: `ContentItem.ContributorNotes` column added, migration `20260927150554_Phase3BMemberFeedbackAndContributions` applied to `JamesThew_Development`, 0 pending model changes.
+- Services: `IFeedbackService` / `FeedbackService` and `IContributionService` / `ContributionService` registered in DI.
+- Member Feedback (`/feedback`): Interactive submission form with category selection, 1-5 rating, and message validation. Personal feedback history log. Guest challenge/redirect enforced. Feedback is private and never exposed publicly.
+- Member Contributions (`/contributions`):
+  - Recipe contribution intake (`/contributions/recipe/new`): title, summary, servings, prep/cook times, multiline ingredients and steps, and notes.
+  - Tip contribution intake (`/contributions/tip/new`): title, summary, technique body, and notes.
+  - Strict Pending state: Submissions are stored with `PublicationStatus = Pending` and `Origin = Community`. They do NOT appear in the public recipe catalog, tips catalog, search, home featured cards, or direct slug routes (which return 404).
+  - Guest challenge/redirect enforced on all submission endpoints.
+- Admin Read-Only Review:
+  - Feedback intake review (`/admin/feedback`): filter by Pending / Reviewed, view submitter info, rating, topic, message.
+  - Content intake review (`/admin/contributions`): filter by Recipes / Tips, view ingredients, steps, and tip body.
+  - Admin dashboard (`/admin`) updated with dynamic counters for new feedback and pending intake.
+  - Regular members accessing admin review pages receive access denied.
+- Testing: 42 passed, 0 failed, 0 skipped (19 Foundation + 7 PublicContent + 6 Subscription + 10 Contribution & Feedback tests in `ContributionAndFeedbackTests.cs`).
+- Note: Phase 4 will implement admin publishing, editorial CRUD, and moderation decisions; profile editing and contests remain deferred.
 
 | Item | Current status / evidence |
 |---|---|
 | T-11 | Complete (Phase 3A): Demo plan requests ($10 monthly, $100 yearly), pending queue, admin approval/rejection, activation window, zero real gateway |
 | T-12 | Complete (Phase 3A): Content authorization matrix updated; approved members unlock paid content; pending/rejected/guest locked; admin bypasses |
-| T-10 | Auth complete in Phase 1; Profile edit deferred to Phase 3B |
-| T-09 | Deferred to Phase 3B (Member-only feedback forms and storage) |
-| Phase 3A verification | Build 0 warnings/0 errors; 32/32 integration tests pass; migration applied and 0 model drift; evidence in TEST_PLAN |
+| T-09 | Complete (Phase 3B): Member-only recipe/site feedback submission forms, database storage, guest redirect, private history, and admin review |
+| T-14 intake portion | Complete (Phase 3B): Member recipe and tip contribution forms, multiline ingredients/steps, strict Pending storage, complete public exclusion, and admin read-only review |
+| T-10 | Auth complete in Phase 1; Profile edit deferred |
+| Phase 3B verification | Build 0 warnings/0 errors; 42/42 integration tests pass; migration applied and 0 model drift; evidence in TEST_PLAN |
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
-| T-10 / REQ-002, REQ-005 | Registration/login/logout DONE in Phase 1; profile edit deferred to Phase 3B | T-05, T-07 | Own profile only; role fields ignored; pending != paid | TC-002/005 duplicate/login/profile tampering |
+| T-10 / REQ-002, REQ-005 | Registration/login/logout DONE in Phase 1; profile edit deferred | T-05, T-07 | Own profile only; role fields ignored; pending != paid | TC-002/005 duplicate/login/profile tampering |
 | T-11 / REQ-002, REQ-004 | Membership controller/views, demo plan request, admin approval/rejection, activation/expiry | T-02, T-10 | $10 monthly/$100 yearly demo labels; Pending until admin approval; rejected/expired excluded; no gateway | Passed: TC-002; 6 new integration tests in SubscriptionTests.cs, live HTTPS verified; G |
 | T-12 / REQ-003, REQ-004, REQ-005, REQ-008 | Full guest/member/admin access integration | T-08, T-11 | UI and direct endpoints consistent; approved members unlock paid content; pending/rejected locked | Passed: TC-003/004/008; direct recipe & tip authorization assertions, no-cache headers; G |
-| T-09 / REQ-013, REQ-015 | Member-only recipe/site FeedbackController, view models aur Razor forms | T-08, T-10, T-11 | Login + active member required; guest POST reject/no record; accessible recipe check; receipt | Deferred to Phase 3B |
+| T-09 / REQ-013, REQ-015 | Member-only recipe/site FeedbackController, view models aur Razor forms | T-08, T-10, T-11 | Login + active member required; guest POST reject/no record; accessible recipe check; receipt | Passed: TC-013/015; 3 new integration tests in ContributionAndFeedbackTests.cs; G |
+| T-14 (intake) / REQ-010, REQ-011 | Member recipe & tip contribution intake forms, Pending storage, public exclusion, admin review | T-08, T-10 | Both types Pending; guest challenge; public catalog/search/home zero leakage; admin intake view | Passed: TC-010/011; 7 new integration tests in ContributionAndFeedbackTests.cs; G |
 
 ## Phase 4 - Content management
 

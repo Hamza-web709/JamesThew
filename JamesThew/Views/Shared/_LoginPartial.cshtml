@@ -3,6 +3,7 @@
     <li><a class="jt-nav-link" asp-area="" asp-controller="Membership" asp-action="Index">Membership</a></li>
 @if (User.Identity?.IsAuthenticated == true)
 {
+    <li><a class="jt-nav-link" asp-area="" asp-controller="Contributions" asp-action="Index">Contribute</a></li>
     <li><a class="jt-nav-link" asp-area="" asp-controller="Account" asp-action="Status">Account</a></li>
     @if (User.IsInRole(AppRoles.Admin))
     {

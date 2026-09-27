@@ -1,0 +1,50 @@
+@model JamesThew.ViewModels.TipContributionViewModel
+@{
+    ViewData["Title"] = "Submit Cooking Tip Contribution - JamesThew";
+}
+
+<div class="max-w-860 mx-auto mb-5">
+    <div class="mb-4">
+        <a asp-action="Index" class="text-decoration-none text-muted small">&larr; Back to Contributions</a>
+        <h1 class="h2 jt-serif mt-2 mb-1">Submit a Cooking Tip Contribution</h1>
+        <p class="text-muted small">Share professional kitchen wisdom, knife techniques, or culinary science tips with the James Thew community.</p>
+    </div>
+
+    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm">
+        <form asp-action="NewTip" method="post" id="tipContributionForm">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label fw-bold small text-uppercase">Tip Title</label>
+                <input asp-for="Title" class="form-control form-control-lg" placeholder="e.g., Preserving Fresh Herbs with Cold Water Herb Wells" />
+                <span asp-validation-for="Title" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Summary" class="form-label fw-bold small text-uppercase">Brief Summary</label>
+                <textarea asp-for="Summary" class="form-control" rows="2" placeholder="A concise 1-2 sentence overview explaining the benefit of this technique..."></textarea>
+                <span asp-validation-for="Summary" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Body" class="form-label fw-bold small text-uppercase">Full Tip &amp; Technique Instructions</label>
+                <textarea asp-for="Body" class="form-control" rows="8" placeholder="Explain the technique in detail:&#10;&#10;1. Equipment needed (e.g., glass jar, damp towel, shears).&#10;2. Step-by-step instructions.&#10;3. Culinary science explanation (why it works).&#10;4. Common pitfalls to avoid."></textarea>
+                <div class="form-text small">Please provide at least 20 characters of clear culinary guidance.</div>
+                <span asp-validation-for="Body" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Notes" class="form-label fw-bold small text-uppercase">Contributor Notes / Category (Optional)</label>
+                <input asp-for="Notes" class="form-control" placeholder="e.g., Category: Kitchen Prep &amp; Storage; adapted from restaurant experience" />
+                <span asp-validation-for="Notes" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                <a asp-action="Index" class="jt-btn jt-btn-outline">Cancel</a>
+                <button type="submit" class="jt-btn jt-btn-accent" id="btnSubmitTip">
+                    Submit Cooking Tip for Review &#8594;
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

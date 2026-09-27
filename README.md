@@ -4,21 +4,21 @@ James Thew ki recipes, cooking tips, paid membership, feedback aur contests ke A
 
 ## Current Phase
 
-**Phase 3A: Manual Membership Approval Foundation implemented, build aur 32 integration tests pass.**
-Simulated/manual demo membership subscription request flow for logged-in Member users, admin approval/rejection queue, and content unlocking implemented:
-- Demo Pricing: strictly $10 monthly (`SubscriptionPlan.Monthly`), $100 yearly (`SubscriptionPlan.Yearly`). Zero real payment gateway or card collection.
-- Member Membership Portal (`/membership`): Clear tier comparison, guest login challenge, demo plan request submission form with optional subscriber notes, real-time subscription status banner (Pending / Active / Rejected with admin feedback), and complete user request history.
-- Admin Subscriptions Management (`/admin/subscriptions`): Admin-only management view with status filter tabs (All, Pending, Approved, Rejected), subscriber details, timestamps, and inline Approve/Reject action forms with feedback notes. Admin dashboard (`/admin`) updated with Subscriptions card and dynamic pending badge.
-- Content Unlocking: Approved members immediately gain full access to protected Members-Only recipes (ingredients and steps) and cooking tips (full technique body).
-- Access Boundary: Pending, rejected, and guest visitors continue to see locked preview boxes with `Cache-Control: no-cache, no-store, must-revalidate`. Admin role continues to bypass locked content.
-- Database: EF Core entity `SubscriptionRequest`, migration `20260927143304_Phase3AMembershipSubscriptions` applied to `JamesThew_Development`, 0 pending model changes.
-- Test Suite: 32 passed, 0 failed, 0 skipped (19 Foundation + 7 PublicContent + 6 Subscription in `SubscriptionTests.cs`).
+**Phase 3: Identity, manual demo membership approval, member feedback, and content contribution intake complete (Phase 3A + Phase 3B), build aur 42 integration tests pass.**
+- Phase 3A Manual Subscription Approval: Demo pricing strictly $10 monthly (`SubscriptionPlan.Monthly`) and $100 yearly (`SubscriptionPlan.Yearly`). Member requests pending approval; Admin approves/rejects with notes at `/admin/subscriptions`. Approved members unlock full recipes and cooking tips; pending/rejected/guest visitors see locked preview boxes (`Cache-Control: no-cache, no-store, must-revalidate`). Admin role retains universal bypass.
+- Phase 3B Member Feedback (`/feedback`): Authenticated member feedback intake with category selection, 1-5 rating, and message validation. Personal feedback history log. Guests challenged/redirected to login. Submitted feedback is stored privately as `Pending` and strictly withheld from public pages.
+- Phase 3B Member Contributions (`/contributions`): Authenticated members can submit recipes (`/contributions/recipe/new`) with title, summary, servings, prep/cook times, multiline ingredients and steps, and notes; and cooking tips (`/contributions/tip/new`) with technique body and notes.
+- Strict Content Isolation: All community submissions are stored as `Origin = Community` and `PublicationStatus = Pending`. They do NOT appear in the public recipe catalog, tips catalog, search, home featured cards, or direct slug routes (which return 404).
+- Admin Read-Only Review: `/admin/feedback` and `/admin/contributions` provide comprehensive read-only review queues with submitter info, ratings, full ingredients/steps, and tip bodies. Admin dashboard (`/admin`) features dynamic counters.
+- Database: EF Core migrations `20260927143304_Phase3AMembershipSubscriptions` and `20260927150554_Phase3BMemberFeedbackAndContributions` applied to `JamesThew_Development`, 0 pending model changes.
+- Test Suite: 42 passed, 0 failed, 0 skipped (19 Foundation + 7 PublicContent + 6 Subscription + 10 Contribution & Feedback in `ContributionAndFeedbackTests.cs`).
 
 ## Next Phase
 
-Next phase **Phase 3B: Profile editing aur member feedback** hai:
-- User profile editing (`/account/profile`).
-- Member-only recipe and site feedback submission forms and inbox storage.
+Next phase **Phase 4: Content management aur editorial moderation** hai:
+- Admin recipe and cooking tip CRUD operations.
+- Admin review, approval, publishing, and rejection workflow for pending community contributions (publishing community recipes/tips as Free content).
+- Admin feedback inbox moderation and archiving actions.
 
 ## Documents aur sources
 
@@ -55,7 +55,7 @@ dotnet ef database update --project JamesThew/JamesThew.csproj
 dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj
 ```
 
-Migrations `20260926181611_InitialIdentity`, `20260927100700_Phase2PublicContent`, aur `20260927143304_Phase3AMembershipSubscriptions` Development database par apply ho chuki hain. `database update` repeat karna safe hai. Startup schema migrate nahi karta; migration pehle run karein. Startup Member/Admin role names idempotently ensure karta hai aur demo content (`ContentSeeder.cs`) seed karta hai.
+Migrations `20260926181611_InitialIdentity`, `20260927100700_Phase2PublicContent`, `20260927143304_Phase3AMembershipSubscriptions`, aur `20260927150554_Phase3BMemberFeedbackAndContributions` Development database par apply ho chuki hain. `database update` repeat karna safe hai. Startup schema migrate nahi karta; migration pehle run karein. Startup Member/Admin role names idempotently ensure karta hai aur demo content (`ContentSeeder.cs`) seed karta hai.
 
 ## Run aur test
 
@@ -96,7 +96,7 @@ dotnet user-secrets remove 'LocalAdmin:Password' --project JamesThew/JamesThew.c
 
 Seed existing Admin ko duplicate/reset nahi karta; existing Member ko promote karne se refuse karta hai. Missing/weak credentials ya non-Development environment fail hota hai. User creation aur Admin role assignment atomic hain. Credentials logs mein print nahi hote. Admin ka apna chosen password login ke liye retain karein; recovery/email sending abhi implement nahi.
 
-## Phase 3A access aur limits
+## Phase 3 access aur limits
  
 - Public Home (`/`): Culinary hero presentation, quick search bar, featured Free/Paid recipes and tips, membership tier comparison cards ($10/mo, $100/yr demo), contests teaser, FAQ accordion preview.
 - Public Recipes (`/recipes`, `/recipes/{slug}`): Catalog with search and filter tabs (All, Free, Members-Only). Free recipes show full ingredients and preparation steps. Members-Only recipes show locked preview box, login/join CTA, zero ingredients/steps exposed, and `Cache-Control: no-cache, no-store, must-revalidate` response header.
@@ -107,7 +107,10 @@ Seed existing Admin ko duplicate/reset nahi karta; existing Member ko promote ka
 - Admin Subscriptions Management (`/admin/subscriptions`): Admin-only management view with status filter tabs (All, Pending, Approved, Rejected), subscriber details, timestamps, and inline Approve/Reject action forms with feedback notes.
 - Content Unlocking: Approved members immediately gain full access to protected Members-Only recipes (ingredients and steps) and cooking tips (full technique body).
 - Access Boundary: Pending, rejected, and guest visitors continue to see locked preview boxes with `Cache-Control: no-cache, no-store, must-revalidate`. Admin role continues to bypass locked content.
-- Informational Menus (`/contests`, `/announcements`, `/feedback`): Informational placeholder pages keep the top-level 7-item navigation functional and clear without broken links; indicate phase deferral.
+- Member Feedback (`/feedback`): Authenticated member feedback intake with category selection, 1-5 rating, and message validation. Personal feedback history log. Guests challenged/redirected to login. Submitted feedback is stored privately as `Pending` and strictly withheld from public pages.
+- Member Contributions (`/contributions`): Authenticated members can submit recipes (`/contributions/recipe/new`) with title, summary, servings, prep/cook times, multiline ingredients and steps, and notes; and cooking tips (`/contributions/tip/new`) with technique body and notes. Strictly stored as `Pending` and omitted from public catalog, search, and direct slug lookups.
+- Admin Review Queues (`/admin/feedback`, `/admin/contributions`): Read-only review queues for administrator to inspect member feedback and pending community recipe and tip intake with full ingredients, steps, and tip bodies.
+- Informational Menus (`/contests`, `/announcements`): Informational placeholder pages keep the top-level navigation functional without broken links; indicate phase deferral.
 - Account & Admin (`/account/status`, `/admin`): Preserved from Phase 1. Logout remains antiforgery-protected POST only. External return URLs rejected. Lockout and password policies remain active.
 
 ## Backup, Git aur academic delivery

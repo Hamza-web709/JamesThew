@@ -20,6 +20,7 @@ public class ContentItem
     public PublicationStatus PublicationStatus { get; set; } = PublicationStatus.Published;
 
     public string? RejectionReason { get; set; }
+    public string? ContributorNotes { get; set; }
     public string? ImageUrl { get; set; }
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;

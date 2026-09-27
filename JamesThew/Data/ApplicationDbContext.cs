@@ -14,6 +14,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Tip> Tips => Set<Tip>();
     public DbSet<FaqItem> FaqItems => Set<FaqItem>();
     public DbSet<SubscriptionRequest> SubscriptionRequests => Set<SubscriptionRequest>();
+    public DbSet<Feedback> Feedbacks => Set<Feedback>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -35,10 +36,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(x => x.Summary).HasMaxLength(500).IsRequired();
             entity.Property(x => x.AuthorDisplayName).HasMaxLength(100).IsRequired();
             entity.Property(x => x.RejectionReason).HasMaxLength(500);
+            entity.Property(x => x.ContributorNotes).HasMaxLength(1000);
             entity.Property(x => x.ImageUrl).HasMaxLength(300);
 
             entity.HasOne(x => x.AuthorUser)
-                .WithMany()
+                .WithMany(u => u.ContributedContentItems)
                 .HasForeignKey(x => x.AuthorUserId)
                 .OnDelete(DeleteBehavior.SetNull);
 
@@ -104,6 +106,24 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithMany(u => u.SubscriptionRequests)
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Feedback>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Message).HasMaxLength(2000).IsRequired();
+            entity.Property(x => x.Category).HasMaxLength(100);
+            entity.Property(x => x.AdminNotes).HasMaxLength(500);
+            entity.HasIndex(x => x.Status);
+            entity.HasIndex(x => x.CreatedAtUtc);
+            entity.HasOne(x => x.AuthorUser)
+                .WithMany(u => u.Feedbacks)
+                .HasForeignKey(x => x.AuthorUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Recipe)
+                .WithMany()
+                .HasForeignKey(x => x.RecipeId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

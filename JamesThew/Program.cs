@@ -55,6 +55,8 @@ builder.Services.AddAuthorization(options =>
 // Add services to the container.
 builder.Services.AddScoped<IContentService, ContentService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+builder.Services.AddScoped<IContributionService, ContributionService>();
 builder.Services.AddControllersWithViews(options =>
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
 

@@ -11,13 +11,17 @@ namespace JamesThew.Controllers;
 [Authorize(Policy = AppPolicies.AdminOnly)]
 [Route("admin")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public class AdminController(ISubscriptionService subscriptionService) : Controller
+public class AdminController(
+    ISubscriptionService subscriptionService,
+    IFeedbackService feedbackService,
+    IContributionService contributionService) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index()
     {
-        var pendingCount = await subscriptionService.GetPendingCountAsync();
-        ViewBag.PendingSubscriptionsCount = pendingCount;
+        ViewBag.PendingSubscriptionsCount = await subscriptionService.GetPendingCountAsync();
+        ViewBag.PendingFeedbackCount = await feedbackService.GetPendingFeedbackCountAsync();
+        ViewBag.PendingContributionsCount = await contributionService.GetPendingContributionCountAsync();
         return View();
     }
 
@@ -61,5 +65,19 @@ public class AdminController(ISubscriptionService subscriptionService) : Control
             TempData["ErrorMessage"] = $"Unable to reject subscription request #{id}.";
 
         return RedirectToAction(nameof(Subscriptions));
+    }
+
+    [HttpGet("feedback")]
+    public async Task<IActionResult> Feedback(FeedbackStatus? status)
+    {
+        var model = await feedbackService.GetAdminFeedbackListAsync(status);
+        return View(model);
+    }
+
+    [HttpGet("contributions")]
+    public async Task<IActionResult> Contributions(ContentKind? kind)
+    {
+        var model = await contributionService.GetAdminContributionListAsync(kind);
+        return View(model);
     }
 }

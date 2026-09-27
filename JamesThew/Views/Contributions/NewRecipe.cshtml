@@ -1,0 +1,75 @@
+@model JamesThew.ViewModels.RecipeContributionViewModel
+@{
+    ViewData["Title"] = "Submit Recipe Contribution - JamesThew";
+}
+
+<div class="max-w-860 mx-auto mb-5">
+    <div class="mb-4">
+        <a asp-action="Index" class="text-decoration-none text-muted small">&larr; Back to Contributions</a>
+        <h1 class="h2 jt-serif mt-2 mb-1">Submit a Recipe Contribution</h1>
+        <p class="text-muted small">Share your culinary creations with Chef James Thew. Submissions are reviewed by our team before publication.</p>
+    </div>
+
+    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm">
+        <form asp-action="NewRecipe" method="post" id="recipeContributionForm">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label fw-bold small text-uppercase">Recipe Title</label>
+                <input asp-for="Title" class="form-control form-control-lg" placeholder="e.g., Artisanal Rosemary &amp; Olive Oil Focaccia" />
+                <span asp-validation-for="Title" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Summary" class="form-label fw-bold small text-uppercase">Brief Summary / Description</label>
+                <textarea asp-for="Summary" class="form-control" rows="2" placeholder="A brief 1-2 sentence culinary overview of the dish..."></textarea>
+                <span asp-validation-for="Summary" class="text-danger small"></span>
+            </div>
+
+            <div class="row g-3 mb-4 p-3 bg-light rounded-3 border">
+                <div class="col-md-4">
+                    <label asp-for="Servings" class="form-label fw-bold small text-uppercase">Servings</label>
+                    <input asp-for="Servings" type="number" class="form-control" placeholder="e.g., 4" min="1" max="100" />
+                    <span asp-validation-for="Servings" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="PrepMinutes" class="form-label fw-bold small text-uppercase">Prep Time (Minutes)</label>
+                    <input asp-for="PrepMinutes" type="number" class="form-control" placeholder="e.g., 25" min="0" max="1440" />
+                    <span asp-validation-for="PrepMinutes" class="text-danger small"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="CookMinutes" class="form-label fw-bold small text-uppercase">Cook Time (Minutes)</label>
+                    <input asp-for="CookMinutes" type="number" class="form-control" placeholder="e.g., 30" min="0" max="1440" />
+                    <span asp-validation-for="CookMinutes" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="IngredientsText" class="form-label fw-bold small text-uppercase">Ingredients List</label>
+                <textarea asp-for="IngredientsText" class="form-control font-monospace" rows="6" placeholder="500g strong bread flour&#10;350ml lukewarm water&#10;7g instant dried yeast&#10;10g fine sea salt&#10;3 tbsp extra virgin olive oil&#10;2 sprigs fresh rosemary, chopped"></textarea>
+                <div class="form-text small">Please enter each ingredient on a new line with its quantity and measurement.</div>
+                <span asp-validation-for="IngredientsText" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="StepsText" class="form-label fw-bold small text-uppercase">Preparation Instructions</label>
+                <textarea asp-for="StepsText" class="form-control" rows="6" placeholder="Combine flour, yeast, and salt in a large bowl. Gradually add water and knead for 10 minutes until elastic.&#10;Transfer dough to an oiled bowl, cover, and prove at room temperature for 1 hour until doubled in size.&#10;Stretch dough into an oiled baking tin, create dimples with fingertips, and drizzle with olive oil and rosemary.&#10;Bake at 220°C (425°F) for 20-25 minutes until golden and crisp."></textarea>
+                <div class="form-text small">Please enter each cooking step on a new line in sequential order.</div>
+                <span asp-validation-for="StepsText" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Notes" class="form-label fw-bold small text-uppercase">Chef's Notes or Sourcing Tips (Optional)</label>
+                <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Any personal tips, origin story, wine pairing, or substitute ingredients..."></textarea>
+                <span asp-validation-for="Notes" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                <a asp-action="Index" class="jt-btn jt-btn-outline">Cancel</a>
+                <button type="submit" class="jt-btn jt-btn-primary" id="btnSubmitRecipe">
+                    Submit Recipe for Review &#8594;
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
