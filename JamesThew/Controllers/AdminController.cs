@@ -149,12 +149,13 @@ public class AdminController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> NewRecipe(AdminRecipeEditViewModel model)
     {
-        if (model.RemoveImage)
+        string? newlyUploadedFile = null;
+
+        if (model.ImageFile is not null && model.ImageFile.Length > 0)
         {
-            model.ImageUrl = null;
-        }
-        else if (model.ImageFile is not null && model.ImageFile.Length > 0)
-        {
+            if (!ModelState.IsValid)
+                return View("RecipeForm", model);
+
             var uploadResult = await mediaService.UploadImageAsync(model.ImageFile);
             if (!uploadResult.Success)
             {
@@ -162,6 +163,11 @@ public class AdminController(
                 return View("RecipeForm", model);
             }
             model.ImageUrl = uploadResult.Url;
+            newlyUploadedFile = uploadResult.FileName;
+        }
+        else if (model.RemoveImage)
+        {
+            model.ImageUrl = null;
         }
 
         if (!ModelState.IsValid)
@@ -173,6 +179,10 @@ public class AdminController(
         var (success, message, id, slug) = await adminContentService.SaveRecipeAsync(model, adminUserId, adminDisplayName);
         if (!success)
         {
+            if (!string.IsNullOrEmpty(newlyUploadedFile))
+            {
+                await mediaService.DeleteMediaAsync(newlyUploadedFile);
+            }
             ModelState.AddModelError(string.Empty, message);
             return View("RecipeForm", model);
         }
@@ -199,12 +209,13 @@ public class AdminController(
     public async Task<IActionResult> EditRecipe(int id, AdminRecipeEditViewModel model)
     {
         model.Id = id;
-        if (model.RemoveImage)
+        string? newlyUploadedFile = null;
+
+        if (model.ImageFile is not null && model.ImageFile.Length > 0)
         {
-            model.ImageUrl = null;
-        }
-        else if (model.ImageFile is not null && model.ImageFile.Length > 0)
-        {
+            if (!ModelState.IsValid)
+                return View("RecipeForm", model);
+
             var uploadResult = await mediaService.UploadImageAsync(model.ImageFile);
             if (!uploadResult.Success)
             {
@@ -212,6 +223,11 @@ public class AdminController(
                 return View("RecipeForm", model);
             }
             model.ImageUrl = uploadResult.Url;
+            newlyUploadedFile = uploadResult.FileName;
+        }
+        else if (model.RemoveImage)
+        {
+            model.ImageUrl = null;
         }
 
         if (!ModelState.IsValid)
@@ -223,6 +239,10 @@ public class AdminController(
         var (success, message, _, _) = await adminContentService.SaveRecipeAsync(model, adminUserId, adminDisplayName);
         if (!success)
         {
+            if (!string.IsNullOrEmpty(newlyUploadedFile))
+            {
+                await mediaService.DeleteMediaAsync(newlyUploadedFile);
+            }
             ModelState.AddModelError(string.Empty, message);
             return View("RecipeForm", model);
         }
@@ -241,12 +261,13 @@ public class AdminController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> NewTip(AdminTipEditViewModel model)
     {
-        if (model.RemoveImage)
+        string? newlyUploadedFile = null;
+
+        if (model.ImageFile is not null && model.ImageFile.Length > 0)
         {
-            model.ImageUrl = null;
-        }
-        else if (model.ImageFile is not null && model.ImageFile.Length > 0)
-        {
+            if (!ModelState.IsValid)
+                return View("TipForm", model);
+
             var uploadResult = await mediaService.UploadImageAsync(model.ImageFile);
             if (!uploadResult.Success)
             {
@@ -254,6 +275,11 @@ public class AdminController(
                 return View("TipForm", model);
             }
             model.ImageUrl = uploadResult.Url;
+            newlyUploadedFile = uploadResult.FileName;
+        }
+        else if (model.RemoveImage)
+        {
+            model.ImageUrl = null;
         }
 
         if (!ModelState.IsValid)
@@ -265,6 +291,10 @@ public class AdminController(
         var (success, message, id, slug) = await adminContentService.SaveTipAsync(model, adminUserId, adminDisplayName);
         if (!success)
         {
+            if (!string.IsNullOrEmpty(newlyUploadedFile))
+            {
+                await mediaService.DeleteMediaAsync(newlyUploadedFile);
+            }
             ModelState.AddModelError(string.Empty, message);
             return View("TipForm", model);
         }
@@ -291,12 +321,13 @@ public class AdminController(
     public async Task<IActionResult> EditTip(int id, AdminTipEditViewModel model)
     {
         model.Id = id;
-        if (model.RemoveImage)
+        string? newlyUploadedFile = null;
+
+        if (model.ImageFile is not null && model.ImageFile.Length > 0)
         {
-            model.ImageUrl = null;
-        }
-        else if (model.ImageFile is not null && model.ImageFile.Length > 0)
-        {
+            if (!ModelState.IsValid)
+                return View("TipForm", model);
+
             var uploadResult = await mediaService.UploadImageAsync(model.ImageFile);
             if (!uploadResult.Success)
             {
@@ -304,6 +335,11 @@ public class AdminController(
                 return View("TipForm", model);
             }
             model.ImageUrl = uploadResult.Url;
+            newlyUploadedFile = uploadResult.FileName;
+        }
+        else if (model.RemoveImage)
+        {
+            model.ImageUrl = null;
         }
 
         if (!ModelState.IsValid)
@@ -315,6 +351,10 @@ public class AdminController(
         var (success, message, _, _) = await adminContentService.SaveTipAsync(model, adminUserId, adminDisplayName);
         if (!success)
         {
+            if (!string.IsNullOrEmpty(newlyUploadedFile))
+            {
+                await mediaService.DeleteMediaAsync(newlyUploadedFile);
+            }
             ModelState.AddModelError(string.Empty, message);
             return View("TipForm", model);
         }

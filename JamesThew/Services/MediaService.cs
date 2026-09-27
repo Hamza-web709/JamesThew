@@ -57,7 +57,7 @@ public class MediaService(ApplicationDbContext db, IWebHostEnvironment env) : IM
         // Query all content items that reference editorial uploads
         var referencedItems = await db.ContentItems
             .AsNoTracking()
-            .Where(x => x.ImageUrl != null && x.ImageUrl.StartsWith(UploadsRelativePath))
+            .Where(x => x.ImageUrl != null && x.ImageUrl.Contains(UploadsRelativePath))
             .Select(x => new
             {
                 x.Id,
@@ -77,7 +77,7 @@ public class MediaService(ApplicationDbContext db, IWebHostEnvironment env) : IM
             var webUrl = $"{UploadsRelativePath}/{file.Name}";
 
             var usages = referencedItems
-                .Where(r => string.Equals(r.ImageUrl, webUrl, StringComparison.OrdinalIgnoreCase))
+                .Where(r => r.ImageUrl != null && (string.Equals(r.ImageUrl, webUrl, StringComparison.OrdinalIgnoreCase) || r.ImageUrl.EndsWith("/" + file.Name, StringComparison.OrdinalIgnoreCase)))
                 .Select(r => new MediaItemUsageDto
                 {
                     ContentId = r.Id,
@@ -248,7 +248,7 @@ public class MediaService(ApplicationDbContext db, IWebHostEnvironment env) : IM
         // Automatically unlink any ContentItems referencing this image URL so public views omit the image cleanly.
         var webUrl = $"{UploadsRelativePath}/{cleanName}";
         var referencingItems = await db.ContentItems
-            .Where(x => x.ImageUrl == webUrl)
+            .Where(x => x.ImageUrl != null && (x.ImageUrl == webUrl || x.ImageUrl.EndsWith("/" + cleanName)))
             .ToListAsync();
 
         var unlinkedCount = referencingItems.Count;

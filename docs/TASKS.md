@@ -190,7 +190,22 @@ Phase 4 Step 1 successfully implemented and verified:
     - Strictly scoped to files within `wwwroot/uploads/editorial`. Protected seed assets in `/images/` cannot be touched.
     - Automatic reference unlinking: When an uploaded image is safely removed from disk, all referencing `ContentItem.ImageUrl` values are atomically set to `null` in the database, ensuring public recipe/tip pages render without broken image tags.
   - Verification:
-    - 84 passed, 0 failed, 0 skipped (64 previous + 20 new integration tests in `AdminMediaTests.cs`).
+    - 85 passed, 0 failed, 0 skipped (64 previous + 20 integration tests in `AdminMediaTests.cs` + 1 full browser lifecycle E2E in `AdminMediaBrowserE2ETests.cs`).
+    - Playwright Chromium Automated Browser QA (10 lifecycle scenarios passed):
+      1. Guest access to `/admin/media` -> redirected to login.
+      2. Member access to `/admin/media` -> HTTP 403 Forbidden.
+      3. Member POST to `/admin/media/upload` -> HTTP 403 Forbidden.
+      4. Admin image upload (`.png`/`.jpg`).
+      5. Gallery thumbnail renders, returns HTTP 200, and decodes with `naturalWidth > 0`.
+      6. Recipe creation using Media Picker Modal selects image and renders preview.
+      7. Cooking tip creation using Media Picker Modal selects image and renders preview.
+      8. Public recipe & tip pages render the image with HTTP 200 and `naturalWidth > 0`.
+      9. Recipe image unlinking via `#btnClearImage` removes image from public recipe.
+      10. In-use media deletion flow displays safe deletion notice, unlinks from tip, safely deletes file, and public tip still renders 200 OK without broken image tag.
+    - Hardening completed:
+      - Enforced upload precedence: direct uploaded `ImageFile` overrides manual/picker URL and `RemoveImage`; `RemoveImage` clears URL; manual/picker URL preserved when no file uploaded.
+      - Prevented orphan files: validated `ModelState.IsValid` before saving file to disk; if database save fails, newly uploaded file is deleted immediately.
+      - Robust URL matching: both relative and rooted image paths supported in media usage count and deletion unlinking.
     - `dotnet ef migrations has-pending-model-changes` verified clean: 0 pending model changes.
 
 | Item | Current status / evidence |
@@ -202,9 +217,9 @@ Phase 4 Step 1 successfully implemented and verified:
 | T-14 moderation portion | Complete (Phase 3C): Admin approve/reject workflows, atomical Free publication, public catalog appearance, 404 on rejection, rejection reason in member dashboard |
 | T-15 feedback moderation | Complete (Phase 3C): Admin feedback review/notes workflow, Reviewed status, private member history notes, 0 public leakage |
 | T-13 editorial CRUD | Complete (Phase 4 Step 1): Admin recipe & tip list, create, edit, unpublish (soft delete), restore, auto-slug collisions, and subscription lock preservation |
-| T-13 media management | Complete (Phase 4 Step 2): Admin media library (`/admin/media`), upload validation, magic bytes check, safe storage (`/uploads/editorial/`), recipe/tip form integration, and safe deletion unlinking |
+| T-13 media management | Complete (Phase 4 Step 2): Admin media library (`/admin/media`), upload validation, magic bytes check, safe storage (`/uploads/editorial/`), recipe/tip form integration, safe deletion unlinking, orphan prevention, and Playwright Chromium E2E QA |
 | T-10 | Auth complete in Phase 1; Profile edit deferred |
-| Phase 4 Step 2 verification | Build 0 warnings/0 errors; 84/84 integration tests pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
+| Phase 4 Step 2 verification | Build 0 warnings/0 errors; 85/85 tests pass; Playwright Chromium 10/10 scenarios pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
