@@ -18,9 +18,12 @@ public class FoundationFixture : WebApplicationFactory<Program>, IAsyncLifetime
     public ApplicationDbContext CreateDb() => new(new DbContextOptionsBuilder<ApplicationDbContext>()
         .UseSqlServer(ConnectionString).Options);
 
+    public string TestUploadDir { get; } = Path.Combine(Path.GetTempPath(), $"JamesThew_Fixture_Uploads_{Guid.NewGuid():N}");
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+        builder.UseSetting("Media:UploadPath", TestUploadDir);
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
@@ -47,6 +50,14 @@ public class FoundationFixture : WebApplicationFactory<Program>, IAsyncLifetime
         await base.DisposeAsync();
         await using var db = CreateDb();
         await db.Database.EnsureDeletedAsync();
+        try
+        {
+            if (Directory.Exists(TestUploadDir))
+            {
+                Directory.Delete(TestUploadDir, recursive: true);
+            }
+        }
+        catch { }
     }
 }
 

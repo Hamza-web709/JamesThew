@@ -1,18 +1,12 @@
 using JamesThew.Authorization;
 using JamesThew.Data;
 using JamesThew.Models;
-using JamesThew.Services;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Hosting;
 using Xunit;
 
 namespace JamesThew.Tests;
@@ -62,63 +56,21 @@ public class BrowserTestServer : IAsyncLifetime
             await db.Database.MigrateAsync();
         }
 
-        // 2. Build and start dedicated Kestrel web application on dynamic port
+        // 2. Build dedicated Kestrel web application using Program.CreateApp
+        // Browser tests exercise the actual application routes/middleware pipeline, not a duplicate app.
         var projectDir = FindProjectDirectory();
-        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        var args = new[]
         {
-            EnvironmentName = "Development",
-            ContentRootPath = projectDir,
-            WebRootPath = Path.Combine(projectDir, "wwwroot")
-        });
+            "--environment", "Development",
+            "--urls", "http://127.0.0.1:0",
+            "--contentRoot", projectDir,
+            "--ConnectionStrings:DefaultConnection", ConnectionString,
+            "--Media:UploadPath", TestUploadDir,
+            "--DisableHttpsRedirection", "true",
+            "--skip-startup-seed"
+        };
 
-        // Set test configuration
-        builder.Configuration["ConnectionStrings:DefaultConnection"] = ConnectionString;
-        builder.Configuration["Media:UploadPath"] = TestUploadDir;
-        builder.Configuration["DisableHttpsRedirection"] = "true";
-
-        // Bind Kestrel to dynamic port on loopback
-        builder.WebHost.UseKestrel(k => k.Listen(System.Net.IPAddress.Loopback, 0));
-
-        // Register application services
-        builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(ConnectionString));
-        builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
-        {
-            options.User.RequireUniqueEmail = true;
-            options.Password.RequiredLength = 12;
-            options.Password.RequiredUniqueChars = 4;
-            options.Lockout.MaxFailedAccessAttempts = 5;
-            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-            options.SignIn.RequireConfirmedAccount = false;
-        }).AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
-
-        builder.Services.ConfigureApplicationCookie(options =>
-        {
-            options.LoginPath = "/account/login";
-            options.AccessDeniedPath = "/account/access-denied";
-            options.Cookie.Name = $"JamesThew.QA.{RunId}";
-            options.Cookie.HttpOnly = true;
-            options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
-        });
-
-        builder.Services.AddAuthorization(options =>
-        {
-            options.AddPolicy(AppPolicies.MemberAccount, policy =>
-                policy.RequireAuthenticatedUser().RequireRole(AppRoles.Member, AppRoles.Admin));
-            options.AddPolicy(AppPolicies.AdminOnly, policy =>
-                policy.RequireAuthenticatedUser().RequireRole(AppRoles.Admin));
-        });
-
-        builder.Services.AddScoped<IContentService, ContentService>();
-        builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
-        builder.Services.AddScoped<IFeedbackService, FeedbackService>();
-        builder.Services.AddScoped<IContributionService, ContributionService>();
-        builder.Services.AddScoped<IAdminContentService, AdminContentService>();
-        builder.Services.AddScoped<IMediaService, MediaService>();
-        builder.Services.AddControllersWithViews(options =>
-            options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()))
-            .AddApplicationPart(typeof(JamesThew.Controllers.HomeController).Assembly);
-
-        _app = builder.Build();
+        _app = Program.CreateApp(args);
 
         // Seed roles, demo content, test admin and test member
         await using (var scope = _app.Services.CreateAsyncScope())
@@ -157,26 +109,6 @@ public class BrowserTestServer : IAsyncLifetime
             }
         }
 
-        // Configure pipeline
-        _app.UseStaticFiles();
-
-        if (Directory.Exists(TestUploadDir))
-        {
-            _app.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = new PhysicalFileProvider(TestUploadDir),
-                RequestPath = "/uploads/editorial"
-            });
-        }
-
-        _app.UseRouting();
-        _app.UseAuthentication();
-        _app.UseAuthorization();
-
-        _app.MapControllerRoute(
-            name: "default",
-            pattern: "{controller=Home}/{action=Index}/{id?}");
-
         await _app.StartAsync();
 
         var server = _app.Services.GetRequiredService<IServer>();
@@ -184,33 +116,117 @@ public class BrowserTestServer : IAsyncLifetime
         ServerAddress = addresses!.Addresses.First();
     }
 
+    public static void AssertSafeTestDatabase(string databaseName, string runId)
+    {
+        if (string.IsNullOrWhiteSpace(databaseName))
+        {
+            throw new InvalidOperationException("Test database name cannot be null or whitespace.");
+        }
+
+        if (string.IsNullOrWhiteSpace(runId))
+        {
+            throw new InvalidOperationException("Test runId cannot be null or whitespace.");
+        }
+
+        var expectedPrefix = "JamesThew_BrowserQA_";
+        if (!databaseName.StartsWith(expectedPrefix, StringComparison.OrdinalIgnoreCase) ||
+            !databaseName.Equals($"{expectedPrefix}{runId}", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Refusing to delete database '{databaseName}'. It does not match the expected ephemeral test database name '{expectedPrefix}{runId}'.");
+        }
+
+        if (databaseName.Equals("JamesThew_Development", StringComparison.OrdinalIgnoreCase) ||
+            databaseName.Equals("JamesThew", StringComparison.OrdinalIgnoreCase) ||
+            databaseName.Equals("master", StringComparison.OrdinalIgnoreCase) ||
+            databaseName.Equals("model", StringComparison.OrdinalIgnoreCase) ||
+            databaseName.Equals("msdb", StringComparison.OrdinalIgnoreCase) ||
+            databaseName.Equals("tempdb", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"CRITICAL: Database '{databaseName}' is protected and must never be deleted.");
+        }
+    }
+
+    public static void AssertSafeTestUploadDirectory(string uploadDir, string runId)
+    {
+        if (string.IsNullOrWhiteSpace(uploadDir))
+        {
+            throw new InvalidOperationException("Test upload directory path cannot be null or whitespace.");
+        }
+
+        if (string.IsNullOrWhiteSpace(runId))
+        {
+            throw new InvalidOperationException("Test runId cannot be null or whitespace.");
+        }
+
+        var fullPath = Path.GetFullPath(uploadDir);
+        var tempPath = Path.GetFullPath(Path.GetTempPath());
+
+        // Must reside strictly inside the system temporary folder
+        if (!fullPath.StartsWith(tempPath, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Refusing to delete directory '{fullPath}'. It is not within the system temporary folder '{tempPath}'.");
+        }
+
+        // Folder name must strictly match the unique test run folder
+        var folderName = Path.GetFileName(fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        var expectedFolderName = $"JamesThew_QA_Uploads_{runId}";
+        if (!string.Equals(folderName, expectedFolderName, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Refusing to delete directory '{fullPath}'. Folder name '{folderName}' does not match expected test pattern '{expectedFolderName}'.");
+        }
+
+        // Explicit safeguard against repository or project asset directories
+        if (fullPath.Contains("source\\repos", StringComparison.OrdinalIgnoreCase) ||
+            fullPath.Contains("source/repos", StringComparison.OrdinalIgnoreCase) ||
+            fullPath.Contains("wwwroot", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"CRITICAL: Directory '{fullPath}' appears to be within project workspace and must never be deleted.");
+        }
+    }
+
     public async Task DisposeAsync()
     {
         if (_app != null)
         {
-            await _app.StopAsync();
-            await _app.DisposeAsync();
+            try
+            {
+                await _app.StopAsync();
+                await _app.DisposeAsync();
+            }
+            catch { }
         }
 
-        // Drop isolated test database
+        // Drop isolated test database with strict safety guard
         try
         {
+            AssertSafeTestDatabase(DatabaseName, RunId);
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseSqlServer(ConnectionString)
                 .Options;
             await using var db = new ApplicationDbContext(options);
             await db.Database.EnsureDeletedAsync();
         }
-        catch { }
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            // Transient database cleanup failures swallowed, but safety guard violations throw
+        }
 
-        // Remove isolated test upload directory
+        // Remove isolated test upload directory with strict safety guard
         try
         {
             if (Directory.Exists(TestUploadDir))
             {
+                AssertSafeTestUploadDirectory(TestUploadDir, RunId);
                 Directory.Delete(TestUploadDir, recursive: true);
             }
         }
-        catch { }
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            // Transient file lock cleanup failures swallowed, but safety guard violations throw
+        }
     }
 }
