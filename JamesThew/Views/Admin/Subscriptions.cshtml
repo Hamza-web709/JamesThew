@@ -1,0 +1,164 @@
+@model JamesThew.ViewModels.SubscriptionAdminListViewModel
+@using JamesThew.Models
+@{
+    ViewData["Title"] = "Admin - Subscription Approvals";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <a asp-action="Index" class="small text-muted text-decoration-none">&larr; Back to Admin Portal</a>
+        <h1 class="h3 jt-serif mb-1 mt-1">Membership Subscription Requests</h1>
+        <p class="text-muted small mb-0">Review demo subscription requests, approve masterclass access, or reject with feedback.</p>
+    </div>
+
+    <div>
+        <span class="jt-badge @(Model.TotalPendingCount > 0 ? "jt-badge-paid" : "jt-badge-free")">
+            @(Model.TotalPendingCount > 0 ? $"{Model.TotalPendingCount} Pending Action" : "All Requests Handled")
+        </span>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+        <strong>Success:</strong> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+        <strong>Error:</strong> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Filter Tabs -->
+<div class="p-3 bg-white rounded-4 border shadow-sm mb-4">
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="Subscriptions" class="jt-btn jt-btn-sm @(Model.StatusFilter == null ? "jt-btn-primary" : "jt-btn-secondary")">
+            All Requests (@Model.Requests.Count)
+        </a>
+        <a asp-action="Subscriptions" asp-route-status="@SubscriptionStatus.Pending" class="jt-btn jt-btn-sm @(Model.StatusFilter == SubscriptionStatus.Pending ? "jt-btn-primary" : "jt-btn-secondary")">
+            Pending Only
+        </a>
+        <a asp-action="Subscriptions" asp-route-status="@SubscriptionStatus.Approved" class="jt-btn jt-btn-sm @(Model.StatusFilter == SubscriptionStatus.Approved ? "jt-btn-primary" : "jt-btn-secondary")">
+            Approved Only
+        </a>
+        <a asp-action="Subscriptions" asp-route-status="@SubscriptionStatus.Rejected" class="jt-btn jt-btn-sm @(Model.StatusFilter == SubscriptionStatus.Rejected ? "jt-btn-primary" : "jt-btn-secondary")">
+            Rejected Only
+        </a>
+    </div>
+</div>
+
+<!-- Subscriptions Table -->
+<div class="p-4 bg-white rounded-4 border shadow-sm mb-5">
+    @if (Model.Requests.Count == 0)
+    {
+        <div class="text-center py-5 text-muted">
+            <div class="fs-1 mb-2">&#128237;</div>
+            <p class="mb-0">No subscription requests match the selected filter.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr class="small text-muted text-uppercase">
+                        <th>ID</th>
+                        <th>Member</th>
+                        <th>Plan &amp; Amount</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Member Notes</th>
+                        <th>Actions / Review</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Requests)
+                    {
+                        <tr>
+                            <td class="fw-bold">#@item.Id</td>
+                            <td>
+                                <div class="fw-bold">@item.UserDisplayName</div>
+                                <div class="small text-muted">@item.UserEmail</div>
+                            </td>
+                            <td>
+                                <div><span class="fw-bold">@item.Plan</span></div>
+                                <div class="small text-muted">$@item.Amount.ToString("F2")</div>
+                            </td>
+                            <td>
+                                @if (item.Status == SubscriptionStatus.Approved)
+                                {
+                                    <span class="badge bg-success">Approved</span>
+                                    @if (item.ExpiresAtUtc.HasValue)
+                                    {
+                                        <div class="small text-muted">Expires: @item.ExpiresAtUtc.Value.ToLocalTime().ToString("d")</div>
+                                    }
+                                }
+                                else if (item.Status == SubscriptionStatus.Pending)
+                                {
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Rejected</span>
+                                }
+                            </td>
+                            <td class="small text-muted">
+                                @item.CreatedAtUtc.ToLocalTime().ToString("g")
+                            </td>
+                            <td class="small">
+                                @if (!string.IsNullOrEmpty(item.Notes))
+                                {
+                                    <span>@item.Notes</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+
+                                @if (!string.IsNullOrEmpty(item.AdminNotes))
+                                {
+                                    <div class="text-muted mt-1 small">
+                                        <em>Admin Note:</em> @item.AdminNotes
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                @if (item.Status == SubscriptionStatus.Pending)
+                                {
+                                    <div class="d-flex flex-column gap-2">
+                                        <!-- Approve Form -->
+                                        <form asp-action="ApproveSubscription" asp-route-id="@item.Id" method="post" class="d-inline">
+                                            <input type="hidden" name="adminNotes" value="Approved for academic demo access." />
+                                            <button type="submit" class="btn btn-sm btn-success w-100">
+                                                &#10004; Approve
+                                            </button>
+                                        </form>
+
+                                        <!-- Reject Form -->
+                                        <form asp-action="RejectSubscription" asp-route-id="@item.Id" method="post" class="d-inline">
+                                            <div class="input-group input-group-sm">
+                                                <input type="text" name="adminNotes" class="form-control" placeholder="Reason (optional)" />
+                                                <button type="submit" class="btn btn-outline-danger">
+                                                    &#10006; Reject
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="small text-muted">Reviewed on @item.ReviewedAtUtc?.ToLocalTime().ToString("d")</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

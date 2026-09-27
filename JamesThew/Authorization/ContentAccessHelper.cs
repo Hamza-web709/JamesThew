@@ -6,11 +6,12 @@ public static class ContentAccessHelper
 {
     /// <summary>
     /// Evaluates whether the current principal can view paid (Members-Only) content.
-    /// In Phase 2, Phase 3 membership approval has not been implemented yet.
-    /// Therefore, ordinary Member accounts DO NOT grant paid access yet.
-    /// Only Admins (editorial staff) can view paid content in this phase.
+    /// In Phase 3A:
+    /// - Admins always have access.
+    /// - Logged-in Members have access ONLY if they have an active approved subscription.
+    /// - Unapproved, pending, rejected members and guests cannot access paid content.
     /// </summary>
-    public static bool CanViewPaidContent(ClaimsPrincipal? user)
+    public static bool CanViewPaidContent(ClaimsPrincipal? user, bool hasActiveSubscription = false)
     {
         if (user?.Identity?.IsAuthenticated != true)
             return false;
@@ -19,7 +20,10 @@ public static class ContentAccessHelper
         if (user.IsInRole(AppRoles.Admin))
             return true;
 
-        // Ordinary Member accounts cannot view paid content until Phase 3 demo subscription approval is implemented.
+        // Ordinary Member accounts can only view paid content if their subscription is approved and active.
+        if (user.IsInRole(AppRoles.Member) && hasActiveSubscription)
+            return true;
+
         return false;
     }
 }

@@ -57,16 +57,25 @@
             </div>
 
             <div class="mb-3">
-                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="jt-btn jt-btn-primary">
-                    Sign In to View
-                </a>
-                <a asp-controller="Account" asp-action="Register" class="jt-btn jt-btn-outline ms-2">
-                    Create Member Account
-                </a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-controller="Membership" asp-action="Index" class="jt-btn jt-btn-primary">
+                        View Demo Subscription Status &rarr;
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="jt-btn jt-btn-primary">
+                        Sign In to View
+                    </a>
+                    <a asp-controller="Account" asp-action="Register" class="jt-btn jt-btn-outline ms-2">
+                        Create Member Account
+                    </a>
+                }
             </div>
 
             <p class="small text-muted mb-0">
-                <em>* Policy Notice: Under Phase 2 requirements, protected tip bodies are never exposed to guests. Phase 3 membership approval is not implemented yet, so paid access is reserved for authorized administrative review.</em>
+                <em>* Policy Notice: In accordance with project specifications, protected tip bodies require an active, approved demo subscription ($10/mo or $100/yr) or administrative review.</em>
             </p>
         </div>
     }

@@ -7,12 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace JamesThew.Controllers;
 
 [AllowAnonymous]
-public class TipsController(IContentService contentService) : Controller
+public class TipsController(IContentService contentService, ISubscriptionService subscriptionService) : Controller
 {
     [HttpGet("tips")]
     public async Task<IActionResult> Index(string? q, ContentVisibility? visibility, int page = 1)
     {
-        var canViewPaid = ContentAccessHelper.CanViewPaidContent(User);
+        var canViewPaid = await subscriptionService.CanAccessPaidContentAsync(User);
         var model = await contentService.SearchTipsAsync(q, visibility, page, 12, canViewPaid);
         return View(model);
     }
@@ -20,7 +20,7 @@ public class TipsController(IContentService contentService) : Controller
     [HttpGet("tips/{slug}")]
     public async Task<IActionResult> Detail(string slug)
     {
-        var canViewPaid = ContentAccessHelper.CanViewPaidContent(User);
+        var canViewPaid = await subscriptionService.CanAccessPaidContentAsync(User);
         var tip = await contentService.GetTipBySlugAsync(slug, canViewPaid);
         if (tip is null)
             return NotFound();

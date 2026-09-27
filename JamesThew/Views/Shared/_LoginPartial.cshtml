@@ -1,5 +1,6 @@
 @using JamesThew.Authorization
 <ul class="jt-nav-links ms-auto">
+    <li><a class="jt-nav-link" asp-area="" asp-controller="Membership" asp-action="Index">Membership</a></li>
 @if (User.Identity?.IsAuthenticated == true)
 {
     <li><a class="jt-nav-link" asp-area="" asp-controller="Account" asp-action="Status">Account</a></li>
@@ -19,3 +20,4 @@ else
     <li><a class="jt-btn jt-btn-primary jt-btn-sm" asp-area="" asp-controller="Account" asp-action="Login">Sign In</a></li>
 }
 </ul>
+

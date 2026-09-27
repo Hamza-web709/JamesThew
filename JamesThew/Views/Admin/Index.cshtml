@@ -1,4 +1,80 @@
-@{ ViewData["Title"] = "Admin access"; }
-<h1>Admin access</h1>
-<p>Your Admin role has been verified.</p>
-<p>Content, membership approvals and contests will be added in later phases.</p>
+@{
+    ViewData["Title"] = "Admin Portal - Culinary Management";
+    var pendingCount = (int)(ViewBag.PendingSubscriptionsCount ?? 0);
+}
+
+<div class="mb-4">
+    <span class="jt-brand-tag">Administration</span>
+    <h1 class="mb-2">Culinary Portal Administration</h1>
+    <p class="text-muted">
+        Manage membership subscriptions, customer contributions, recipe masterclasses, and contests.
+    </p>
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- Subscriptions Card -->
+    <div class="col-md-6 col-lg-4">
+        <div class="p-4 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fs-2">&#128179;</span>
+                    @if (pendingCount > 0)
+                    {
+                        <span class="badge bg-danger rounded-pill px-3 py-2">@pendingCount Pending</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success rounded-pill px-3 py-2">All Clear</span>
+                    }
+                </div>
+                <h2 class="h5 jt-serif mb-2">Membership Subscriptions</h2>
+                <p class="small text-muted mb-3">
+                    Review incoming demo plan requests ($10 monthly / $100 yearly). Approve to unlock Members-Only masterclasses or reject with feedback notes.
+                </p>
+            </div>
+            <div>
+                <a asp-action="Subscriptions" class="jt-btn jt-btn-primary jt-btn-sm w-100 text-center">
+                    Manage Subscriptions &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Card (Phase 4) -->
+    <div class="col-md-6 col-lg-4">
+        <div class="p-4 bg-light rounded-4 border h-100 d-flex flex-column justify-content-between text-muted">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fs-2">&#127859;</span>
+                    <span class="badge bg-secondary">Phase 4</span>
+                </div>
+                <h2 class="h5 jt-serif mb-2 text-dark">Recipe &amp; Tip Management</h2>
+                <p class="small mb-3">
+                    Create, edit, and moderate editorial recipes and customer contributions.
+                </p>
+            </div>
+            <div>
+                <span class="small text-muted">&#128337; Planned for Phase 4</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contests Card (Phase 5) -->
+    <div class="col-md-6 col-lg-4">
+        <div class="p-4 bg-light rounded-4 border h-100 d-flex flex-column justify-content-between text-muted">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fs-2">&#127942;</span>
+                    <span class="badge bg-secondary">Phase 5</span>
+                </div>
+                <h2 class="h5 jt-serif mb-2 text-dark">Contests &amp; Announcements</h2>
+                <p class="small mb-3">
+                    Create cooking competitions, review submissions, and declare contest winners.
+                </p>
+            </div>
+            <div>
+                <span class="small text-muted">&#128337; Planned for Phase 5</span>
+            </div>
+        </div>
+    </div>
+</div>

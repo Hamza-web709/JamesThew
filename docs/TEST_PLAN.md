@@ -283,3 +283,53 @@ Scope: Public read-only ASP.NET Core MVC website (`T-07` and `T-08`), including 
 | New | [JamesThew/Views/Tips/Detail.cshtml](../JamesThew/Views/Tips/Detail.cshtml) | Tip detail view with Free content and Members-Only locked state |
 | New | [tests/JamesThew.Tests/PublicContentTests.cs](../tests/JamesThew.Tests/PublicContentTests.cs) | 7 integration tests for TC-001, TC-003, TC-004, TC-008, TC-020 |
 | New | `JamesThew/wwwroot/images/` | High quality culinary photography assets for hero, recipes, and tips |
+
+## Phase 3A actual verification - 27 September 2026
+
+Scope: Manual demo membership subscription requests ($10/mo, $100/yr), pending queue, admin approval/rejection with notes, active subscription window enforcement, and paid masterclass unlocking for approved members. No real payment gateway; no guest request submission. Phase 3B profile editing and feedback submission remain deferred.
+
+| Evidence | Actual result |
+|---|---|
+| Build | Solution build succeeded, 0 warnings / 0 errors (`dotnet build JamesThew.slnx`) |
+| Integration test suite | 32 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) across Foundation, PublicContent, and Subscription test classes |
+| Migration | `20260927143304_Phase3AMembershipSubscriptions` applied to `JamesThew_Development`; 0 pending model changes |
+| Guest subscription challenge | `GET /membership` displays demo pricing and requires login; `POST /membership/subscribe` as guest redirects to `/Account/Login` with 302 |
+| Member subscription submission | Authenticated member can submit demo request ($10 monthly or $100 yearly); enters `Pending` state; duplicate pending submission blocked |
+| Pending / Rejected state enforcement | Pending or Rejected member cannot view protected recipe ingredients/steps or masterclass tip body; locked preview box displayed with CTA button |
+| Admin subscription management | Admin accesses `/admin/subscriptions`, views pending requests queue, approves or rejects with optional admin notes |
+| Content unlocking | Upon Admin approval, Member immediately gains full access to paid recipes and tips; no locked box rendered |
+| Rejection with feedback | Upon Admin rejection, Member sees rejection notice and admin reason on `/membership`; content remains securely locked |
+| Admin role bypass | Admin account continues to bypass locked masterclasses regardless of personal subscription status |
+| Cache control | `Cache-Control: no-cache, no-store, must-revalidate` response header verified on all locked responses |
+
+### Phase 3A changed-file inventory
+
+| Status | File path | Description |
+|---|---|---|
+| Updated | [JamesThew/Models/ApplicationUser.cs](../JamesThew/Models/ApplicationUser.cs) | Added SubscriptionRequests navigation collection |
+| Updated | [JamesThew/Data/ApplicationDbContext.cs](../JamesThew/Data/ApplicationDbContext.cs) | Configured SubscriptionRequest DbSet, foreign key, indexes, precision |
+| Updated | [JamesThew/Data/Migrations/ApplicationDbContextModelSnapshot.cs](../JamesThew/Data/Migrations/ApplicationDbContextModelSnapshot.cs) | Updated EF Core model snapshot with SubscriptionRequest entity |
+| Updated | [JamesThew/Program.cs](../JamesThew/Program.cs) | Registered ISubscriptionService / SubscriptionService in DI container |
+| Updated | [JamesThew/Authorization/ContentAccessHelper.cs](../JamesThew/Authorization/ContentAccessHelper.cs) | Added hasActiveSubscription parameter for paid content access |
+| Updated | [JamesThew/Controllers/RecipesController.cs](../JamesThew/Controllers/RecipesController.cs) | Injected ISubscriptionService, checks user subscription before rendering |
+| Updated | [JamesThew/Controllers/TipsController.cs](../JamesThew/Controllers/TipsController.cs) | Injected ISubscriptionService, checks user subscription before rendering |
+| Updated | [JamesThew/Controllers/HomeController.cs](../JamesThew/Controllers/HomeController.cs) | Injected ISubscriptionService for home preview access checks |
+| Updated | [JamesThew/Controllers/AdminController.cs](../JamesThew/Controllers/AdminController.cs) | Added Subscriptions GET list, approve POST, reject POST actions |
+| Updated | [JamesThew/Views/Admin/Index.cshtml](../JamesThew/Views/Admin/Index.cshtml) | Added Subscriptions management card with dynamic pending count badge |
+| Updated | [JamesThew/Views/Shared/_LoginPartial.cshtml](../JamesThew/Views/Shared/_LoginPartial.cshtml) | Added Membership nav link for authenticated and guest users |
+| Updated | [JamesThew/Views/Account/Status.cshtml](../JamesThew/Views/Account/Status.cshtml) | Added Membership card linking to `/membership` |
+| Updated | [JamesThew/Views/Recipes/Detail.cshtml](../JamesThew/Views/Recipes/Detail.cshtml) | Updated locked preview CTA button to point to `/membership` for members |
+| Updated | [JamesThew/Views/Tips/Detail.cshtml](../JamesThew/Views/Tips/Detail.cshtml) | Updated locked preview CTA button to point to `/membership` for members |
+| Updated | [tests/JamesThew.Tests/FoundationTests.cs](../tests/JamesThew.Tests/FoundationTests.cs) | Added SubscriptionRequests table to schema test assertions |
+| New | [JamesThew/Models/SubscriptionEnums.cs](../JamesThew/Models/SubscriptionEnums.cs) | SubscriptionPlan (Monthly $10, Yearly $100) and SubscriptionStatus enums |
+| New | [JamesThew/Models/SubscriptionRequest.cs](../JamesThew/Models/SubscriptionRequest.cs) | SubscriptionRequest entity model |
+| New | [JamesThew/ViewModels/SubscriptionViewModels.cs](../JamesThew/ViewModels/SubscriptionViewModels.cs) | View models & DTOs for membership and admin subscription flows |
+| New | [JamesThew/Services/ISubscriptionService.cs](../JamesThew/Services/ISubscriptionService.cs) | Service contract for subscription operations & paid access validation |
+| New | [JamesThew/Services/SubscriptionService.cs](../JamesThew/Services/SubscriptionService.cs) | Subscription service implementation with EF Core queries and expiry logic |
+| New | [JamesThew/Controllers/MembershipController.cs](../JamesThew/Controllers/MembershipController.cs) | Membership controller for viewing tiers, submitting requests, checking status |
+| New | [JamesThew/Views/Membership/Index.cshtml](../JamesThew/Views/Membership/Index.cshtml) | Culinary membership page with tiers, request form, status banner, request history |
+| New | [JamesThew/Views/Admin/Subscriptions.cshtml](../JamesThew/Views/Admin/Subscriptions.cshtml) | Admin subscriptions management view with status filters, approve/reject forms |
+| New | [JamesThew/Data/Migrations/20260927143304_Phase3AMembershipSubscriptions.cs](../JamesThew/Data/Migrations/20260927143304_Phase3AMembershipSubscriptions.cs) | EF Core migration creating SubscriptionRequests table |
+| New | [JamesThew/Data/Migrations/20260927143304_Phase3AMembershipSubscriptions.Designer.cs](../JamesThew/Data/Migrations/20260927143304_Phase3AMembershipSubscriptions.Designer.cs) | EF Core migration designer file |
+| New | [tests/JamesThew.Tests/SubscriptionTests.cs](../tests/JamesThew.Tests/SubscriptionTests.cs) | 6 integration tests verifying guest denial, pending, approval, rejection, unlock, and admin bypass |
+

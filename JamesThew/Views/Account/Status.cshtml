@@ -1,6 +1,20 @@
 @model string
 @{ ViewData["Title"] = "Account"; }
-<h1>Account</h1>
-<p>Welcome, @Model.</p>
-<p>You are signed in. Registration alone does not grant paid membership access.</p>
-<p>Subscription approval, profile editing and member features are planned for later phases.</p>
+
+<div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm max-w-700 mx-auto my-4">
+    <h1 class="h3 jt-serif mb-2">Account</h1>
+    <p class="lead">Welcome, <strong>@Model</strong>.</p>
+    <p class="text-muted">You are signed in. Registration alone does not grant paid membership access.</p>
+
+    <div class="p-3 rounded-3 border mb-4" style="background-color: var(--jt-surface-warm);">
+        <h2 class="h6 mb-2">&#127859; Membership &amp; Masterclass Access</h2>
+        <p class="small text-muted mb-3">
+            Access to exclusive culinary masterclasses and secret preparation techniques requires an approved demo subscription plan ($10/month or $100/year).
+        </p>
+        <a asp-controller="Membership" asp-action="Index" class="jt-btn jt-btn-primary jt-btn-sm">
+            View / Request Subscription &rarr;
+        </a>
+    </div>
+
+    <p class="small text-muted mb-0">Subscription approval, profile editing and member features are planned for later phases.</p>
+</div>

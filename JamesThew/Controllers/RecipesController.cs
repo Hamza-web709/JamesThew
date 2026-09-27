@@ -7,12 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace JamesThew.Controllers;
 
 [AllowAnonymous]
-public class RecipesController(IContentService contentService) : Controller
+public class RecipesController(IContentService contentService, ISubscriptionService subscriptionService) : Controller
 {
     [HttpGet("recipes")]
     public async Task<IActionResult> Index(string? q, ContentVisibility? visibility, int page = 1)
     {
-        var canViewPaid = ContentAccessHelper.CanViewPaidContent(User);
+        var canViewPaid = await subscriptionService.CanAccessPaidContentAsync(User);
         var model = await contentService.SearchRecipesAsync(q, visibility, page, 12, canViewPaid);
         return View(model);
     }
@@ -20,7 +20,7 @@ public class RecipesController(IContentService contentService) : Controller
     [HttpGet("recipes/{slug}")]
     public async Task<IActionResult> Detail(string slug)
     {
-        var canViewPaid = ContentAccessHelper.CanViewPaidContent(User);
+        var canViewPaid = await subscriptionService.CanAccessPaidContentAsync(User);
         var recipe = await contentService.GetRecipeBySlugAsync(slug, canViewPaid);
         if (recipe is null)
             return NotFound();

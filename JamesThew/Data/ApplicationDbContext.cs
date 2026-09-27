@@ -13,6 +13,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
     public DbSet<Tip> Tips => Set<Tip>();
     public DbSet<FaqItem> FaqItems => Set<FaqItem>();
+    public DbSet<SubscriptionRequest> SubscriptionRequests => Set<SubscriptionRequest>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -91,5 +92,19 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(x => x.Question).HasMaxLength(250).IsRequired();
             entity.Property(x => x.Answer).HasMaxLength(2000).IsRequired();
         });
+
+        builder.Entity<SubscriptionRequest>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Amount).HasPrecision(18, 2);
+            entity.Property(x => x.Notes).HasMaxLength(500);
+            entity.Property(x => x.AdminNotes).HasMaxLength(500);
+            entity.HasIndex(x => new { x.UserId, x.Status });
+            entity.HasOne(x => x.User)
+                .WithMany(u => u.SubscriptionRequests)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
+

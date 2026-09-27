@@ -91,12 +91,32 @@ Phase 2 successfully implemented and verified:
 
 ## Phase 3 - Identity, manual demo membership aur member feedback
 
+### Actual scoped completion - Phase 3A: Manual Membership Approval Foundation
+
+Phase 3A successfully implemented and verified:
+- Subscription models & enums: `SubscriptionPlan` (Monthly $10, Yearly $100 demo), `SubscriptionStatus` (Pending, Approved, Rejected), `SubscriptionRequest` entity with relations, foreign keys, and indexes.
+- EF Core Migration: `20260927143304_Phase3AMembershipSubscriptions` applied to `JamesThew_Development`, 0 pending model changes.
+- Subscription service & helper: `ISubscriptionService` and `SubscriptionService` handling request submission, pending checks, admin approval/rejection with notes, active subscription validity window (30 days for monthly, 365 days for yearly), and `ContentAccessHelper` integration.
+- Member membership page (`/membership`): Clear demo tier display ($10/mo, $100/yr), guest login notice, demo subscription request submission form with optional notes, real-time status banner (Pending / Active Masterclass Access / Rejected with reason), and user request history table.
+- Admin subscriptions management (`/admin/subscriptions`): Admin-only management table with status filtering tabs (All, Pending, Approved, Rejected), subscriber email/name, plan, amount ($10.00 / $100.00), timestamps, inline Approve and Reject actions with admin notes. Admin dashboard (`/admin`) updated with Subscriptions card and dynamic pending count badge.
+- Content access integration: Approved members now immediately unlock full recipe ingredients/steps and masterclass tip bodies; pending, rejected, and guest users continue to see locked preview boxes with `Cache-Control: no-cache, no-store, must-revalidate` headers. Admin role continues to bypass locked content.
+- Testing: 32 passed, 0 failed, 0 skipped (19 Foundation + 7 PublicContent + 6 Subscription in `tests/JamesThew.Tests/SubscriptionTests.cs`).
+- Note: Phase 3B (T-10 profile editing, T-09 member feedback submission) remains deferred for subsequent implementation.
+
+| Item | Current status / evidence |
+|---|---|
+| T-11 | Complete (Phase 3A): Demo plan requests ($10 monthly, $100 yearly), pending queue, admin approval/rejection, activation window, zero real gateway |
+| T-12 | Complete (Phase 3A): Content authorization matrix updated; approved members unlock paid content; pending/rejected/guest locked; admin bypasses |
+| T-10 | Auth complete in Phase 1; Profile edit deferred to Phase 3B |
+| T-09 | Deferred to Phase 3B (Member-only feedback forms and storage) |
+| Phase 3A verification | Build 0 warnings/0 errors; 32/32 integration tests pass; migration applied and 0 model drift; evidence in TEST_PLAN |
+
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
-| T-10 / REQ-002, REQ-005 | Registration/login/logout DONE in Phase 1; profile edit and membership integration remain | T-05, T-07 | Own profile only; role fields ignored; pending != paid | TC-002/005 duplicate/login/profile tampering |
-| T-11 / REQ-002, REQ-004 | Membership controller/views, demo plan request, admin approval/rejection, activation/expiry | T-02, T-10 | $10 monthly/$100 yearly demo labels; Pending until admin approval; rejected/expired excluded; no gateway | Admin-only approval/rejection, replay/idempotency/expiry and amount-tamper tests |
-| T-12 / REQ-003, REQ-004, REQ-005, REQ-008 | Full guest/member/admin access integration | T-08, T-11 | UI and direct endpoints consistent; expiry updates access | Full authorization matrix; paid image/cache checks; G |
-| T-09 / REQ-013, REQ-015 | Member-only recipe/site FeedbackController, view models aur Razor forms | T-08, T-10, T-11 | Login + active member required; guest POST reject/no record; accessible recipe check; receipt | TC-013/015 anonymous denial, malformed input, CSRF aur duplicate tests; G |
+| T-10 / REQ-002, REQ-005 | Registration/login/logout DONE in Phase 1; profile edit deferred to Phase 3B | T-05, T-07 | Own profile only; role fields ignored; pending != paid | TC-002/005 duplicate/login/profile tampering |
+| T-11 / REQ-002, REQ-004 | Membership controller/views, demo plan request, admin approval/rejection, activation/expiry | T-02, T-10 | $10 monthly/$100 yearly demo labels; Pending until admin approval; rejected/expired excluded; no gateway | Passed: TC-002; 6 new integration tests in SubscriptionTests.cs, live HTTPS verified; G |
+| T-12 / REQ-003, REQ-004, REQ-005, REQ-008 | Full guest/member/admin access integration | T-08, T-11 | UI and direct endpoints consistent; approved members unlock paid content; pending/rejected locked | Passed: TC-003/004/008; direct recipe & tip authorization assertions, no-cache headers; G |
+| T-09 / REQ-013, REQ-015 | Member-only recipe/site FeedbackController, view models aur Razor forms | T-08, T-10, T-11 | Login + active member required; guest POST reject/no record; accessible recipe check; receipt | Deferred to Phase 3B |
 
 ## Phase 4 - Content management
 

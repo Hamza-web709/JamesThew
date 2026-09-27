@@ -8,11 +8,11 @@ using System.Diagnostics;
 namespace JamesThew.Controllers;
 
 [AllowAnonymous]
-public class HomeController(IContentService contentService) : Controller
+public class HomeController(IContentService contentService, ISubscriptionService subscriptionService) : Controller
 {
     public async Task<IActionResult> Index()
     {
-        var canViewPaid = ContentAccessHelper.CanViewPaidContent(User);
+        var canViewPaid = await subscriptionService.CanAccessPaidContentAsync(User);
         var model = await contentService.GetHomeDataAsync(canViewPaid);
         return View(model);
     }

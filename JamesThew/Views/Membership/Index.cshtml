@@ -1,0 +1,279 @@
+@model JamesThew.ViewModels.SubscriptionRequestViewModel
+@using JamesThew.Models
+@{
+    ViewData["Title"] = "Membership & Demo Subscriptions";
+}
+
+<div class="text-center max-w-700 mx-auto mb-5">
+    <span class="jt-brand-tag">Culinary Masterclasses</span>
+    <h1 class="mb-2">Membership Plans &amp; Benefits</h1>
+    <p class="lead text-muted">
+        Unlock Chef James Thew's complete collection of culinary secrets, precise ingredient measurements, and advanced technique masterclasses.
+    </p>
+</div>
+
+<!-- Academic Demonstration Notice -->
+<div class="p-3 bg-light rounded-4 border mb-5 max-w-860 mx-auto shadow-sm">
+    <div class="d-flex align-items-center gap-2">
+        <span class="jt-badge jt-badge-demo">&#9888; Academic Demo Notice</span>
+        <span class="small text-muted">
+            All subscription plans are simulated for demonstration purposes. No real monetary transactions, credit card numbers, or external payment gateways are used. Plan requests are reviewed and approved manually by the site administrator.
+        </span>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success max-w-860 mx-auto mb-4 rounded-3 shadow-sm" role="alert">
+        <strong>Success:</strong> @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger max-w-860 mx-auto mb-4 rounded-3 shadow-sm" role="alert">
+        <strong>Notice:</strong> @TempData["ErrorMessage"]
+    </div>
+}
+
+<!-- Current Status Banner for Logged-in Users -->
+@if (Model.IsAuthenticated)
+{
+    <div class="p-4 p-md-5 bg-white rounded-4 border mb-5 shadow-sm max-w-860 mx-auto">
+        <h2 class="h5 jt-serif mb-3">Your Membership Status</h2>
+
+        @if (Model.HasActiveSubscription)
+        {
+            <div class="p-4 rounded-3 border mb-3" style="background-color: #E8F5E9; border-color: #C8E6C9;">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="jt-badge" style="background-color: var(--jt-accent); color: white;">&#10004; Active Premium Access</span>
+                    <span class="fw-bold text-success">@Model.CurrentPlan Plan ($@(Model.CurrentAmount?.ToString("F2") ?? "0.00"))</span>
+                </div>
+                <p class="small text-muted mb-2">
+                    You have full access to all exclusive Members-Only recipes, hidden ingredient ratios, preparation steps, and cooking technique guides.
+                </p>
+                @if (Model.ExpiresAtUtc.HasValue)
+                {
+                    <p class="small text-muted mb-3">
+                        <strong>Valid Through:</strong> @Model.ExpiresAtUtc.Value.ToLocalTime().ToString("f")
+                    </p>
+                }
+                <div class="d-flex gap-2">
+                    <a asp-controller="Recipes" asp-action="Index" asp-route-visibility="MembersOnly" class="jt-btn jt-btn-primary jt-btn-sm">
+                        Browse Masterclass Recipes &rarr;
+                    </a>
+                    <a asp-controller="Tips" asp-action="Index" asp-route-visibility="MembersOnly" class="jt-btn jt-btn-outline jt-btn-sm">
+                        Browse Masterclass Tips &rarr;
+                    </a>
+                </div>
+            </div>
+        }
+        else if (Model.CurrentStatus == SubscriptionStatus.Pending)
+        {
+            <div class="p-4 rounded-3 border mb-3" style="background-color: #FFFDE7; border-color: #FFF9C4;">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="jt-badge" style="background-color: var(--jt-gold); color: white;">&#9203; Pending Approval</span>
+                    <span class="fw-bold">@Model.CurrentPlan Plan ($@(Model.CurrentAmount?.ToString("F2") ?? "0.00"))</span>
+                </div>
+                <p class="small text-muted mb-2">
+                    Your demo subscription request was received on @Model.LatestRequestedAtUtc?.ToLocalTime().ToString("f") and is currently in the administrator moderation queue.
+                </p>
+                @if (!string.IsNullOrEmpty(Model.LatestMemberNotes))
+                {
+                    <p class="small text-muted mb-2">
+                        <strong>Submitted Notes / Reference:</strong> @Model.LatestMemberNotes
+                    </p>
+                }
+                <p class="small text-muted mb-0">
+                    Once the administrator approves your request, you will immediately gain access to all locked masterclass content.
+                </p>
+            </div>
+        }
+        else if (Model.CurrentStatus == SubscriptionStatus.Rejected)
+        {
+            <div class="p-4 rounded-3 border mb-3" style="background-color: #FFEBEE; border-color: #FFCDD2;">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="jt-badge jt-badge-paid">&#10006; Request Not Approved</span>
+                    <span class="fw-bold text-danger">@Model.CurrentPlan Plan</span>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.LatestAdminNotes))
+                {
+                    <p class="small text-muted mb-2">
+                        <strong>Administrator Feedback:</strong> @Model.LatestAdminNotes
+                    </p>
+                }
+                <p class="small text-muted mb-0">
+                    You may select a plan below to submit a new subscription request for administrator review.
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="p-3 bg-light rounded-3 border mb-3">
+                <span class="jt-badge jt-badge-free mb-2 d-inline-block">Standard Member</span>
+                <p class="small text-muted mb-0">
+                    You are signed in with a standard Member account. You currently have access to all Free recipes and tips. To unlock Members-Only masterclasses, submit a demo subscription request below.
+                </p>
+            </div>
+        }
+    </div>
+}
+
+<!-- Plan Pricing Comparison Cards -->
+<div class="row g-4 max-w-860 mx-auto mb-5">
+    <div class="col-md-6">
+        <div class="p-4 bg-white rounded-4 border h-100 shadow-sm d-flex flex-column justify-content-between position-relative">
+            <div>
+                <span class="jt-brand-tag">Flexible</span>
+                <h3 class="h4 jt-serif mb-2">Monthly Masterclass</h3>
+                <div class="display-6 fw-bold mb-3 jt-serif" style="color: var(--jt-primary);">$10 <span class="fs-6 fw-normal text-muted">/ month</span></div>
+                <p class="text-muted small mb-4">Ideal for enthusiasts exploring seasonal recipes and weekly masterclasses.</p>
+
+                <ul class="list-unstyled small mb-4">
+                    <li class="mb-2">&#10004; Full access to all Cookery Recipes</li>
+                    <li class="mb-2">&#10004; Secret ingredients &amp; prep steps</li>
+                    <li class="mb-2">&#10004; Professional cooking tip guides</li>
+                    <li class="mb-2">&#10004; Simulated 30-day demo access</li>
+                </ul>
+            </div>
+
+            @if (!Model.IsAuthenticated)
+            {
+                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="/membership" class="jt-btn jt-btn-outline w-100 text-center">
+                    Sign In to Choose Plan
+                </a>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="p-4 bg-white rounded-4 border h-100 shadow-sm d-flex flex-column justify-content-between position-relative" style="border-color: var(--jt-gold) !important; border-width: 2px !important;">
+            <div class="position-absolute top-0 end-0 translate-middle-y me-3">
+                <span class="jt-badge" style="background-color: var(--jt-gold); color: white;">Best Value &bull; Save $20</span>
+            </div>
+
+            <div>
+                <span class="jt-brand-tag">Annual Access</span>
+                <h3 class="h4 jt-serif mb-2">Yearly Connoisseur</h3>
+                <div class="display-6 fw-bold mb-3 jt-serif" style="color: var(--jt-primary);">$100 <span class="fs-6 fw-normal text-muted">/ year</span></div>
+                <p class="text-muted small mb-4">Unrestricted 365-day access to James Thew's complete culinary archive and masterclasses.</p>
+
+                <ul class="list-unstyled small mb-4">
+                    <li class="mb-2">&#10004; Everything in Monthly Plan</li>
+                    <li class="mb-2">&#10004; Priority queue demonstration review</li>
+                    <li class="mb-2">&#10004; Unrestricted 365-day demo validity</li>
+                    <li class="mb-2">&#10004; Access to future masterclass updates</li>
+                </ul>
+            </div>
+
+            @if (!Model.IsAuthenticated)
+            {
+                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="/membership" class="jt-btn jt-btn-primary w-100 text-center">
+                    Sign In to Choose Plan
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Request Form for Logged-In Members without an Active/Pending Request -->
+@if (Model.IsAuthenticated && !Model.HasActiveSubscription && Model.CurrentStatus != SubscriptionStatus.Pending)
+{
+    <div class="p-4 p-md-5 bg-white rounded-4 border mb-5 shadow-sm max-w-860 mx-auto">
+        <h2 class="h4 jt-serif mb-3">Submit Demo Subscription Request</h2>
+        <p class="text-muted small mb-4">
+            Select your preferred demo tier below. Your request will be queued for manual administrative review.
+        </p>
+
+        <form asp-action="Subscribe" method="post">
+            <div class="mb-4">
+                <label class="form-label fw-bold small text-uppercase text-muted d-block mb-2">Select Subscription Plan</label>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="p-3 border rounded-3 d-flex align-items-center gap-3 w-100 cursor-pointer" style="background-color: var(--jt-surface-warm);">
+                            <input type="radio" asp-for="Plan" value="@SubscriptionPlan.Monthly" checked="checked" class="form-check-input mt-0" />
+                            <div>
+                                <div class="fw-bold">Monthly Plan</div>
+                                <div class="small text-muted">$10.00 / month (30-day demo)</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="p-3 border rounded-3 d-flex align-items-center gap-3 w-100 cursor-pointer" style="background-color: var(--jt-surface-warm);">
+                            <input type="radio" asp-for="Plan" value="@SubscriptionPlan.Yearly" class="form-check-input mt-0" />
+                            <div>
+                                <div class="fw-bold">Yearly Plan</div>
+                                <div class="small text-muted">$100.00 / year (365-day demo)</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <span asp-validation-for="Plan" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Notes" class="form-label fw-bold small text-uppercase text-muted">Demo Notes or Reference (Optional)</label>
+                <textarea asp-for="Notes" class="form-control" rows="3" placeholder="e.g. Academic test request, demo payment voucher #98765..."></textarea>
+                <span asp-validation-for="Notes" class="text-danger small"></span>
+                <div class="form-text small">Do not enter real credit card numbers or banking secrets.</div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between pt-2">
+                <button type="submit" class="jt-btn jt-btn-primary">
+                    Submit Demo Request &rarr;
+                </button>
+                <span class="small text-muted">&#128274; Safe Academic Demo</span>
+            </div>
+        </form>
+    </div>
+}
+
+<!-- Subscription History Table -->
+@if (Model.IsAuthenticated && Model.History.Count > 0)
+{
+    <div class="p-4 p-md-5 bg-white rounded-4 border mb-5 shadow-sm max-w-860 mx-auto">
+        <h3 class="h5 jt-serif mb-3">Your Request History</h3>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr class="small text-muted text-uppercase">
+                        <th>Plan</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Member Notes</th>
+                        <th>Expires</th>
+                        <th>Admin Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.History)
+                    {
+                        <tr>
+                            <td class="fw-bold">@item.Plan</td>
+                            <td>$@item.Amount.ToString("F2")</td>
+                            <td>
+                                @if (item.Status == SubscriptionStatus.Approved)
+                                {
+                                    <span class="badge bg-success">Approved</span>
+                                }
+                                else if (item.Status == SubscriptionStatus.Pending)
+                                {
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Rejected</span>
+                                }
+                            </td>
+                            <td class="small text-muted">@item.CreatedAtUtc.ToLocalTime().ToString("g")</td>
+                            <td class="small text-muted">@(string.IsNullOrEmpty(item.Notes) ? "—" : item.Notes)</td>
+                            <td class="small text-muted">@(item.ExpiresAtUtc.HasValue ? item.ExpiresAtUtc.Value.ToLocalTime().ToString("g") : "—")</td>
+                            <td class="small text-muted">@(string.IsNullOrEmpty(item.AdminNotes) ? "—" : item.AdminNotes)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
