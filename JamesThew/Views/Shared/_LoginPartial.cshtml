@@ -1,21 +1,21 @@
 @using JamesThew.Authorization
-<ul class="navbar-nav">
+<ul class="jt-nav-links ms-auto">
 @if (User.Identity?.IsAuthenticated == true)
 {
-    <li class="nav-item"><a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Status">Account</a></li>
+    <li><a class="jt-nav-link" asp-area="" asp-controller="Account" asp-action="Status">Account</a></li>
     @if (User.IsInRole(AppRoles.Admin))
     {
-        <li class="nav-item"><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Admin</a></li>
+        <li><a class="jt-nav-link" asp-area="" asp-controller="Admin" asp-action="Index">Admin</a></li>
     }
-    <li class="nav-item">
-        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
-            <button class="nav-link btn btn-link text-dark" type="submit">Logout</button>
+    <li>
+        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+            <button class="jt-btn jt-btn-outline jt-btn-sm" type="submit">Logout</button>
         </form>
     </li>
 }
 else
 {
-    <li class="nav-item"><a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Register">Register</a></li>
-    <li class="nav-item"><a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Login">Login</a></li>
+    <li><a class="jt-nav-link" asp-area="" asp-controller="Account" asp-action="Register">Register</a></li>
+    <li><a class="jt-btn jt-btn-primary jt-btn-sm" asp-area="" asp-controller="Account" asp-action="Login">Sign In</a></li>
 }
 </ul>

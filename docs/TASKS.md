@@ -2,19 +2,19 @@
 
 ## Execution contract
 
-Yeh implementation backlog hai. Latest user instruction se sirf scoped Phase 1 execute hui: database/Identity/account authentication. Baqi feature tasks Not started hain; actual status neeche hai. T-01 ka source/document baseline tayyar hai; latest user assumptions incorporated hain. Remaining faculty details aur screen review alag pending hain. [PRD](PRD.md) requirement authority aur Open Decisions rakhta hai; [TEST_PLAN](TEST_PLAN.md) expected evidence define karta hai. Har Task ID stable rahe; completion par date, evidence aur actual Git commit baad mein add ho.
+Yeh implementation backlog hai. Phase 1 foundation ke baad Phase 2 execute hui: public read-only ASP.NET Core MVC website, recipes/tips lists/details/search, 7 FAQs, guest vs paid locked preview states, demo content seeder, aur 26 integration tests pass. Future feature tasks (Phase 3 onwards: manual membership approval, member feedback, admin CRUD, member contributions, contests) Not started hain; actual status neeche hai. T-01 ka source/document baseline tayyar hai; latest user assumptions incorporated hain. Remaining faculty details aur screen review alag pending hain. [PRD](PRD.md) requirement authority aur Open Decisions rakhta hai; [TEST_PLAN](TEST_PLAN.md) expected evidence define karta hai. Har Task ID stable rahe; completion par date, evidence aur actual Git commit record ho.
 
 Har task ki row mein scope, dependencies, acceptance aur verification hai. `G` ka matlab neeche common phase gate hai. REQ references coverage dikhate hain, implementation complete hone ka claim nahi. Har phase ke baad build, relevant tests, browser check aur Git checkpoint planned hain. Planning phase mein build/browser application tests N/A hain, kyunke app execute/change nahi ki ja rahi.
 
 ## ASP.NET Core MVC phase boundaries
 
-Latest user instruction ne Phase 1 authorize ki hai. Is phase mein sirf Identity foundation aur minimal account/admin views bane; future business entities/workflows abhi create nahi karne. Existing starter Phase 1 mein reuse/assess ho chuka hai; duplicate project create nahi hua. Har MVC feature mein route/controller -> service/policy -> view model -> Razor view -> applicable tests ka vertical flow complete ho.
+Phase 1 aur Phase 2 complete ho chuki hain. Is phase mein public read-only website, content entities, migration, seeder, aur preview/locked authorization implement hue; Admin CRUD, payments, membership approval, feedback writes, contributions aur contests future phases ke liye deferred hain. Existing starter mein vertical MVC flow (route/controller -> service/policy -> view model -> Razor view -> integration tests) follow hua hai.
 
 | Phase | MVC-specific output, future | Entry / exit boundary |
 |---|---|---|
 | 0 Planning | Approved assumptions, remaining version decisions, wireframes aur traceability | Planning baseline available; remaining faculty details tracked |
 | 1 Foundation | Existing MVC host, DI/config, Identity-only DbContext/migration, roles, registration/login/logout aur safe local admin seed | Acceptance passed: build/schema/tests and trusted-HTTPS Member/Admin browser checks; Phase 1 Git checkpoint authorized |
-| 2 Public read-only website | Home/Recipes/Tips/FAQ controllers, read services, public view models, Razor shared layout/search/detail | Guest public reads; protected action sirf login prompt; feedback submission Phase 3 |
+| 2 Public read-only website | Home/Recipes/Tips/FAQ controllers, read services, public view models, Razor shared layout/search/detail, demo seeder, locked states | Acceptance passed: build 0 errors/0 warnings, 26/26 tests pass, migration applied, live HTTPS curl checks pass; Phase 2 Git checkpoint authorized |
 | 3 Identity and membership | Profile editing/Membership controllers/views, admin manual demo approval, member-only feedback endpoints/forms; authentication Phase 1 mein complete | No gateway; pending approval cannot unlock member features; role/access tests |
 | 4 Content and moderation | Admin area content controllers/views; member contributions; Pending approval queue; public publication | Published + Free after admin approval; pending hidden except owner/admin |
 | 5 Contests and winners | Admin contest/review/result pages, member entry form/service, public contest/result views | Guest entry blocked; only admin manages winners/results |
@@ -64,10 +64,30 @@ Rozana backups operational obligation hain; automatic schedule install nahi hua.
 
 ## Phase 2 - Public read-only MVC website
 
+### Actual scoped completion
+
+Phase 2 successfully implemented and verified:
+- Shared responsive layout with culinary brand tokens (`--jt-canvas: #FFF9F0`, `--jt-primary: #9C3526`, `--jt-accent: #46583B`, `--jt-gold: #C89847`), skip link (`#main-content`), mobile navigation drawer, and 4-column culinary footer.
+- Home page (`/`): hero presentation, quick search, featured recipes and tips, membership tier comparison cards ($10/mo, $100/yr demo), contests teaser, FAQ accordion preview.
+- All 7 required FAQ items from PRD CRS 7 / p5-6 rendered with accessible semantic `<details>`/`<summary>` markup (works without JS), jump anchors, and policy links.
+- Public recipe catalog (`/recipes`) and cooking tip catalog (`/tips`) with search, filter tabs (All, Free, Members-Only), and pagination.
+- Recipe detail (`/recipes/{slug}`) and Tip detail (`/tips/{slug}`) with full guest access for Free content.
+- Paid/Members-Only content locked state: protected ingredients, steps, and tip bodies are strictly withheld from guest and Member responses (Phase 3 approval not yet implemented; only Admin role unlocks masterclasses). `Cache-Control: no-cache, no-store, must-revalidate` set on locked responses. Search excludes protected text for unauthorized users.
+- Database: EF Core aggregate entities (`ContentItem`, `Recipe`, `RecipeIngredient`, `RecipeStep`, `Tip`, `FaqItem`), migration `20260927100700_Phase2PublicContent` applied to LocalDB `JamesThew_Development`, 0 pending model changes.
+- Seeder: `ContentSeeder.cs` runs idempotently on startup, adding 7 FAQs, 4 recipes (3 Free, 1 Paid), and 3 tips (2 Free, 1 Paid), clearly labelled as `[DEMO CONTENT]`.
+- Testing: 26 passed, 0 failed, 0 skipped (19 Foundation + 7 PublicContent integration tests in `PublicContentTests.cs`).
+- Live HTTPS verification: verified via `curl` on `https://localhost:7054` for all routes. Note: Playwright browser subagent encountered an upstream Azure CDN 404 for driver zip (`playwright-1.57.0-win32_x64.zip`), so live HTTPS curl checks were used for automated verification.
+
+| Item | Current status / evidence |
+|---|---|
+| T-07 | Complete: Shared layout, James home, 7 FAQ answers with semantic details/summary, accessible navigation, and placeholder routes for menu completeness |
+| T-08 | Complete: Recipe/tip catalogs, search filtering, Free guest access, locked preview state without protected body leakage, 0-leak search results, Admin-only bypass in Phase 2 |
+| Phase 2 verification | Build 0 warnings/0 errors; 26/26 integration tests pass; migration applied and 0 model drift; live HTTPS checks pass; evidence in TEST_PLAN |
+
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
-| T-07 / REQ-001, REQ-020 | Shared responsive layout, James home, all seven FAQ answers | T-03, T-06 | Required menu/home details; FAQ aligned with policy | TC-001, TC-020; no-JS and keyboard nav |
-| T-08 / REQ-003, REQ-004, REQ-008 | Recipe/tip read + authorized search policies | T-06, T-07 | Free guest access; protected paid body; correct result counts | TC-003/004/008 anonymous and seeded identities, direct URL/cache tests; G |
+| T-07 / REQ-001, REQ-020 | Shared responsive layout, James home, all seven FAQ answers | T-03, T-06 | Required menu/home details; FAQ aligned with policy | Passed: TC-001, TC-020; no-JS details/summary, skip link, responsive mobile drawer |
+| T-08 / REQ-003, REQ-004, REQ-008 | Recipe/tip read + authorized search policies | T-06, T-07 | Free guest access; protected paid body; correct result counts | Passed: TC-003/004/008; 7 new integration tests, live HTTPS curl checks; G |
 
 ## Phase 3 - Identity, manual demo membership aur member feedback
 

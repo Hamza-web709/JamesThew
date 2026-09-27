@@ -1,0 +1,37 @@
+@{
+    ViewData["Title"] = "Announcements - Contest Winners & Culinary News";
+}
+
+<div class="text-center max-w-700 mx-auto mb-5">
+    <span class="jt-brand-tag">Hall of Fame</span>
+    <h1 class="mb-2">Contest Winner Announcements</h1>
+    <p class="lead text-muted">
+        Celebrating outstanding culinary posts and community recipes awarded by Chef James Thew.
+    </p>
+</div>
+
+<div class="p-4 p-md-5 bg-white rounded-4 border mb-5 shadow-sm max-w-860 mx-auto">
+    <div class="d-flex align-items-center gap-3 mb-3">
+        <span class="jt-badge jt-badge-demo">&#128337; Phase 5 Feature</span>
+        <span class="text-muted small">Upcoming Milestone</span>
+    </div>
+
+    <h2 class="h4 jt-serif mb-3">Public Announcements &amp; Winner Recognition</h2>
+    <p class="text-muted">
+        Following the conclusion of each seasonal cooking contest, winners will be formally showcased here for all visitors to view.
+    </p>
+
+    <div class="p-3 bg-light rounded-3 border mb-4">
+        <h3 class="h6 mb-2">&#128100; What Will Be Displayed:</h3>
+        <ul class="small text-muted mb-0 ps-3">
+            <li>Winning Member's public display name (private account emails and phone numbers are never published).</li>
+            <li>Contest category, title, and evaluation summary by Chef James Thew.</li>
+            <li>Complete winning recipe formula or cooking tip.</li>
+        </ul>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-controller="Contests" asp-action="Index" class="jt-btn jt-btn-outline">View Contests</a>
+        <a asp-controller="Faq" asp-action="Index" class="jt-btn jt-btn-secondary">Check Contest FAQ</a>
+    </div>
+</div>

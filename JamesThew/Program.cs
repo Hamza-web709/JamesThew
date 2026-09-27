@@ -1,6 +1,7 @@
 using JamesThew.Authorization;
 using JamesThew.Data;
 using JamesThew.Models;
+using JamesThew.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -52,6 +53,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 // Add services to the container.
+builder.Services.AddScoped<IContentService, ContentService>();
 builder.Services.AddControllersWithViews(options =>
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
 
@@ -65,10 +67,12 @@ if (seedAdmin)
     return;
 }
 
-// Schema changes are explicit CLI operations. Startup only ensures the two role names exist.
+// Schema changes are explicit CLI operations. Startup ensures the roles and demo content exist.
 await using (var scope = app.Services.CreateAsyncScope())
 {
     await IdentitySeeder.SeedRolesAsync(scope.ServiceProvider);
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await ContentSeeder.SeedContentAsync(db);
 }
 
 // Configure the HTTP request pipeline.

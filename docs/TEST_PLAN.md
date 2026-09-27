@@ -216,3 +216,70 @@ Commit author identity supplied by the user and configured only in this reposito
 ## Public repository preparation
 
 Before first publication, the unpublished root commit was amended to exclude both source PDFs while retaining their local copies. Documentation removes local user paths, attachment IDs, student portal identifiers and academic calendar details; relative reporting requirements remain. PDF download links were replaced with local-source explanations. Local certificate fingerprint and source PDF hash were omitted. No application code changed. Historical acceptance evidence above remains valid.
+
+## Phase 2 actual verification - 27 September 2026
+
+Scope: Public read-only ASP.NET Core MVC website (`T-07` and `T-08`), including shared layout, Home page, all 7 required FAQs, public recipe/tip catalogs and search, Free guest access, Members-Only locked preview with zero leakage, no-cache headers, demo content seeder, DB entities and migration. Test source [PublicContentTests.cs](../tests/JamesThew.Tests/PublicContentTests.cs) and updated [FoundationTests.cs](../tests/JamesThew.Tests/FoundationTests.cs).
+
+| Check | Actual result |
+|---|---|
+| Build | Passed, 0 warnings / 0 errors (`dotnet build JamesThew.slnx`) |
+| Test suite run | 26 passed, 0 failed, 0 skipped (19 Foundation + 7 PublicContent); `artifacts/TestResults/phase2.trx` |
+| EF Migration | `20260927100700_Phase2PublicContent` applied to `JamesThew_Development`; CLI check `dotnet ef migrations has-pending-model-changes` confirmed 0 pending model changes |
+| Demo content seeding | `ContentSeeder.cs` runs idempotently on startup, seeding all 7 PRD CRS 7 FAQs, 4 recipes (3 Free, 1 Paid), and 3 tips (2 Free, 1 Paid), clearly tagged `[DEMO CONTENT]` |
+| TC-001 Shared Layout & Home | Responsive 7-item navigation menu, keyboard skip link (`#main-content`), mobile drawer, 4-column culinary footer, hero culinary presentation, quick search, featured cards, tier comparison ($10/mo, $100/yr demo) |
+| TC-003 Free Recipe Access | Guest access to Free recipe (`/recipes/jamess-classic-roast-herb-chicken`) returns full ingredients and preparation steps; no login prompt |
+| TC-004 Paid Recipe Lockout | Guest and Member requests to Members-Only recipe (`/recipes/jamess-masterclass-beef-wellington`) show locked preview box and login/join CTA; zero ingredients or steps in HTML payload; `Cache-Control: no-cache, no-store, must-revalidate` set |
+| TC-003 Free Tip Access | Guest access to Free tip (`/tips/mastering-chefs-knife-grip-and-precision-cuts`) returns complete culinary guide text |
+| TC-004 Paid Tip Lockout | Guest and Member requests to Members-Only tip (`/tips/masterclass-french-sauce-emulsions-and-pan-deglazing`) show locked preview box; protected tip body completely omitted from response payload; `Cache-Control: no-cache, no-store, must-revalidate` set |
+| TC-008 Search Isolation | Public search for protected body text (`"chilled butter cubes"`, `"tenderloin"`) returns 0 results for unauthorized users. Search for Free titles/summaries returns correct items |
+| TC-020 Seven FAQ Answers | Semantic HTML5 `<details>`/`<summary>` elements render all 7 required answers from PRD CRS 7 p5-6; fully functional without JavaScript; jump anchors and policy links verified |
+| Authorization boundaries | Phase 3 membership approval is not implemented yet; ordinary Member accounts do NOT grant access to paid content. Only Admin role unlocks paid masterclasses in Phase 2 |
+| Informational menus | Placeholder routes (`/contests`, `/announcements`, `/feedback`) provide complete navigation structure without dead links, clearly stating phase deferral |
+| Live HTTPS verification | Verified via trusted HTTPS (`https://localhost:7054`) with `curl`; status 200 on all public endpoints, headers verified, zero secret leakage in response bodies |
+| Tool environment note | Playwright browser subagent encountered an upstream Azure CDN 404 for driver zip (`playwright-1.57.0-win32_x64.zip`); automated verification was executed via direct HTTPS integration checks and curl assertions |
+
+### Phase 2 changed-file inventory
+
+| Status | File path | Description |
+|---|---|---|
+| Updated | [JamesThew/Controllers/HomeController.cs](../JamesThew/Controllers/HomeController.cs) | Injected IContentService, query featured recipes/tips/FAQs for Home view |
+| Updated | [JamesThew/Data/ApplicationDbContext.cs](../JamesThew/Data/ApplicationDbContext.cs) | Added ContentItems, Recipes, RecipeIngredients, RecipeSteps, Tips, FaqItems DbSets, unique slug index and constraints |
+| Updated | [JamesThew/Data/Migrations/ApplicationDbContextModelSnapshot.cs](../JamesThew/Data/Migrations/ApplicationDbContextModelSnapshot.cs) | Updated EF Core model snapshot for Phase 2 entities |
+| Updated | [JamesThew/Program.cs](../JamesThew/Program.cs) | Registered IContentService DI, added ContentSeeder execution on startup |
+| Updated | [JamesThew/Views/Home/Index.cshtml](../JamesThew/Views/Home/Index.cshtml) | Hero banner, search bar, featured cards, tier comparison, FAQ preview |
+| Updated | [JamesThew/Views/Shared/_Layout.cshtml](../JamesThew/Views/Shared/_Layout.cshtml) | 7-item navigation menu, skip link, mobile toggle, 4-column footer |
+| Updated | [JamesThew/Views/Shared/_LoginPartial.cshtml](../JamesThew/Views/Shared/_LoginPartial.cshtml) | Culinary styled auth buttons and account links |
+| Updated | [JamesThew/wwwroot/css/site.css](../JamesThew/wwwroot/css/site.css) | Culinary brand variables, card layouts, locked box styles, responsive rules |
+| Updated | [JamesThew/wwwroot/js/site.js](../JamesThew/wwwroot/js/site.js) | Accessible drawer toggle, Escape key listener, FAQ hash deep-linking |
+| Updated | [tests/JamesThew.Tests/FoundationTests.cs](../tests/JamesThew.Tests/FoundationTests.cs) | Updated schema table assertions to include Phase 2 public content tables |
+| New | [JamesThew/Authorization/ContentAccessHelper.cs](../JamesThew/Authorization/ContentAccessHelper.cs) | Authorization rule: only Admin unlocks paid content in Phase 2 |
+| New | [JamesThew/Controllers/AnnouncementsController.cs](../JamesThew/Controllers/AnnouncementsController.cs) | Informational placeholder for Announcements (Phase 5) |
+| New | [JamesThew/Controllers/ContestsController.cs](../JamesThew/Controllers/ContestsController.cs) | Informational placeholder for Contests (Phase 5) |
+| New | [JamesThew/Controllers/FaqController.cs](../JamesThew/Controllers/FaqController.cs) | FAQ controller querying published FAQs |
+| New | [JamesThew/Controllers/FeedbackController.cs](../JamesThew/Controllers/FeedbackController.cs) | Informational placeholder for Feedback (Phase 3) |
+| New | [JamesThew/Controllers/RecipesController.cs](../JamesThew/Controllers/RecipesController.cs) | Recipe catalog, search, filtering, and detail endpoint with lock enforcement |
+| New | [JamesThew/Controllers/TipsController.cs](../JamesThew/Controllers/TipsController.cs) | Cooking tips catalog, search, filtering, and detail endpoint with lock enforcement |
+| New | [JamesThew/Data/ContentSeeder.cs](../JamesThew/Data/ContentSeeder.cs) | Idempotent seeder for 7 FAQs, 4 recipes, and 3 tips ([DEMO CONTENT]) |
+| New | [JamesThew/Data/Migrations/20260927100700_Phase2PublicContent.cs](../JamesThew/Data/Migrations/20260927100700_Phase2PublicContent.cs) | EF Core migration creating public content tables |
+| New | [JamesThew/Data/Migrations/20260927100700_Phase2PublicContent.Designer.cs](../JamesThew/Data/Migrations/20260927100700_Phase2PublicContent.Designer.cs) | EF Core migration designer file |
+| New | [JamesThew/Models/ContentEnums.cs](../JamesThew/Models/ContentEnums.cs) | ContentKind, ContentOrigin, ContentVisibility, PublicationStatus enums |
+| New | [JamesThew/Models/ContentItem.cs](../JamesThew/Models/ContentItem.cs) | Core content aggregate root entity |
+| New | [JamesThew/Models/Recipe.cs](../JamesThew/Models/Recipe.cs) | Recipe entity 1-to-1 with ContentItem |
+| New | [JamesThew/Models/RecipeIngredient.cs](../JamesThew/Models/RecipeIngredient.cs) | Recipe ingredient child entity |
+| New | [JamesThew/Models/RecipeStep.cs](../JamesThew/Models/RecipeStep.cs) | Recipe step child entity |
+| New | [JamesThew/Models/Tip.cs](../JamesThew/Models/Tip.cs) | Tip entity 1-to-1 with ContentItem |
+| New | [JamesThew/Models/FaqItem.cs](../JamesThew/Models/FaqItem.cs) | FAQ item entity with QuestionKey and SortOrder |
+| New | [JamesThew/Services/IContentService.cs](../JamesThew/Services/IContentService.cs) | Public content service contract |
+| New | [JamesThew/Services/ContentService.cs](../JamesThew/Services/ContentService.cs) | Public content service implementation with leak-proof search & detail queries |
+| New | [JamesThew/ViewModels/PublicContentViewModels.cs](../JamesThew/ViewModels/PublicContentViewModels.cs) | View models for Home, Recipes, Tips, and FAQ pages |
+| New | [JamesThew/Views/Announcements/Index.cshtml](../JamesThew/Views/Announcements/Index.cshtml) | Informational announcement placeholder view |
+| New | [JamesThew/Views/Contests/Index.cshtml](../JamesThew/Views/Contests/Index.cshtml) | Informational contest placeholder view |
+| New | [JamesThew/Views/Faq/Index.cshtml](../JamesThew/Views/Faq/Index.cshtml) | Accessible 7-item FAQ view with details/summary |
+| New | [JamesThew/Views/Feedback/Index.cshtml](../JamesThew/Views/Feedback/Index.cshtml) | Informational feedback placeholder view |
+| New | [JamesThew/Views/Recipes/Index.cshtml](../JamesThew/Views/Recipes/Index.cshtml) | Recipe catalog view with search and filters |
+| New | [JamesThew/Views/Recipes/Detail.cshtml](../JamesThew/Views/Recipes/Detail.cshtml) | Recipe detail view with Free content and Members-Only locked state |
+| New | [JamesThew/Views/Tips/Index.cshtml](../JamesThew/Views/Tips/Index.cshtml) | Cooking tips catalog view with search and filters |
+| New | [JamesThew/Views/Tips/Detail.cshtml](../JamesThew/Views/Tips/Detail.cshtml) | Tip detail view with Free content and Members-Only locked state |
+| New | [tests/JamesThew.Tests/PublicContentTests.cs](../tests/JamesThew.Tests/PublicContentTests.cs) | 7 integration tests for TC-001, TC-003, TC-004, TC-008, TC-020 |
+| New | `JamesThew/wwwroot/images/` | High quality culinary photography assets for hero, recipes, and tips |

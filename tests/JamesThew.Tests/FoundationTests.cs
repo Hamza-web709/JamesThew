@@ -64,7 +64,7 @@ public class FoundationTests(FoundationFixture fixture)
     }
 
     [Fact]
-    public async Task Migration_applies_to_sql_server_and_contains_only_foundation_tables()
+    public async Task Migration_applies_to_sql_server_and_contains_expected_tables()
     {
         await using var db = fixture.CreateDb();
         Assert.NotEmpty(await db.Database.GetAppliedMigrationsAsync());
@@ -73,7 +73,16 @@ public class FoundationTests(FoundationFixture fixture)
         await db.Database.MigrateAsync(); // Repeating the documented migration is safe.
         var tables = await db.Database.SqlQueryRaw<string>(
             "SELECT TABLE_NAME AS [Value] FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'").ToListAsync();
-        Assert.All(tables, name => Assert.True(name.StartsWith("AspNet") || name == "__EFMigrationsHistory"));
+        var expectedTables = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "__EFMigrationsHistory",
+            "AspNetUsers", "AspNetRoles", "AspNetUserRoles", "AspNetUserClaims", "AspNetUserLogins", "AspNetUserTokens", "AspNetRoleClaims",
+            "ContentItems", "FaqItems", "Recipes", "RecipeIngredients", "RecipeSteps", "Tips"
+        };
+        Assert.All(tables, name => Assert.Contains(name, expectedTables));
+        Assert.Contains("ContentItems", tables);
+        Assert.Contains("Recipes", tables);
+        Assert.Contains("FaqItems", tables);
     }
 
     [Fact]

@@ -1,0 +1,128 @@
+@model JamesThew.ViewModels.RecipeDetailViewModel
+@{
+    ViewData["Title"] = $"{Model.Title} - Recipe by {Model.AuthorDisplayName}";
+}
+
+<article class="mb-5">
+    <!-- Header -->
+    <header class="jt-detail-header">
+        <div class="mb-2">
+            <a asp-controller="Recipes" asp-action="Index" class="text-decoration-none text-muted small">&larr; Back to all recipes</a>
+        </div>
+
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            @if (Model.IsMembersOnly)
+            {
+                <span class="jt-badge jt-badge-paid">&#128274; Exclusive Members-Only Masterclass</span>
+            }
+            else
+            {
+                <span class="jt-badge jt-badge-free">Free Public Recipe</span>
+            }
+            <span class="text-muted small">&#128197; Published @Model.CreatedAtUtc.ToString("MMMM dd, yyyy")</span>
+        </div>
+
+        <h1 class="jt-detail-title">@Model.Title</h1>
+
+        <div class="jt-detail-meta">
+            <span>&#128100; By <strong>@Model.AuthorDisplayName</strong></span>
+            @if (Model.PrepMinutes.HasValue)
+            {
+                <span>&#9201; Prep: <strong>@Model.PrepMinutes mins</strong></span>
+            }
+            @if (Model.CookMinutes.HasValue)
+            {
+                <span>&#128293; Cook: <strong>@Model.CookMinutes mins</strong></span>
+            }
+            @if (Model.Servings.HasValue)
+            {
+                <span>&#127860; Servings: <strong>@Model.Servings portions</strong></span>
+            }
+        </div>
+    </header>
+
+    <!-- Main Image -->
+    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+    {
+        <div class="jt-detail-img-box">
+            <img src="@Model.ImageUrl" alt="@Model.Title" class="jt-detail-img" />
+        </div>
+    }
+
+    <!-- Summary / Overview -->
+    <div class="p-4 bg-white rounded-4 border mb-4 shadow-sm">
+        <h2 class="h5 text-uppercase fw-bold text-muted mb-2" style="letter-spacing: 1px;">Chef's Overview</h2>
+        <p class="lead mb-0" style="color: var(--jt-text); font-size: 1.15rem;">@Model.Summary</p>
+    </div>
+
+    <!-- Protected Locked State vs Unlocked Content -->
+    @if (Model.IsLocked)
+    {
+        <div class="jt-locked-box" role="region" aria-label="Members Only Locked Content">
+            <div class="jt-locked-icon">&#128274;</div>
+            <h2 class="jt-locked-title">Exclusive Members-Only Recipe</h2>
+            <p class="jt-locked-desc">
+                James Thew's complete recipe formula—including exact secret ingredient proportions, culinary prep steps, and cooking times—is protected for registered members with an approved demo subscription.
+            </p>
+
+            <div class="jt-locked-pricing">
+                <div>Monthly Plan: <span>$10 / mo</span></div>
+                <div>Annual Plan: <span>$100 / yr</span></div>
+            </div>
+
+            <div class="mb-3">
+                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="jt-btn jt-btn-primary">
+                    Sign In to View
+                </a>
+                <a asp-controller="Account" asp-action="Register" class="jt-btn jt-btn-outline ms-2">
+                    Create Member Account
+                </a>
+            </div>
+
+            <p class="small text-muted mb-0">
+                <em>* Policy Notice: In accordance with Phase 2 specifications, protected recipe bodies are never exposed to guests. Phase 3 membership approval is not implemented yet, so paid access is reserved for authorized administrative review.</em>
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="jt-recipe-layout">
+            <!-- Ingredients Side Column -->
+            <aside class="jt-ingredients-panel" aria-label="Recipe Ingredients">
+                <h2 class="h4 jt-serif mb-3">Ingredients</h2>
+                <p class="text-muted small">Checked and balanced for optimal flavor.</p>
+
+                <ul class="jt-ingredients-list">
+                    @foreach (var ing in Model.Ingredients)
+                    {
+                        <li class="jt-ingredient-item">
+                            @if (!string.IsNullOrEmpty(ing.QuantityText) || !string.IsNullOrEmpty(ing.Unit))
+                            {
+                                <span class="jt-ingredient-qty">@ing.QuantityText @ing.Unit</span>
+                            }
+                            <span>@ing.Name</span>
+                        </li>
+                    }
+                </ul>
+            </aside>
+
+            <!-- Cooking Instructions Main Column -->
+            <section class="jt-steps-panel" aria-label="Preparation and Cooking Steps">
+                <h2 class="h4 jt-serif mb-4">Method &amp; Preparation</h2>
+
+                <div class="jt-steps-list">
+                    @foreach (var step in Model.Steps)
+                    {
+                        <div class="jt-step-item">
+                            <div class="jt-step-number" aria-hidden="true">@step.Position</div>
+                            <div class="jt-step-content">
+                                <h3 class="h6 text-muted text-uppercase mb-1">Step @step.Position</h3>
+                                <p class="mb-0">@step.Instruction</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+        </div>
+    }
+</article>

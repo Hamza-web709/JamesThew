@@ -1,0 +1,54 @@
+@{
+    ViewData["Title"] = "Culinary Contests - Seasonal Competitions";
+}
+
+<div class="text-center max-w-700 mx-auto mb-5">
+    <span class="jt-brand-tag">Culinary Competitions</span>
+    <h1 class="mb-2">Recipe &amp; Tip Contests</h1>
+    <p class="lead text-muted">
+        Seasonal cooking contests curated by Chef James Thew. Showcase your kitchen creativity, adhere to contest rules, and compete for culinary recognition.
+    </p>
+</div>
+
+<div class="p-4 p-md-5 bg-white rounded-4 border mb-5 shadow-sm max-w-860 mx-auto">
+    <div class="d-flex align-items-center gap-3 mb-3">
+        <span class="jt-badge jt-badge-paid">&#128337; Phase 5 Feature</span>
+        <span class="text-muted small">Upcoming Milestone</span>
+    </div>
+
+    <h2 class="h4 jt-serif mb-3">Contest Participation Guidelines</h2>
+    <p class="text-muted">
+        In accordance with our updated project policies:
+    </p>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3 h-100 border">
+                <h3 class="h6 mb-2">&#128065; Public Guests</h3>
+                <p class="small text-muted mb-0">
+                    Guests and unregistered visitors are welcome to browse active competitions, read detailed contest criteria and deadlines, and view published winners.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3 h-100 border">
+                <h3 class="h6 mb-2">&#9997; Registered Members</h3>
+                <p class="small text-muted mb-0">
+                    Submitting entries requires an authenticated member account. Members can submit either recipe entries (with ingredients and steps) or cooking tip entries depending on the contest category.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-3 rounded-3 border mb-4" style="background-color: var(--jt-surface-warm);">
+        <h3 class="h6 mb-1">&#127942; Winner Announcements</h3>
+        <p class="small text-muted mb-0">
+            Contest submissions are evaluated by the administrator. Once selected, winners are announced atomically on the public <a asp-controller="Announcements" asp-action="Index">Announcements</a> page.
+        </p>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-controller="Recipes" asp-action="Index" class="jt-btn jt-btn-primary">Browse Current Recipes</a>
+        <a asp-controller="Faq" asp-action="Index" class="jt-btn jt-btn-outline">Read Contest FAQ</a>
+    </div>
+</div>

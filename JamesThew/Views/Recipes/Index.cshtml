@@ -1,0 +1,132 @@
+@model JamesThew.ViewModels.ContentSearchViewModel
+@using JamesThew.Models
+@{
+    ViewData["Title"] = "Recipes - James Thew Cookery Catalog";
+}
+
+<div class="mb-4">
+    <span class="jt-brand-tag">Culinary Catalog</span>
+    <h1 class="mb-2">Cookery Recipes</h1>
+    <p class="text-muted">Browse foundational everyday favorites and fine-dining masterclasses created by Chef James Thew.</p>
+</div>
+
+<!-- Search & Filter Controls -->
+<div class="p-3 p-md-4 bg-white rounded-4 border mb-4 shadow-sm">
+    <form asp-controller="Recipes" asp-action="Index" method="get">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-7">
+                <div class="jt-search-form">
+                    <input type="search" name="q" value="@Model.Query" class="jt-search-input" placeholder="Search by recipe title or summary..." aria-label="Search recipes" />
+                    <button type="submit" class="jt-btn jt-btn-primary">Search</button>
+                    @if (!string.IsNullOrEmpty(Model.Query))
+                    {
+                        <a asp-controller="Recipes" asp-action="Index" class="jt-btn jt-btn-secondary" title="Reset search">Clear</a>
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-5 d-flex flex-wrap gap-2 justify-content-md-end">
+                <a asp-controller="Recipes" asp-action="Index" asp-route-q="@Model.Query"
+                   class="jt-btn jt-btn-sm @(Model.Visibility == null ? "jt-btn-primary" : "jt-btn-secondary")">
+                    All (@Model.TotalItems)
+                </a>
+                <a asp-controller="Recipes" asp-action="Index" asp-route-q="@Model.Query" asp-route-visibility="@ContentVisibility.Free"
+                   class="jt-btn jt-btn-sm @(Model.Visibility == ContentVisibility.Free ? "jt-btn-primary" : "jt-btn-secondary")">
+                    Free Only
+                </a>
+                <a asp-controller="Recipes" asp-action="Index" asp-route-q="@Model.Query" asp-route-visibility="@ContentVisibility.MembersOnly"
+                   class="jt-btn jt-btn-sm @(Model.Visibility == ContentVisibility.MembersOnly ? "jt-btn-primary" : "jt-btn-secondary")">
+                    Members-Only
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Results Information -->
+<div class="d-flex justify-content-between align-items-center mb-3 text-muted small">
+    <div>
+        Showing @Model.Recipes.Count of @Model.TotalItems matching recipe@(Model.TotalItems == 1 ? "" : "s")
+        @if (!string.IsNullOrEmpty(Model.Query))
+        {
+            <span>for "<strong>@Model.Query</strong>"</span>
+        }
+    </div>
+</div>
+
+<!-- Recipe Grid -->
+@if (Model.Recipes.Count == 0)
+{
+    <div class="p-5 text-center bg-white rounded-4 border shadow-sm my-4">
+        <div class="display-6 text-muted mb-3">&#128269;</div>
+        <h3>No matching recipes found</h3>
+        <p class="text-muted max-w-500 mx-auto">We couldn't find any recipes matching your criteria. Try adjusting your search keywords or removing filters.</p>
+        <a asp-controller="Recipes" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm mt-2">Reset All Filters</a>
+    </div>
+}
+else
+{
+    <div class="jt-card-grid mb-5">
+        @foreach (var recipe in Model.Recipes)
+        {
+            <article class="jt-card">
+                <div class="jt-card-img-wrapper">
+                    @if (!string.IsNullOrEmpty(recipe.ImageUrl))
+                    {
+                        <img src="@recipe.ImageUrl" alt="@recipe.Title" class="jt-card-img" loading="lazy" />
+                    }
+                    <div class="jt-card-badge-pos">
+                        @if (recipe.IsMembersOnly)
+                        {
+                            <span class="jt-badge jt-badge-paid">&#128274; Members-Only</span>
+                        }
+                        else
+                        {
+                            <span class="jt-badge jt-badge-free">Free Recipe</span>
+                        }
+                    </div>
+                </div>
+                <div class="jt-card-body">
+                    <div class="jt-card-meta">
+                        <span>&#128100; @recipe.AuthorDisplayName</span>
+                        @if (recipe.PrepMinutes.HasValue || recipe.CookMinutes.HasValue)
+                        {
+                            <span>&#9201; @((recipe.PrepMinutes ?? 0) + (recipe.CookMinutes ?? 0)) mins</span>
+                        }
+                        @if (recipe.Servings.HasValue)
+                        {
+                            <span>&#127860; @recipe.Servings servings</span>
+                        }
+                    </div>
+                    <h2 class="jt-card-title">
+                        <a asp-controller="Recipes" asp-action="Detail" asp-route-slug="@recipe.Slug">@recipe.Title</a>
+                    </h2>
+                    <p class="jt-card-text">@recipe.Summary</p>
+                    <div class="jt-card-footer">
+                        <a asp-controller="Recipes" asp-action="Detail" asp-route-slug="@recipe.Slug" class="jt-btn jt-btn-outline jt-btn-sm">
+                            @(recipe.IsMembersOnly ? "View Preview" : "View Recipe") &rarr;
+                        </a>
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Recipe pagination" class="d-flex justify-content-center my-4">
+            <ul class="pagination">
+                @for (int p = 1; p <= Model.TotalPages; p++)
+                {
+                    <li class="page-item @(p == Model.Page ? "active" : "")">
+                        <a class="page-link" asp-controller="Recipes" asp-action="Index"
+                           asp-route-page="@p"
+                           asp-route-q="@Model.Query"
+                           asp-route-visibility="@Model.Visibility">@p</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+}

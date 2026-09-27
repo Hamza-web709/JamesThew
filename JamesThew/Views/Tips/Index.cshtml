@@ -1,0 +1,125 @@
+@model JamesThew.ViewModels.ContentSearchViewModel
+@using JamesThew.Models
+@{
+    ViewData["Title"] = "Cooking Tips - Professional Kitchen Wisdom";
+}
+
+<div class="mb-4">
+    <span class="jt-brand-tag">Kitchen Wisdom</span>
+    <h1 class="mb-2">Chef's Cooking Tips</h1>
+    <p class="text-muted">Master essential culinary secrets, knife skills, temperature science, and pan kinetics by James Thew.</p>
+</div>
+
+<!-- Search & Filter Controls -->
+<div class="p-3 p-md-4 bg-white rounded-4 border mb-4 shadow-sm">
+    <form asp-controller="Tips" asp-action="Index" method="get">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-7">
+                <div class="jt-search-form">
+                    <input type="search" name="q" value="@Model.Query" class="jt-search-input" placeholder="Search knife skills, pan searing, emulsions..." aria-label="Search cooking tips" />
+                    <button type="submit" class="jt-btn jt-btn-primary">Search</button>
+                    @if (!string.IsNullOrEmpty(Model.Query))
+                    {
+                        <a asp-controller="Tips" asp-action="Index" class="jt-btn jt-btn-secondary" title="Reset search">Clear</a>
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-5 d-flex flex-wrap gap-2 justify-content-md-end">
+                <a asp-controller="Tips" asp-action="Index" asp-route-q="@Model.Query"
+                   class="jt-btn jt-btn-sm @(Model.Visibility == null ? "jt-btn-primary" : "jt-btn-secondary")">
+                    All (@Model.TotalItems)
+                </a>
+                <a asp-controller="Tips" asp-action="Index" asp-route-q="@Model.Query" asp-route-visibility="@ContentVisibility.Free"
+                   class="jt-btn jt-btn-sm @(Model.Visibility == ContentVisibility.Free ? "jt-btn-primary" : "jt-btn-secondary")">
+                    Free Only
+                </a>
+                <a asp-controller="Tips" asp-action="Index" asp-route-q="@Model.Query" asp-route-visibility="@ContentVisibility.MembersOnly"
+                   class="jt-btn jt-btn-sm @(Model.Visibility == ContentVisibility.MembersOnly ? "jt-btn-primary" : "jt-btn-secondary")">
+                    Members-Only
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Results Information -->
+<div class="d-flex justify-content-between align-items-center mb-3 text-muted small">
+    <div>
+        Showing @Model.Tips.Count of @Model.TotalItems matching tip@(Model.TotalItems == 1 ? "" : "s")
+        @if (!string.IsNullOrEmpty(Model.Query))
+        {
+            <span>for "<strong>@Model.Query</strong>"</span>
+        }
+    </div>
+</div>
+
+<!-- Tips Grid -->
+@if (Model.Tips.Count == 0)
+{
+    <div class="p-5 text-center bg-white rounded-4 border shadow-sm my-4">
+        <div class="display-6 text-muted mb-3">&#128269;</div>
+        <h3>No matching tips found</h3>
+        <p class="text-muted max-w-500 mx-auto">We couldn't find any cooking tips matching your search. Try different keywords or reset your filter.</p>
+        <a asp-controller="Tips" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm mt-2">Reset All Filters</a>
+    </div>
+}
+else
+{
+    <div class="jt-card-grid mb-5">
+        @foreach (var tip in Model.Tips)
+        {
+            <article class="jt-card">
+                <div class="jt-card-img-wrapper">
+                    @if (!string.IsNullOrEmpty(tip.ImageUrl))
+                    {
+                        <img src="@tip.ImageUrl" alt="@tip.Title" class="jt-card-img" loading="lazy" />
+                    }
+                    <div class="jt-card-badge-pos">
+                        @if (tip.IsMembersOnly)
+                        {
+                            <span class="jt-badge jt-badge-paid">&#128274; Masterclass Secret</span>
+                        }
+                        else
+                        {
+                            <span class="jt-badge jt-badge-free">Free Tip</span>
+                        }
+                    </div>
+                </div>
+                <div class="jt-card-body">
+                    <div class="jt-card-meta">
+                        <span>&#128100; @tip.AuthorDisplayName</span>
+                        <span>&#128197; @tip.CreatedAtUtc.ToString("MMM dd, yyyy")</span>
+                    </div>
+                    <h2 class="jt-card-title">
+                        <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug">@tip.Title</a>
+                    </h2>
+                    <p class="jt-card-text">@tip.Summary</p>
+                    <div class="jt-card-footer">
+                        <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug" class="jt-btn jt-btn-outline jt-btn-sm">
+                            @(tip.IsMembersOnly ? "View Preview" : "Read Full Tip") &rarr;
+                        </a>
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Tips pagination" class="d-flex justify-content-center my-4">
+            <ul class="pagination">
+                @for (int p = 1; p <= Model.TotalPages; p++)
+                {
+                    <li class="page-item @(p == Model.Page ? "active" : "")">
+                        <a class="page-link" asp-controller="Tips" asp-action="Index"
+                           asp-route-page="@p"
+                           asp-route-q="@Model.Query"
+                           asp-route-visibility="@Model.Visibility">@p</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+}

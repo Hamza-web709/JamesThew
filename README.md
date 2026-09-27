@@ -4,21 +4,25 @@ James Thew ki recipes, cooking tips, paid membership, feedback aur contests ke A
 
 ## Current Phase
 
-**Phase 1 foundation implemented, build aur 19 integration tests pass.** Existing `net10.0` MVC project reuse hua; EF Core SQL Server, Identity Member/Admin roles, registration/login/logout, protected account/admin landing pages aur safe local admin seed ready hain. Database mein sirf Identity tables aur ApplicationUser.DisplayName hai. Public registration Member account banati hai, paid membership activate nahi karti.
+**Phase 2 public read-only website implemented, build aur 26 integration tests pass.**
+Responsive shared layout, culinary brand styling (`--jt-primary`, `--jt-accent`, `--jt-gold`), Home page, recipe/tip catalogs, search, all 7 required FAQs (`/faq`), Free guest access, aur Members-Only locked preview state (zero body/ingredients/steps leak + `Cache-Control: no-cache, no-store, must-revalidate`) ready hain. Aggregate content entities (`ContentItem`, `Recipe`, `RecipeIngredient`, `RecipeStep`, `Tip`, `FaqItem`), migration `20260927100700_Phase2PublicContent` aur idempotent startup demo content seeder added. Phase 3 membership approval abhi implement nahi hua, is liye ordinary Member account paid content unlock nahi karta (Phase 2 mein sirf Admin role bypass karta hai).
 
-27 September acceptance review mein trusted local HTTPS par browser registration/login/logout aur Member/Admin access checks pass hue. Latest evidence aur scoped review findings docs/TEST_PLAN.md mein hain. Payment, profile editing, recipe/contribution/contest workflows abhi implemented nahi. Hosting optional hai.
+Live HTTPS verification trusted dev cert ke saath pass hui. 26/26 tests pass (19 Foundation + 7 PublicContent). Payment gateway, profile edit, membership approval, feedback submission, member contributions aur contests later phases ke liye reserved hain.
 
 ## Next Phase
 
-Next phase **Phase 2: public read-only MVC website** hai, agle instruction ke baad. Account authentication user ke current scope se Phase 1 mein aa gayi; Phase 3 mein profile editing, simulated/manual membership approval aur member feedback baqi hain. Billing periods aur contest edge rules abhi guess nahi kiye gaye.
+Next phase **Phase 3: Identity, manual demo membership approval, aur member feedback** hai:
+- User profile editing.
+- Simulated/manual demo membership plan selection ($10/mo, $100/yr) aur admin approval/rejection queue.
+- Member-only recipe/site feedback submission forms aur storage.
 
 ## Documents aur sources
 
 - [PRD](docs/PRD.md): approved behavior, original PDF differences aur remaining decisions.
-- [DESIGN](docs/DESIGN.md): future editorial UI/layouts.
-- [SYSTEM_DESIGN](docs/SYSTEM_DESIGN.md): implemented foundation vs future entities.
-- [TASKS](docs/TASKS.md): scoped completion, dependencies aur dates.
-- [TEST_PLAN](docs/TEST_PLAN.md): actual foundation results aur future scenarios.
+- [DESIGN](docs/DESIGN.md): editorial UI/layouts aur brand tokens.
+- [SYSTEM_DESIGN](docs/SYSTEM_DESIGN.md): implemented schema, aggregate relationships aur policies.
+- [TASKS](docs/TASKS.md): scoped completion, dependencies, Phase 2 actual results aur dates.
+- [TEST_PLAN](docs/TEST_PLAN.md): actual foundation & Phase 2 verification results, test matrix aur inventory.
 - Original 10-page specification: both source PDFs are retained locally and excluded from Git. Public requirements are summarized in PRD; no public PDF download is provided.
 
 Private screenshots and request attachments remain local; their identifiers and paths are not published. Separate submission TXT, Excel/feedback forms aur original ZIP available nahi thay.
@@ -47,13 +51,13 @@ dotnet ef database update --project JamesThew/JamesThew.csproj
 dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj
 ```
 
-Migration `20260926181611_InitialIdentity` Development database par apply ho chuki hai. `database update` repeat karna safe hai. App startup schema migrate nahi karta; migration pehle run karein. Startup Member/Admin role names idempotently ensure karta hai. Future feature migration us feature ki implementation mein add hogi; payment/contribution/contest entities abhi nahi.
+Migrations `20260926181611_InitialIdentity` aur `20260927100700_Phase2PublicContent` Development database par apply ho chuki hain. `database update` repeat karna safe hai. Startup schema migrate nahi karta; migration pehle run karein. Startup Member/Admin role names idempotently ensure karta hai aur demo content (`ContentSeeder.cs`) seed karta hai.
 
 ## Run aur test
 
 ```powershell
 dotnet run --project JamesThew/JamesThew.csproj --launch-profile https
-dotnet test JamesThew.slnx --logger 'trx;LogFileName=foundation.trx' --results-directory artifacts/TestResults
+dotnet test JamesThew.slnx --logger 'trx;LogFileName=phase2.trx' --results-directory artifacts/TestResults
 ```
 
 URLs: [local HTTPS](https://localhost:7054), HTTP `http://localhost:5052` HTTPS par redirect hota hai. Authentication cookies Secure/HttpOnly hain; HTTPS profile use karein. 27 September ko localhost development certificate trusted mila aur browser HTTPS verification pass hui. Fresh machine par browser use se pehle developer certificate trust verify/configure karein; `dotnet dev-certs https --trust` aapke local trust store ko change karta hai aur confirmation dikha sakta hai. Acceptance review mein trust warning bypass ya trust store change nahi kiya gaya; existing trusted certificate use hua.
@@ -88,14 +92,16 @@ dotnet user-secrets remove 'LocalAdmin:Password' --project JamesThew/JamesThew.c
 
 Seed existing Admin ko duplicate/reset nahi karta; existing Member ko promote karne se refuse karta hai. Missing/weak credentials ya non-Development environment fail hota hai. User creation aur Admin role assignment atomic hain. Credentials logs mein print nahi hote. Admin ka apna chosen password login ke liye retain karein; recovery/email sending abhi implement nahi.
 
-## Foundation access aur limits
+## Phase 2 access aur limits
 
-- Public: existing Home/Privacy aur Login/Register pages. Registration always Member role assign karti hai; submitted Role/activation/email-confirmation fields bind nahi hote.
-- Signed-in Member/Admin: `/account/status`, account identity ka limited landing page; profile edit ya paid features nahi.
-- Admin only: `/admin`, minimal authorization check page; business management UI nahi.
-- Logout sirf antiforgery-protected POST; GET logout nahi karta. Login external return URLs accept nahi karta.
-- Unique normalized email SQL constraint, Identity password hashing, 12-character minimum and 5-failure/15-minute lockout configured. Email confirmation service absent hone ki wajah se login confirmation gate disabled hai; EmailConfirmed falsely true nahi set hota.
-- MemberAccount policy account access ke liye hai, active subscription ke liye nahi. Later paid endpoints ko future subscription policy chahiye; registration ko approval na samjhein.
+- Public Home (`/`): Culinary hero presentation, quick search bar, featured Free/Paid recipes and tips, membership tier comparison cards ($10/mo, $100/yr demo), contests teaser, FAQ accordion preview.
+- Public Recipes (`/recipes`, `/recipes/{slug}`): Catalog with search and filter tabs (All, Free, Members-Only). Free recipes show full ingredients and preparation steps. Members-Only recipes show locked preview box, login/join CTA, zero ingredients/steps exposed, and `Cache-Control: no-cache, no-store, must-revalidate` response header.
+- Public Tips (`/tips`, `/tips/{slug}`): Catalog with search and filter tabs. Free tips show full text. Members-Only tips show locked preview box with zero protected body exposure and no-cache header.
+- Public Search: Searches across titles, summaries, and tags. Secret body text (e.g. ingredients, steps, tip text) is strictly omitted from search matching for unauthorized users to prevent indirect leakage.
+- Public FAQ (`/faq`): Semantic HTML5 `<details>`/`<summary>` elements display all 7 required answers from PRD CRS 7; works completely without JavaScript; includes deep-link anchors and policy links.
+- Informational Menus (`/contests`, `/announcements`, `/feedback`): Informational placeholder pages keep the top-level 7-item navigation functional and clear without broken links; indicate phase deferral.
+- Identity & Paid Access Boundary: Phase 3 membership approval is not implemented yet. A registered Member account does NOT unlock paid content. In Phase 2, only the Admin role bypasses locked content for verification.
+- Account & Admin (`/account/status`, `/admin`): Preserved from Phase 1. Logout remains antiforgery-protected POST only. External return URLs rejected. Lockout and password policies remain active.
 
 ## Backup, Git aur academic delivery
 
