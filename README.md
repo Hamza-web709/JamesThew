@@ -4,34 +4,36 @@ James Thew ki recipes, cooking tips, paid membership, feedback aur contests ke A
 
 ## Current Phase
 
-**Phase 6A: Release-Readiness Review & Automated Demo QA complete. Build 0 warnings/0 errors, 153/153 tests pass.**
+**Academic Submission Reconciliation Complete. Build 0 warnings/0 errors, 163/163 tests pass.**
 
-### Phase 6A Deliverables & Verification
-1. **Neutral Winner Display Name Fallback & Zero Data Leakage**:
-   - When a contest entrant's `DisplayName` is missing or whitespace, the system falls back to a neutral, professional moniker: `"Culinary Member"`.
-   - Never falls back to email or email prefixes (e.g. `user@example.com` will never be shown as `user`).
-   - Public HTML strictly excludes email addresses, private ingredients, preparation steps, and admin qualitative review notes.
-2. **Atomic Winner Replacement & Durable Multi-Revocation Audit**:
-   - Replacing an announced winner atomically clears public announcement state (`WinnerAnnouncedAtUtc = null`). The replacement winner is NEVER publicly visible until an explicit "Announce Winner Publicly" action is taken.
-   - Repeated revocations preserve a durable, timestamped audit log (`[yyyy-MM-dd HH:mm UTC] reason`) in both `Contest.WinnerRevocationReason` and `ContestEntry.RevocationReason` without overwriting prior audit entries.
-3. **Dedicated Clean Demo Database (`JamesThew_Demo`)**:
+### Reconciled Requirements & Submission Deliverables
+1. **REQ-005 (Same-Page Profile View & Edit - PASSED)**:
+   - Authenticated members can view and update their public display name directly on `/account/status` (and `/account/profile`).
+   - Server-side validation enforces display name length (2 to 100 characters) and prevents client tampering.
+   - Enforces antiforgery token protection (`[ValidateAntiForgeryToken]`).
+   - Verified in real Chromium browser via Playwright E2E test `REQ005_SamePage_Profile_View_And_Edit_Browser_Verification` in `ProfileBrowserE2ETests.cs`.
+2. **REQ-012 (Member Contribution Edit/Delete & Moderation Lifecycle - PASSED)**:
+   - Members can edit and soft-delete their own submitted recipes (`/contributions/recipe/{id}/edit`) and cooking tips (`/contributions/tip/{id}/edit`).
+   - Authorization strictly isolates member contributions; cross-member edits or deletions return HTTP 404.
+   - Strict moderation lifecycle: editing an item immediately resets `PublicationStatus` to `Pending`, clears prior rejection reasons, and immediately withdraws published items from the public catalog/direct slugs until re-approved by an administrator.
+   - Verified by 5 passing tests in `ProfileAndContributionEditTests.cs`.
+3. **REQ-022 (Daily Backup Automation & Retention - PARTIAL)**:
+   - One-time backup and restore verified via `FoundationTests.cs` and `JamesThew_Demo.bak`.
+   - Repeatable PowerShell automation script `scripts/DailyBackup.ps1` implements automated backups with `WITH INIT, CHECKSUM`, `RESTORE VERIFYONLY`, configurable retention pruning (default 7 days), dry-run test restores, and audit logging.
+   - Requirement is labeled **Partial** (rather than Passed) because persistent daily OS daemon scheduling (Windows Task Scheduler / SQL Server Agent) is not configured in this local demo environment.
+4. **REQ-024 / REQ-025 (Project Status Reports - PARTIAL / PENDING DISPATCH)**:
+   - Accurate draft emails for Status Report 1 (Foundation & Public Catalog) and Status Report 2 (Workflows, Contests & QA) prepared in `docs/STATUS_EMAILS.md`.
+   - Dispatch is marked **Pending** (unsent); no transmission dates or evidence fabricated.
+5. **REQ-026 (Academic Certificate & Feedback Form - PENDING FACULTY ISSUANCE)**:
+   - Official Certificate of Completion template and Faculty Feedback / Evaluation form remain pending from faculty. No signatures or forms fabricated.
+6. **Dedicated Clean Demo Database (`JamesThew_Demo`)**:
    - Connection String: `Server=(localdb)\MSSQLLocalDB;Database=JamesThew_Demo;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True`
-   - Migrated through all 8 EF Core migrations up to `20260928074105_Phase5CDurableRevocationAudit`.
-   - Seeded with clean baseline data: 7 ContentItems (recipes/tips), 7 Faqs, 4 Contests, 1 Admin User, 2 Roles.
-   - Development database `JamesThew_Development` is preserved intact with all 16 ContentItems (including all 9 QA items), 7 Faqs, and 6 Users; its Contests table contains 0 rows (0 rows affected by the contest image update). Contest demo data (4 contests) resides in `JamesThew_Demo`, where contest `summer-artisanal-seafood-showcase` ImageUrl points to `/images/recipes/seafood-saffron-risotto.jpg`.
-4. **Automated End-to-End Browser QA (`ReleaseReadinessBrowserE2ETests.cs`)**:
-   - Chromium Playwright E2E testing across 7 comprehensive lifecycle phases:
-     - Part 1: Guest browsing & responsive layout on Desktop (1280x800) and Mobile (390x844). Verified 0 horizontal overflow, 0 broken images, free content access vs members-only locked state.
-     - Part 2: Member registration and login with Alex Rivers.
-     - Part 3: Subscription request submission, admin approval from `/admin/subscriptions`, and subsequent unlock of members-only masterclass recipe.
-     - Part 4: Community contribution submission, admin moderation approval from `/admin/contributions`, and public publication.
-     - Part 5: Editorial media library upload from admin dashboard.
-     - Part 6: Contest entry submission, admin contest closure, winner selection, unannounced winner privacy verification (0 leak in public HTML), winner announcement verification, and durable revocation with audit record.
-     - Part 7: Zero unhandled console or server errors across all browser contexts.
-   - All QA screenshots are captured into system temporary directories and excluded from Git tracking.
-5. **Full Verification**:
+   - Migrated through all 8 EF Core migrations.
+   - Seeded with clean baseline data: 7 ContentItems, 7 Faqs, 4 Contests, 1 Admin User, 2 Roles.
+   - Development database `JamesThew_Development` is preserved intact with all 16 ContentItems (including all 9 QA items), 7 Faqs, and 6 Users.
+7. **Full Verification**:
    - Solution Build: 0 Warnings, 0 Errors (`dotnet build JamesThew.slnx`).
-   - Test Suite: 153/153 Tests Passed (100% Pass Rate).
+   - Test Suite: 163/163 Tests Passed (100% Pass Rate across unit, integration, and Playwright Chromium browser tests).
    - EF Core Model: 0 Pending Model Changes (`dotnet ef migrations has-pending-model-changes`).
 
 ## Documents aur sources

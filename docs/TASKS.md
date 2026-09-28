@@ -331,12 +331,14 @@ Phase 5B successfully implemented and verified:
 | T-16 | Complete (Phase 5A): Admin contest management (create/edit/publish/close/archive), auto-slug resolution, date validation, and public read-only discovery at /contests |
 | T-17 | Complete (Phase 5B): Member contest entry intake, pre-deadline editing, one entry per member DB constraint, My Entries dashboard, private isolation, and admin read-only review |
 | T-18 | Complete (Phase 5C): Admin judging, qualitative review, private notes, winner selection, decoupled public announcement, member edit lock, winner revocation, durable audit storage, and public accolades |
-| T-10 | Auth complete in Phase 1; Profile edit deferred |
-| Phase 5C verification | Build 0 warnings/0 errors; 150/150 tests pass; Playwright Chromium 10/10 Phase 5A + full Phase 5B + full Phase 5C lifecycle pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
+| T-10 | Complete (Academic Reconciliation): Same-page profile viewing/editing implemented on `/account/status` and verified via Playwright Chromium E2E QA |
+| T-14 edit/delete | Complete (Academic Reconciliation): Member recipe/tip editing and deletion implemented with strict moderation lifecycle (Pending reset and public withdrawal) |
+| T-22 daily backup | Partial (Academic Reconciliation): Automated backup script `DailyBackup.ps1` with retention & dry-run restore verified; OS daemon scheduling not installed |
+| Phase 6A & Reconciliation verification | Build 0 warnings/0 errors; 163/163 tests pass; Playwright Chromium browser tests pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
-| T-10 / REQ-002, REQ-005 | Registration/login/logout DONE in Phase 1; profile edit deferred | T-05, T-07 | Own profile only; role fields ignored; pending != paid | TC-002/005 duplicate/login/profile tampering |
+| T-10 / REQ-002, REQ-005 | Registration/login/logout and same-page profile edit on `/account/status` | T-05, T-07 | Own profile only; role fields ignored; pending != paid; display name 2-100 chars; CSRF protected | Passed: TC-002/005; unit/integration tests in `ProfileAndContributionEditTests.cs` and browser E2E test in `ProfileBrowserE2ETests.cs`; G |
 | T-11 / REQ-002, REQ-004 | Membership controller/views, demo plan request, admin approval/rejection, activation/expiry | T-02, T-10 | $10 monthly/$100 yearly demo labels; Pending until admin approval; rejected/expired excluded; no gateway | Passed: TC-002; 6 new integration tests in SubscriptionTests.cs, live HTTPS verified; G |
 | T-12 / REQ-003, REQ-004, REQ-005, REQ-008 | Full guest/member/admin access integration | T-08, T-11 | UI and direct endpoints consistent; approved members unlock paid content; pending/rejected locked | Passed: TC-003/004/008; direct recipe & tip authorization assertions, no-cache headers; G |
 | T-09 / REQ-013, REQ-015 | Member-only recipe/site FeedbackController, view models aur Razor forms | T-08, T-10, T-11 | Login + active member required; guest POST reject/no record; accessible recipe check; receipt | Passed: TC-013/015; 3 new integration tests in ContributionAndFeedbackTests.cs; G |
@@ -381,15 +383,14 @@ Phase 6A successfully verified and completed on 28 September 2026:
 ## Phase 7 - Testing aur release readiness
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
-|---|---|---|---|---|
-| T-21 / REQ-001 to REQ-020 | Functional/security E2E regression aur defect repair | T-20 | TC-001 to TC-020 pass or documented accepted exception | Complete (Phase 6A): 153/153 integration & browser E2E tests pass (`dotnet test JamesThew.slnx`) |
-| T-22 / REQ-021, REQ-022, REQ-023, REQ-027 | Local fresh setup, migrations, restore aur academic-demo rehearsal | T-21 | Approved machine par reproducible setup; backup restore; accurate README | Complete (Phase 6A): Dedicated `JamesThew_Demo` database provisioned, migrated, and seeded; README commands verified |
+| T-21 / REQ-001 to REQ-020 | Functional/security E2E regression, profile edit & member contribution lifecycle | T-20 | TC-001 to TC-020 pass or documented accepted exception | Complete: 163/163 unit, integration & browser E2E tests pass (`dotnet test JamesThew.slnx`) |
+| T-22 / REQ-021, REQ-022, REQ-023, REQ-027 | Local fresh setup, migrations, restore rehearsal & repeatable daily backup automation | T-21 | Approved machine par reproducible setup; backup restore; accurate README | Partial (REQ-022): Backup & restore verified; `DailyBackup.ps1` with retention verified; daily OS daemon scheduling not installed |
 
-### Remaining Work Short Checklist (Academic Submission Phase 8)
-1. **Academic Certificate & Forms**: Obtain official institutional Certificate of Completion template and Faculty Feedback/Evaluation Form (OD-04, OD-06).
-2. **Final Project Documentation Package**: Compile final synopsis, problem definition, algorithms, and test checklist into single deliverable PDF (T-25).
-3. **Faculty Delivery Coordination**: Confirm institutional submission channel, recipient email, and exact deadline date/timezone (T-26).
-4. **Source Code & DB Backup ZIP**: Package repository source (excluding Git history, secrets, and temp screenshots) and create SQL Server `.bak` demo archive for submission.
+### Academic Submission Deliverables Status (Phase 8 Reconciliation)
+1. **Academic Certificate & Faculty Forms (REQ-026)**: PENDING FACULTY ISSUANCE. Official institutional Certificate of Completion and Faculty Feedback Form await faculty provision (no fabricated forms or signatures).
+2. **Final Project Documentation Package (REQ-023)**: Complete. Compiled final project report PDF and HTML documentation covering all 13 required sections.
+3. **Status Report Draft Emails (REQ-024 / REQ-025)**: Partial / Pending Dispatch. Prepared accurate drafts in `docs/STATUS_EMAILS.md`; dispatch marked Pending (unsent) awaiting faculty coordination.
+4. **Source Code & DB Backup Artifacts**: Prepared outside repository at `JamesThew_Academic_Submission/`. Includes clean source ZIP (no secrets/git/build artifacts) and verified SQL Server `.bak` demo database archive.
 
 ## Phase 8 - Reports aur submission
 
@@ -397,10 +398,10 @@ Yeh phase ki reporting tasks calendar se bhi trigger hongi; status mail ko final
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
-| T-23 / REQ-024, REQ-025 | Status report 1 aur review attachment | T-01; schedule/recipient T-02 | Actual progress, blockers, next work; correct subject | Confirmed date/recipient, attachment checklist; sending separately authorized |
-| T-24 / REQ-024, REQ-025 | Status report 2 aur updated review | T-23; confirmed milestone | Actual completion/gaps and test state accurate | Report diff, remaining risks, dispatch evidence only if actually sent |
-| T-25 / REQ-021, REQ-023, REQ-025, REQ-026 | Synopsis + complete final report, original feedback form, source package | T-22, T-24; forms from T-02 | All 13 report items + source + original form present; format verified | TEST_PLAN final checklist; clean package opens on another machine |
-| T-26 / REQ-022, REQ-024, REQ-025, REQ-026, REQ-027 | Final readiness review and authorized submission | T-25 | Confirmed channel/date; final backup; no secrets; actual delivery receipt if sent | Package hash/version, G, recipient/file/readback check; no automatic send in this plan |
+| T-23 / REQ-024, REQ-025 | Status report 1 aur review attachment | T-01; schedule/recipient T-02 | Actual progress, blockers, next work; correct subject | Partial / Pending Dispatch: Accurate draft in `docs/STATUS_EMAILS.md`; dispatch unsent |
+| T-24 / REQ-024, REQ-025 | Status report 2 aur updated review | T-23; confirmed milestone | Actual completion/gaps and test state accurate | Partial / Pending Dispatch: Accurate draft in `docs/STATUS_EMAILS.md`; dispatch unsent |
+| T-25 / REQ-021, REQ-023, REQ-025, REQ-026 | Synopsis + complete final report, original feedback form, source package | T-22, T-24; forms from T-02 | All 13 report items + source + original form present; format verified | Report & source package complete outside repo; faculty form/certificate pending |
+| T-26 / REQ-022, REQ-024, REQ-025, REQ-026, REQ-027 | Final readiness review and authorized submission | T-25 | Confirmed channel/date; final backup; no secrets; actual delivery receipt if sent | Package verified; pending faculty delivery coordination; no unauthorized publish |
 
 ## Common phase gate G
 

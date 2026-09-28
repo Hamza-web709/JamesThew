@@ -1,13 +1,57 @@
-@model string
-@{ ViewData["Title"] = "Account"; }
+@model JamesThew.ViewModels.UserProfileViewModel
+@{ ViewData["Title"] = "User Profile & Account Dashboard"; }
 
 <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm max-w-700 mx-auto my-4">
-    <h1 class="h3 jt-serif mb-2">Account</h1>
-    <p class="lead">Welcome, <strong>@Model</strong>.</p>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <span class="jt-brand-tag">Member Profile</span>
+            <h1 class="h3 jt-serif mb-0">User Profile &amp; Account</h1>
+        </div>
+        <span class="badge bg-secondary-subtle text-secondary border">@Model.Roles</span>
+    </div>
+
+    <p class="lead">Welcome, <strong>@Model.DisplayName</strong>.</p>
     <p class="text-muted">You are signed in. Registration alone does not grant paid membership access.</p>
+
+    @if (TempData["ProfileSuccess"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" id="alertProfileSuccess">
+            <strong>&#10004; Success!</strong> @TempData["ProfileSuccess"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Same-Page Profile Editing Card (REQ-005) -->
+    <div class="p-4 rounded-3 border mb-4 bg-light" id="cardEditProfile">
+        <h2 class="h6 mb-3">&#128100; Edit Profile Details</h2>
+        <form asp-action="UpdateProfile" method="post" id="formEditProfile">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-uppercase text-muted">Registered Email</label>
+                <input type="text" class="form-control bg-white" id="inputEmail" value="@Model.Email" readonly disabled />
+                <div class="form-text small">Email address is managed by security policies and cannot be modified directly.</div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="DisplayName" class="form-label fw-bold small text-uppercase">Public Display Name</label>
+                <input asp-for="DisplayName" class="form-control" id="inputDisplayName" placeholder="Your full or pen name..." />
+                <span asp-validation-for="DisplayName" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="jt-btn jt-btn-primary" id="btnUpdateProfile">
+                    &#128190; Save Profile Changes
+                </button>
+            </div>
+        </form>
+    </div>
 
     <div class="p-3 rounded-3 border mb-4" style="background-color: var(--jt-surface-warm);">
         <h2 class="h6 mb-2">&#127859; Membership &amp; Masterclass Access</h2>
+        <p class="small text-muted mb-2">
+            Status: <strong>@Model.SubscriptionStatus</strong>
+        </p>
         <p class="small text-muted mb-3">
             Access to exclusive culinary masterclasses and secret preparation techniques requires an approved demo subscription plan ($10/month or $100/year).
         </p>
@@ -20,7 +64,7 @@
         <div class="col-md-4">
             <div class="p-3 bg-light rounded-3 border h-100">
                 <h3 class="h6 mb-1">&#127859; My Contributions</h3>
-                <p class="small text-muted mb-3">Submit your personal recipes and cooking tips for editorial review.</p>
+                <p class="small text-muted mb-3">Submit and manage your artisanal recipes and cooking tips.</p>
                 <a asp-controller="Contributions" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm">
                     View Contributions &rarr;
                 </a>
@@ -45,6 +89,4 @@
             </div>
         </div>
     </div>
-
-    <p class="small text-muted mb-0">Profile editing is planned for subsequent phases.</p>
 </div>

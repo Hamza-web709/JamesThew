@@ -151,6 +151,177 @@ public class ContributionService(ApplicationDbContext db) : IContributionService
         };
     }
 
+    public async Task<RecipeContributionViewModel?> GetRecipeContributionForEditAsync(int id, string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || id <= 0)
+            return null;
+
+        var item = await db.ContentItems
+            .AsNoTracking()
+            .Include(c => c.Recipe)
+                .ThenInclude(r => r!.Ingredients.OrderBy(i => i.Position))
+            .Include(c => c.Recipe)
+                .ThenInclude(r => r!.Steps.OrderBy(s => s.Position))
+            .FirstOrDefaultAsync(c => c.Id == id && c.Origin == ContentOrigin.Community && c.DeletedAtUtc == null);
+
+        if (item is null || item.AuthorUserId != userId || item.Kind != ContentKind.Recipe || item.Recipe is null)
+            return null;
+
+        var ingredientsText = string.Join(Environment.NewLine, item.Recipe.Ingredients.OrderBy(i => i.Position).Select(i => i.Name));
+        var stepsText = string.Join(Environment.NewLine, item.Recipe.Steps.OrderBy(s => s.Position).Select(s => s.Instruction));
+
+        return new RecipeContributionViewModel
+        {
+            Id = item.Id,
+            Title = item.Title,
+            Summary = item.Summary,
+            Servings = item.Recipe.Servings,
+            PrepMinutes = item.Recipe.PrepMinutes,
+            CookMinutes = item.Recipe.CookMinutes,
+            IngredientsText = ingredientsText,
+            StepsText = stepsText,
+            Notes = item.ContributorNotes,
+            CurrentStatus = item.PublicationStatus,
+            RejectionReason = item.RejectionReason
+        };
+    }
+
+    public async Task<TipContributionViewModel?> GetTipContributionForEditAsync(int id, string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || id <= 0)
+            return null;
+
+        var item = await db.ContentItems
+            .AsNoTracking()
+            .Include(c => c.Tip)
+            .FirstOrDefaultAsync(c => c.Id == id && c.Origin == ContentOrigin.Community && c.DeletedAtUtc == null);
+
+        if (item is null || item.AuthorUserId != userId || item.Kind != ContentKind.Tip || item.Tip is null)
+            return null;
+
+        return new TipContributionViewModel
+        {
+            Id = item.Id,
+            Title = item.Title,
+            Summary = item.Summary,
+            Body = item.Tip.Body,
+            Notes = item.ContributorNotes,
+            CurrentStatus = item.PublicationStatus,
+            RejectionReason = item.RejectionReason
+        };
+    }
+
+    public async Task<(bool Success, string Message)> UpdateRecipeContributionAsync(int id, string userId, RecipeContributionViewModel model)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || id <= 0)
+            return (false, "Invalid contribution request.");
+
+        var item = await db.ContentItems
+            .Include(c => c.Recipe)
+                .ThenInclude(r => r!.Ingredients)
+            .Include(c => c.Recipe)
+                .ThenInclude(r => r!.Steps)
+            .FirstOrDefaultAsync(c => c.Id == id && c.Origin == ContentOrigin.Community && c.DeletedAtUtc == null);
+
+        if (item is null || item.AuthorUserId != userId || item.Kind != ContentKind.Recipe || item.Recipe is null)
+            return (false, "Contribution not found or unauthorized.");
+
+        var ingredientLines = (model.IngredientsText ?? string.Empty)
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .ToList();
+
+        var stepLines = (model.StepsText ?? string.Empty)
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .ToList();
+
+        if (ingredientLines.Count == 0 || stepLines.Count == 0)
+            return (false, "Please provide at least one ingredient and one preparation step.");
+
+        item.Title = model.Title.Trim();
+        item.Summary = model.Summary.Trim();
+        item.ContributorNotes = model.Notes?.Trim();
+        item.Recipe.Servings = model.Servings;
+        item.Recipe.PrepMinutes = model.PrepMinutes;
+        item.Recipe.CookMinutes = model.CookMinutes;
+        item.UpdatedAtUtc = DateTime.UtcNow;
+
+        item.Recipe.Ingredients.Clear();
+        for (int i = 0; i < ingredientLines.Count; i++)
+        {
+            item.Recipe.Ingredients.Add(new RecipeIngredient
+            {
+                Position = i + 1,
+                Name = ingredientLines[i]
+            });
+        }
+
+        item.Recipe.Steps.Clear();
+        for (int i = 0; i < stepLines.Count; i++)
+        {
+            item.Recipe.Steps.Add(new RecipeStep
+            {
+                Position = i + 1,
+                Instruction = stepLines[i]
+            });
+        }
+
+        // Re-review lifecycle rule:
+        // Editing a contribution sets status back to Pending and clears rejection reasons.
+        item.PublicationStatus = PublicationStatus.Pending;
+        item.RejectionReason = null;
+
+        await db.SaveChangesAsync();
+        return (true, "Recipe contribution updated successfully and submitted for editorial review.");
+    }
+
+    public async Task<(bool Success, string Message)> UpdateTipContributionAsync(int id, string userId, TipContributionViewModel model)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || id <= 0)
+            return (false, "Invalid contribution request.");
+
+        var item = await db.ContentItems
+            .Include(c => c.Tip)
+            .FirstOrDefaultAsync(c => c.Id == id && c.Origin == ContentOrigin.Community && c.DeletedAtUtc == null);
+
+        if (item is null || item.AuthorUserId != userId || item.Kind != ContentKind.Tip || item.Tip is null)
+            return (false, "Contribution not found or unauthorized.");
+
+        if (string.IsNullOrWhiteSpace(model.Body) || model.Body.Trim().Length < 20)
+            return (false, "Tip body instruction must be at least 20 characters.");
+
+        item.Title = model.Title.Trim();
+        item.Summary = model.Summary.Trim();
+        item.ContributorNotes = model.Notes?.Trim();
+        item.Tip.Body = model.Body.Trim();
+        item.UpdatedAtUtc = DateTime.UtcNow;
+
+        // Re-review lifecycle rule
+        item.PublicationStatus = PublicationStatus.Pending;
+        item.RejectionReason = null;
+
+        await db.SaveChangesAsync();
+        return (true, "Cooking tip contribution updated successfully and submitted for editorial review.");
+    }
+
+    public async Task<(bool Success, string Message)> DeleteContributionAsync(int id, string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || id <= 0)
+            return (false, "Invalid request.");
+
+        var item = await db.ContentItems
+            .FirstOrDefaultAsync(c => c.Id == id && c.Origin == ContentOrigin.Community && c.DeletedAtUtc == null);
+
+        if (item is null || item.AuthorUserId != userId)
+            return (false, "Contribution not found or unauthorized.");
+
+        item.DeletedAtUtc = DateTime.UtcNow;
+        item.UpdatedAtUtc = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+        return (true, "Contribution deleted successfully.");
+    }
+
     public async Task<AdminContributionListViewModel> GetAdminContributionListAsync(ContentKind? kindFilter = null, PublicationStatus? statusFilter = null)
     {
         var query = db.ContentItems

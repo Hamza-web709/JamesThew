@@ -77,4 +77,117 @@ public class ContributionsController(IContributionService contributionService) :
         ModelState.AddModelError(string.Empty, "Could not submit cooking tip. Please check your submission and try again.");
         return View(model);
     }
+
+    [HttpGet("contributions/recipe/{id:int}/edit")]
+    public async Task<IActionResult> EditRecipe(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Challenge();
+
+        var model = await contributionService.GetRecipeContributionForEditAsync(id, userId);
+        if (model is null)
+            return NotFound();
+
+        return View(model);
+    }
+
+    [HttpPost("contributions/recipe/{id:int}/edit")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditRecipe(int id, RecipeContributionViewModel model)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Challenge();
+
+        var existing = await contributionService.GetRecipeContributionForEditAsync(id, userId);
+        if (existing is null)
+            return NotFound();
+
+        if (!ModelState.IsValid)
+        {
+            model.Id = id;
+            model.CurrentStatus = existing.CurrentStatus;
+            model.RejectionReason = existing.RejectionReason;
+            return View(model);
+        }
+
+        var (success, message) = await contributionService.UpdateRecipeContributionAsync(id, userId, model);
+        if (success)
+        {
+            TempData["SuccessMessage"] = message;
+            return RedirectToAction(nameof(Index));
+        }
+
+        ModelState.AddModelError(string.Empty, message);
+        model.Id = id;
+        model.CurrentStatus = existing.CurrentStatus;
+        model.RejectionReason = existing.RejectionReason;
+        return View(model);
+    }
+
+    [HttpGet("contributions/tip/{id:int}/edit")]
+    public async Task<IActionResult> EditTip(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Challenge();
+
+        var model = await contributionService.GetTipContributionForEditAsync(id, userId);
+        if (model is null)
+            return NotFound();
+
+        return View(model);
+    }
+
+    [HttpPost("contributions/tip/{id:int}/edit")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditTip(int id, TipContributionViewModel model)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Challenge();
+
+        var existing = await contributionService.GetTipContributionForEditAsync(id, userId);
+        if (existing is null)
+            return NotFound();
+
+        if (!ModelState.IsValid)
+        {
+            model.Id = id;
+            model.CurrentStatus = existing.CurrentStatus;
+            model.RejectionReason = existing.RejectionReason;
+            return View(model);
+        }
+
+        var (success, message) = await contributionService.UpdateTipContributionAsync(id, userId, model);
+        if (success)
+        {
+            TempData["SuccessMessage"] = message;
+            return RedirectToAction(nameof(Index));
+        }
+
+        ModelState.AddModelError(string.Empty, message);
+        model.Id = id;
+        model.CurrentStatus = existing.CurrentStatus;
+        model.RejectionReason = existing.RejectionReason;
+        return View(model);
+    }
+
+    [HttpPost("contributions/{id:int}/delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Challenge();
+
+        var (success, message) = await contributionService.DeleteContributionAsync(id, userId);
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(Index));
+    }
 }

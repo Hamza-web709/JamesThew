@@ -1,6 +1,7 @@
 using JamesThew.Authorization;
 using JamesThew.Data;
 using JamesThew.Models;
+using JamesThew.Services;
 using JamesThew.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -13,7 +14,8 @@ namespace JamesThew.Controllers;
 [Route("account")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public class AccountController(UserManager<ApplicationUser> users,
-    SignInManager<ApplicationUser> signIn, ApplicationDbContext db) : Controller
+    SignInManager<ApplicationUser> signIn, ApplicationDbContext db,
+    ISubscriptionService subscriptionService) : Controller
 {
     [AllowAnonymous, HttpGet("register")]
     public IActionResult Register() => User.Identity?.IsAuthenticated == true
@@ -88,7 +90,8 @@ public class AccountController(UserManager<ApplicationUser> users,
         return RedirectToAction("Index", "Home");
     }
 
-    [Authorize(Policy = AppPolicies.MemberAccount), HttpGet("status")]
+    [Authorize(Policy = AppPolicies.MemberAccount), HttpGet("status", Order = 1)]
+    [Authorize(Policy = AppPolicies.MemberAccount), HttpGet("profile", Order = 2)]
     public async Task<IActionResult> Status()
     {
         var user = await users.GetUserAsync(User);
@@ -97,7 +100,71 @@ public class AccountController(UserManager<ApplicationUser> users,
             await signIn.SignOutAsync();
             return RedirectToAction(nameof(Login));
         }
-        return View(model: user.DisplayName);
+
+        var roles = await users.GetRolesAsync(user);
+        var subStatus = await subscriptionService.GetCurrentSubscriptionStatusAsync(user.Id);
+
+        var model = new UserProfileViewModel
+        {
+            Email = user.Email ?? string.Empty,
+            DisplayName = user.DisplayName,
+            Roles = string.Join(", ", roles),
+            SubscriptionStatus = subStatus?.HasActiveSubscription == true
+                ? $"Active Subscriber ({subStatus.Plan})"
+                : subStatus?.Status == SubscriptionStatus.Pending
+                    ? "Subscription Pending Review"
+                    : "Standard Registered Member"
+        };
+        return View(nameof(Status), model);
+    }
+
+    [Authorize(Policy = AppPolicies.MemberAccount), HttpPost("status", Order = 1)]
+    [Authorize(Policy = AppPolicies.MemberAccount), HttpPost("profile", Order = 2)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateProfile(UserProfileViewModel model)
+    {
+        var user = await users.GetUserAsync(User);
+        if (user is null)
+        {
+            await signIn.SignOutAsync();
+            return RedirectToAction(nameof(Login));
+        }
+
+        if (!ModelState.IsValid)
+        {
+            var roles = await users.GetRolesAsync(user);
+            var subStatus = await subscriptionService.GetCurrentSubscriptionStatusAsync(user.Id);
+            model.Email = user.Email ?? string.Empty;
+            model.Roles = string.Join(", ", roles);
+            model.SubscriptionStatus = subStatus?.HasActiveSubscription == true
+                ? $"Active Subscriber ({subStatus.Plan})"
+                : subStatus?.Status == SubscriptionStatus.Pending
+                    ? "Subscription Pending Review"
+                    : "Standard Registered Member";
+            return View(nameof(Status), model);
+        }
+
+        user.DisplayName = model.DisplayName.Trim();
+        var result = await users.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+                ModelState.AddModelError(string.Empty, error.Description);
+
+            var roles = await users.GetRolesAsync(user);
+            var subStatus = await subscriptionService.GetCurrentSubscriptionStatusAsync(user.Id);
+            model.Email = user.Email ?? string.Empty;
+            model.Roles = string.Join(", ", roles);
+            model.SubscriptionStatus = subStatus?.HasActiveSubscription == true
+                ? $"Active Subscriber ({subStatus.Plan})"
+                : subStatus?.Status == SubscriptionStatus.Pending
+                    ? "Subscription Pending Review"
+                    : "Standard Registered Member";
+            return View(nameof(Status), model);
+        }
+
+        TempData["ProfileSuccess"] = "Your profile has been updated successfully.";
+        return RedirectToAction(nameof(Status));
     }
 
     [AllowAnonymous, HttpGet("access-denied")]

@@ -5,6 +5,10 @@ namespace JamesThew.ViewModels;
 
 public class RecipeContributionViewModel
 {
+    public int Id { get; set; }
+    public PublicationStatus? CurrentStatus { get; set; }
+    public string? RejectionReason { get; set; }
+
     [Required(ErrorMessage = "Recipe title is required.")]
     [StringLength(150, MinimumLength = 3, ErrorMessage = "Title must be between 3 and 150 characters.")]
     public string Title { get; set; } = string.Empty;
@@ -36,6 +40,10 @@ public class RecipeContributionViewModel
 
 public class TipContributionViewModel
 {
+    public int Id { get; set; }
+    public PublicationStatus? CurrentStatus { get; set; }
+    public string? RejectionReason { get; set; }
+
     [Required(ErrorMessage = "Tip title is required.")]
     [StringLength(150, MinimumLength = 3, ErrorMessage = "Title must be between 3 and 150 characters.")]
     public string Title { get; set; } = string.Empty;

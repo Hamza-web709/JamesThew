@@ -718,8 +718,41 @@ Scope: Release-readiness review, neutral winner fallback, decoupled announcement
 | Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Documented Phase 6A verification results, scenario coverage, and changed-file inventory |
 | Updated | [README.md](../README.md) | Documented Phase 6A capabilities, clean demo database setup, connection string, and User Secrets credentials |
 
+## Academic Submission Package Reconciliation - 28 September 2026
 
+Scope: Final reconciliation of requirement matrix with actual code, verified test execution, and original eProject specification. Specifically addresses REQ-005, REQ-012, REQ-022, REQ-024/025, and REQ-026.
 
+| Evidence | Actual result |
+|---|---|
+| Build | Solution build succeeded, 0 warnings / 0 errors (`dotnet build JamesThew.slnx`) |
+| Test suite run | 163 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) |
+| EF Core model check | `dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj` clean: 0 pending model changes |
+| REQ-005 (Same-Page Profile View/Edit) | **PASSED**. Authenticated profile viewing and editing implemented on `/account/status` and `/account/profile` with server-side validation (2-100 characters), antiforgery protection, and real browser verification in Playwright Chromium test `ProfileBrowserE2ETests.cs`. |
+| REQ-012 (Member Contribution Edit/Delete) | **PASSED**. Routes `/contributions/recipe/{id}/edit`, `/contributions/tip/{id}/edit`, and `/contributions/{id}/delete` implemented. Cross-member edits return 404. Strict moderation lifecycle enforced: editing an item immediately resets `PublicationStatus` to `Pending` and withdraws published items from public catalogs until re-approved. Verified by 5 passing tests in `ProfileAndContributionEditTests.cs`. |
+| REQ-022 (Daily Database Backup & Retention) | **PARTIAL**. One-time backup and restore verified via `FoundationTests.cs` and `JamesThew_Demo.bak`. Repeatable automated PowerShell script `scripts/DailyBackup.ps1` implements `CHECKSUM`, `RESTORE VERIFYONLY`, 7-day retention pruning, and dry-run test restores. Labeled **Partial** because persistent daily OS daemon scheduling is not configured in this local demo environment. |
+| REQ-024 / REQ-025 (Status Reports 1 & 2) | **PARTIAL / PENDING DISPATCH**. Accurate draft emails for Status Report 1 and Status Report 2 prepared in `docs/STATUS_EMAILS.md` with correct `STATUS:` prefixes and milestone descriptions. Dispatch marked **Pending** (unsent); no transmission dates or evidence fabricated. |
+| REQ-026 (Certificate & Feedback Form) | **PENDING FACULTY ISSUANCE**. Official institutional Certificate of Completion template and Faculty Feedback Form remain pending from faculty. No signatures or forms fabricated. |
 
+### Reconciliation changed-file inventory
 
-
+| Status | File path | Description |
+|---|---|---|
+| New | [JamesThew/ViewModels/UserProfileViewModel.cs](../JamesThew/ViewModels/UserProfileViewModel.cs) | View model for same-page profile viewing and editing with validation annotations |
+| Updated | [JamesThew/ViewModels/ContributionViewModels.cs](../JamesThew/ViewModels/ContributionViewModels.cs) | Added edit model properties (`Id`, `CurrentStatus`, `RejectionReason`) for recipes and tips |
+| Updated | [JamesThew/Controllers/AccountController.cs](../JamesThew/Controllers/AccountController.cs) | Added GET and POST handlers for `/account/status` and `/account/profile` with antiforgery and validation |
+| Updated | [JamesThew/Views/Account/Status.cshtml](../JamesThew/Views/Account/Status.cshtml) | Integrated same-page profile editing form (`#formEditProfile`, `#inputDisplayName`, `#btnUpdateProfile`, `#alertProfileSuccess`) |
+| Updated | [JamesThew/Services/IContributionService.cs](../JamesThew/Services/IContributionService.cs) | Added method contracts for contribution editing, updating, and soft deletion |
+| Updated | [JamesThew/Services/ContributionService.cs](../JamesThew/Services/ContributionService.cs) | Implemented edit retrieval, update with moderation lifecycle reset, and member ownership authorization |
+| Updated | [JamesThew/Controllers/ContributionsController.cs](../JamesThew/Controllers/ContributionsController.cs) | Added GET/POST edit endpoints and POST delete endpoint with ownership validation and 404 responses |
+| Updated | [JamesThew/Views/Contributions/Index.cshtml](../JamesThew/Views/Contributions/Index.cshtml) | Added Actions column with Edit and Delete controls |
+| New | [JamesThew/Views/Contributions/EditRecipe.cshtml](../JamesThew/Views/Contributions/EditRecipe.cshtml) | Recipe edit form with moderation warnings and reviewer feedback banners |
+| New | [JamesThew/Views/Contributions/EditTip.cshtml](../JamesThew/Views/Contributions/EditTip.cshtml) | Cooking tip edit form with moderation warnings |
+| New | [scripts/DailyBackup.ps1](../scripts/DailyBackup.ps1) | Automated repeatable backup script with CHECKSUM, VERIFYONLY, retention pruning, and dry-run restore |
+| New | [docs/BACKUP_AND_RESTORE.md](../docs/BACKUP_AND_RESTORE.md) | Documentation of backup, retention, restore, and Windows Task Scheduler commands |
+| New | [docs/STATUS_EMAILS.md](../docs/STATUS_EMAILS.md) | Accurate draft emails for Status Report 1 and Status Report 2 with Pending dispatch status |
+| New | [tests/JamesThew.Tests/ProfileAndContributionEditTests.cs](../tests/JamesThew.Tests/ProfileAndContributionEditTests.cs) | 9 integration tests covering profile edit validation/CSRF and contribution edit/delete moderation |
+| New | [tests/JamesThew.Tests/ProfileBrowserE2ETests.cs](../tests/JamesThew.Tests/ProfileBrowserE2ETests.cs) | Playwright Chromium browser E2E test verifying same-page profile viewing and editing |
+| Updated | [docs/TASKS.md](../docs/TASKS.md) | Reconciled task statuses and added academic submission tasks |
+| Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Recorded reconciliation verification results and updated test inventory |
+| Updated | [README.md](../README.md) | Documented reconciled requirements, updated test counts, and submission deliverables |
+| Updated | [.gitignore](../.gitignore) | Excluded `backups/` directory from Git tracking |

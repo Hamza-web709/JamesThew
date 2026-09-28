@@ -7,6 +7,7 @@
 *.mdf
 *.ldf
 *.bak
+backups/
 .env
 .env.*
 **/appsettings.Local.json
