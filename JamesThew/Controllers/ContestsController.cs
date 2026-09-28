@@ -151,6 +151,25 @@ public class ContestsController(IContestService contestService, IContestEntrySer
     }
 
     [Authorize(Roles = "Member,Admin")]
+    [HttpGet("contests/my-entries/{id:int}")]
+    public async Task<IActionResult> MyEntryDetailById(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Challenge();
+        }
+
+        var model = await contestEntryService.GetMemberEntryDetailAsync(id, userId);
+        if (model == null)
+        {
+            return NotFound();
+        }
+
+        return View("MyEntryDetail", model);
+    }
+
+    [Authorize(Roles = "Member,Admin")]
     [HttpGet("contests/{slug}/my-entry")]
     public async Task<IActionResult> MyEntryDetail(string slug)
     {

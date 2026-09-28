@@ -203,6 +203,48 @@ public class ContestEntryBrowserE2ETests
             var accordionBody = await adminPage.Locator("div.accordion-collapse").First.InnerTextAsync();
             Assert.Contains("800g Beef Shin", accordionBody);
             Assert.Contains("Refined with butter-glazed parsnips.", accordionBody);
+
+            // -------------------------------------------------------------
+            // Step 10: Member B context - cross-member isolation & access denial
+            // -------------------------------------------------------------
+            var memberBContext = await browser.NewContextAsync(new BrowserNewContextOptions
+            {
+                IgnoreHTTPSErrors = true,
+                BaseURL = server.ServerAddress
+            });
+            var memberBPage = await memberBContext.NewPageAsync();
+
+            // Register Member B
+            await memberBPage.GotoAsync("/account/register");
+            await memberBPage.FillAsync("input[name='DisplayName']", "Member Bravo");
+            await memberBPage.FillAsync("input[name='Email']", "member_bravo@jamesthew.com");
+            await memberBPage.FillAsync("input[name='Password']", "MemberBravo@123!");
+            await memberBPage.FillAsync("input[name='ConfirmPassword']", "MemberBravo@123!");
+            await memberBPage.ClickAsync("form[action*='/account/register'] button[type='submit']");
+            await memberBPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            // Member B attempts to view Member A's entry via slug -> 404
+            var memberBSlugRes = await memberBPage.GotoAsync($"/contests/{openStewContestSlug}/my-entry");
+            Assert.Equal(404, memberBSlugRes!.Status);
+
+            // Member B attempts to view entry ID 1 directly -> 404
+            var memberBIdRes = await memberBPage.GotoAsync("/contests/my-entries/1");
+            Assert.Equal(404, memberBIdRes!.Status);
+
+            // Member B attempts to access admin contest entries inbox -> access denied / redirect
+            var memberBAdminRes = await memberBPage.GotoAsync("/admin/contests/1/entries");
+            Assert.True(memberBAdminRes!.Status == 403 || memberBPage.Url.Contains("access-denied"),
+                "Regular Member B must be denied access to admin entries inbox.");
+
+            // Guest attempts to access admin contest entries inbox -> redirected to login
+            await guestPage.GotoAsync("/admin/contests/1/entries");
+            await guestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            Assert.Contains("/account/login", guestPage.Url);
+
+            // Guest attempts to access contest entry form directly -> redirected to login
+            await guestPage.GotoAsync($"/contests/{openStewContestSlug}/entry");
+            await guestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            Assert.Contains("/account/login", guestPage.Url);
         }
         finally
         {

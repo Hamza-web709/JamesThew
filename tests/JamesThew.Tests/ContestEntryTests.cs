@@ -623,4 +623,196 @@ public class ContestEntryTests(FoundationFixture fixture)
         Assert.Equal(HttpStatusCode.Redirect, guestAdminRes.StatusCode);
         Assert.Contains("/account/login", guestAdminRes.Headers.Location?.OriginalString);
     }
+
+    [Fact]
+    public async Task Member_B_cannot_view_or_edit_Member_A_entry_via_direct_url_or_id()
+    {
+        var openContest = await CreateTestContestAsync(ContestType.Recipe, ContestStatus.Published, DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(7));
+
+        // Member A creates an entry
+        var memberClientA = fixture.NewClient();
+        var emailA = NewEmail();
+        await RegisterAndLogin(memberClientA, emailA, NewPassword(), "Member Alpha");
+
+        var tokenA = await Token(memberClientA, $"/contests/{openContest.Slug}/entry");
+        var formA = new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = tokenA,
+            ["ContestId"] = openContest.Id.ToString(),
+            ["ContestSlug"] = openContest.Slug,
+            ["ContestTitle"] = openContest.Title,
+            ["ContestType"] = ((int)ContestType.Recipe).ToString(),
+            ["Title"] = "Alpha Signature Terrine",
+            ["Summary"] = "Duck and pistachio terrine by Member Alpha.",
+            ["IngredientsText"] = "500g Duck Liver\n50g Pistachios",
+            ["StepsText"] = "Layer in terrine mould and bake in water bath."
+        };
+        var createRes = await memberClientA.PostAsync($"/contests/{openContest.Slug}/entry", new FormUrlEncodedContent(formA));
+        Assert.Equal(HttpStatusCode.Redirect, createRes.StatusCode);
+
+        int entryIdA;
+        using (var scope = fixture.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var entryA = await db.ContestEntries.FirstAsync(e => e.ContestId == openContest.Id);
+            entryIdA = entryA.Id;
+        }
+
+        // Member B logs in
+        var memberClientB = fixture.NewClient();
+        var emailB = NewEmail();
+        await RegisterAndLogin(memberClientB, emailB, NewPassword(), "Member Bravo");
+
+        // 1. Member B attempts to view Member A's entry via /contests/{slug}/my-entry -> 404 (Member B has no entry in this contest)
+        var memberBSlugRes = await memberClientB.GetAsync($"/contests/{openContest.Slug}/my-entry");
+        Assert.Equal(HttpStatusCode.NotFound, memberBSlugRes.StatusCode);
+
+        // 2. Member B attempts to view Member A's entry via /contests/my-entries/{entryIdA} -> 404
+        var memberBIdRes = await memberClientB.GetAsync($"/contests/my-entries/{entryIdA}");
+        Assert.Equal(HttpStatusCode.NotFound, memberBIdRes.StatusCode);
+
+        // 3. Member B attempts to edit Member A's entry by sending Member A's entry ID in POST
+        var tokenB = await Token(memberClientB, $"/contests/{openContest.Slug}/entry");
+        var formB = new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = tokenB,
+            ["EntryId"] = entryIdA.ToString(),
+            ["ContestId"] = openContest.Id.ToString(),
+            ["ContestSlug"] = openContest.Slug,
+            ["ContestTitle"] = openContest.Title,
+            ["ContestType"] = ((int)ContestType.Recipe).ToString(),
+            ["Title"] = "Malicious Hijack Attempt",
+            ["Summary"] = "Bravo attempting to overwrite Alpha entry.",
+            ["IngredientsText"] = "1 Onion",
+            ["StepsText"] = "Chop onion."
+        };
+        var editRes = await memberClientB.PostAsync($"/contests/{openContest.Slug}/entry", new FormUrlEncodedContent(formB));
+        Assert.Equal(HttpStatusCode.Redirect, editRes.StatusCode);
+
+        // Verify Member A's entry was completely untouched
+        using (var scope = fixture.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var entryA = await db.ContestEntries
+                .Include(e => e.Ingredients)
+                .Include(e => e.Steps)
+                .FirstAsync(e => e.Id == entryIdA);
+
+            Assert.Equal("Alpha Signature Terrine", entryA.Title);
+            Assert.Equal("Duck and pistachio terrine by Member Alpha.", entryA.Summary);
+            Assert.Equal(2, entryA.Ingredients.Count);
+            Assert.Single(entryA.Steps);
+
+            // And Member B's post created Member B's OWN entry instead
+            var userB = await db.Users.FirstAsync(u => u.Email == emailB);
+            var entryB = await db.ContestEntries.FirstAsync(e => e.AuthorUserId == userB.Id && e.ContestId == openContest.Id);
+            Assert.Equal("Malicious Hijack Attempt", entryB.Title);
+            Assert.NotEqual(entryIdA, entryB.Id);
+        }
+    }
+
+    [Fact]
+    public async Task Forged_POST_payload_cannot_tamper_with_author_contest_status_or_submitted_date()
+    {
+        var openContest = await CreateTestContestAsync(ContestType.Recipe, ContestStatus.Published, DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(7));
+        var client = fixture.NewClient();
+        var email = NewEmail();
+        await RegisterAndLogin(client, email, NewPassword(), "Honest Member");
+
+        // Attacker attempts to forge AuthorUserId, ContestId, Status, SubmittedAtUtc
+        var token = await Token(client, $"/contests/{openContest.Slug}/entry");
+        var forgedPayload = new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = token,
+            ["AuthorUserId"] = "fake-user-id-99999",
+            ["ContestId"] = "999999",
+            ["ContestSlug"] = openContest.Slug,
+            ["ContestTitle"] = openContest.Title,
+            ["ContestType"] = ((int)ContestType.Recipe).ToString(),
+            ["Status"] = ((int)ContestEntryStatus.Selected).ToString(),
+            ["SubmittedAtUtc"] = "2020-01-01T00:00:00Z",
+            ["Title"] = "Forged Metadata Dish",
+            ["Summary"] = "Attempting to inject fake status and historical timestamp.",
+            ["IngredientsText"] = "1 Whole Truffle",
+            ["StepsText"] = "Shave truffle generously."
+        };
+        var res = await client.PostAsync($"/contests/{openContest.Slug}/entry", new FormUrlEncodedContent(forgedPayload));
+        Assert.Equal(HttpStatusCode.Redirect, res.StatusCode);
+
+        using var scope = fixture.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var user = await db.Users.FirstAsync(u => u.Email == email);
+        var entry = await db.ContestEntries.FirstAsync(e => e.ContestId == openContest.Id && e.AuthorUserId == user.Id);
+
+        // Assert strictly bound server values
+        Assert.Equal(user.Id, entry.AuthorUserId);
+        Assert.Equal(openContest.Id, entry.ContestId);
+        Assert.Equal(ContestEntryStatus.Submitted, entry.Status); // NOT Selected
+        Assert.True(entry.SubmittedAtUtc > DateTime.UtcNow.AddMinutes(-5)); // NOT 2020
+    }
+
+    [Fact]
+    public async Task Post_entry_requires_antiforgery_token()
+    {
+        var openContest = await CreateTestContestAsync(ContestType.Recipe, ContestStatus.Published, DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(7));
+        var client = fixture.NewClient();
+        await RegisterAndLogin(client, NewEmail(), NewPassword());
+
+        // POST without token
+        var form = new Dictionary<string, string>
+        {
+            ["ContestId"] = openContest.Id.ToString(),
+            ["ContestSlug"] = openContest.Slug,
+            ["ContestType"] = ((int)ContestType.Recipe).ToString(),
+            ["Title"] = "Missing Token Dish",
+            ["Summary"] = "This request must fail antiforgery verification.",
+            ["IngredientsText"] = "1 Salt",
+            ["StepsText"] = "Season to taste."
+        };
+        var res = await client.PostAsync($"/contests/{openContest.Slug}/entry", new FormUrlEncodedContent(form));
+        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task Date_boundary_and_closed_contest_enforcement()
+    {
+        var contest = await CreateTestContestAsync(ContestType.Tip, ContestStatus.Published, DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddHours(2));
+        var client = fixture.NewClient();
+        var email = NewEmail();
+        await RegisterAndLogin(client, email, NewPassword(), "Boundary Tester");
+
+        // 1. Admin closes contest manually before ClosesAtUtc
+        using (var scope = fixture.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var c = await db.Contests.FindAsync(contest.Id);
+            c!.Status = ContestStatus.Closed;
+            await db.SaveChangesAsync();
+        }
+
+        // Submitting to closed contest is rejected
+        var token = await Token(client, $"/contests/{contest.Slug}");
+        var form = new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = token,
+            ["ContestId"] = contest.Id.ToString(),
+            ["ContestSlug"] = contest.Slug,
+            ["ContestTitle"] = contest.Title,
+            ["ContestType"] = ((int)ContestType.Tip).ToString(),
+            ["Title"] = "Late Tip Submission",
+            ["Summary"] = "Testing submission to admin-closed contest.",
+            ["TipBody"] = "Always chill puff pastry before baking at high temperature."
+        };
+        var res = await client.PostAsync($"/contests/{contest.Slug}/entry", new FormUrlEncodedContent(form));
+        var html = await res.Content.ReadAsStringAsync();
+        Assert.Contains("concluded", html, StringComparison.OrdinalIgnoreCase);
+
+        // Verify no entry was created in DB
+        using (var scope = fixture.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var exists = await db.ContestEntries.AnyAsync(e => e.ContestId == contest.Id);
+            Assert.False(exists, "No entry should be created for closed contest.");
+        }
+    }
 }
