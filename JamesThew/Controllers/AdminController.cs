@@ -18,7 +18,8 @@ public class AdminController(
     IAdminContentService adminContentService,
     IMediaService mediaService,
     IContestService contestService,
-    IContestEntryService contestEntryService) : Controller
+    IContestEntryService contestEntryService,
+    IContestJudgingService contestJudgingService) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index()
@@ -614,5 +615,80 @@ public class AdminController(
             return NotFound();
 
         return View(model);
+    }
+
+    [HttpPost("contests/{id:int}/entries/{entryId:int}/review")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReviewContestEntry(int id, int entryId, ReviewContestEntryInputModel input)
+    {
+        var adminUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(adminUserId))
+            return Challenge();
+
+        var (success, message) = await contestJudgingService.ReviewEntryAsync(
+            id,
+            entryId,
+            adminUserId,
+            input.Status,
+            input.AdminReviewNotes,
+            input.DisqualificationReason);
+
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(ContestEntries), new { id });
+    }
+
+    [HttpPost("contests/{id:int}/entries/{entryId:int}/select-winner")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SelectContestWinner(int id, int entryId)
+    {
+        var adminUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(adminUserId))
+            return Challenge();
+
+        var (success, message) = await contestJudgingService.SelectWinnerAsync(id, entryId, adminUserId);
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(ContestEntries), new { id });
+    }
+
+    [HttpPost("contests/{id:int}/announce-winner")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AnnounceContestWinner(int id)
+    {
+        var adminUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(adminUserId))
+            return Challenge();
+
+        var (success, message) = await contestJudgingService.AnnounceWinnerAsync(id, adminUserId);
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(ContestEntries), new { id });
+    }
+
+    [HttpPost("contests/{id:int}/revoke-winner")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RevokeContestWinner(int id, string? reason)
+    {
+        var adminUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(adminUserId))
+            return Challenge();
+
+        var (success, message) = await contestJudgingService.RevokeWinnerAsync(id, adminUserId, reason);
+        if (success)
+            TempData["SuccessMessage"] = message;
+        else
+            TempData["ErrorMessage"] = message;
+
+        return RedirectToAction(nameof(ContestEntries), new { id });
     }
 }

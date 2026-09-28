@@ -32,9 +32,36 @@
                     </span>
                 }
 
-                <span class="badge bg-light text-dark border rounded-pill px-3 py-1">
-                    Status: @Model.Status
-                </span>
+                @if (Model.IsWinnerAnnounced)
+                {
+                    <span class="badge bg-warning text-dark border border-warning-subtle rounded-pill px-3 py-1 fw-bold">
+                        &#127942; Winner Announced!
+                    </span>
+                }
+                else if (Model.Status == ContestEntryStatus.Selected)
+                {
+                    <span class="badge bg-success rounded-pill px-3 py-1 fw-bold">
+                        &#127942; Winner Selected
+                    </span>
+                }
+                else if (Model.Status == ContestEntryStatus.UnderReview)
+                {
+                    <span class="badge bg-info text-dark rounded-pill px-3 py-1">
+                        &#128269; Under Review
+                    </span>
+                }
+                else if (Model.Status == ContestEntryStatus.Disqualified)
+                {
+                    <span class="badge bg-danger rounded-pill px-3 py-1">
+                        &#10060; Disqualified
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-light text-dark border rounded-pill px-3 py-1">
+                        Status: Submitted
+                    </span>
+                }
             </div>
 
             @if (Model.CanEdit)
@@ -46,7 +73,7 @@
             else
             {
                 <span class="badge bg-secondary rounded-pill px-3 py-1">
-                    &#128274; Read-Only (Closed)
+                    &#128274; Read-Only (Locked)
                 </span>
             }
         </div>
@@ -63,6 +90,59 @@
             <span>&#128203; Contest: @Model.ContestTitle</span>
         </div>
     </div>
+
+    @if (Model.IsWinnerAnnounced)
+    {
+        <div class="alert alert-warning border border-warning-subtle shadow-sm rounded-4 mb-4">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="fs-4">&#127942;</span>
+                <h2 class="h5 jt-serif text-dark mb-0">Official Competition Winner Announced!</h2>
+            </div>
+            <p class="small text-secondary mb-0">
+                Congratulations! Chef James Thew and the culinary committee selected your submission as the official winning entry. Your recipe/tip is honored in the Public Announcements Hall of Fame.
+            </p>
+        </div>
+    }
+    else if (Model.Status == ContestEntryStatus.Selected)
+    {
+        <div class="alert alert-success border border-success-subtle shadow-sm rounded-4 mb-4">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="fs-4">&#127942;</span>
+                <h2 class="h5 jt-serif text-success mb-0">Entry Selected as Winner</h2>
+            </div>
+            <p class="small text-muted mb-0">
+                Your entry has been selected by the jury as the winner! It will appear in public announcements once the jury completes official publication.
+            </p>
+        </div>
+    }
+    else if (Model.Status == ContestEntryStatus.UnderReview)
+    {
+        <div class="alert alert-info border border-info-subtle shadow-sm rounded-4 mb-4">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="fs-4">&#128269;</span>
+                <h2 class="h5 jt-serif text-dark mb-0">Jury Review In Progress</h2>
+            </div>
+            <p class="small text-muted mb-0">
+                The culinary committee is currently reviewing your submission. To preserve competitive fairness during judging, modifications to this entry are temporarily locked.
+            </p>
+        </div>
+    }
+    else if (Model.Status == ContestEntryStatus.Disqualified)
+    {
+        <div class="alert alert-danger border border-danger-subtle shadow-sm rounded-4 mb-4">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="fs-4">&#10060;</span>
+                <h2 class="h5 jt-serif text-danger mb-0">Entry Disqualified</h2>
+            </div>
+            <p class="small text-muted mb-0">
+                This entry does not meet competition guidelines and has been marked as disqualified.
+                @if (!string.IsNullOrWhiteSpace(Model.DisqualificationReason))
+                {
+                    <div class="mt-2 text-danger fw-semibold">Jury Note: @Model.DisqualificationReason</div>
+                }
+            </p>
+        </div>
+    }
 
     @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
     {
@@ -152,6 +232,12 @@
             <a asp-action="Entry" asp-route-slug="@Model.ContestSlug" class="btn btn-primary btn-sm">
                 &#9998; Edit Entry &rarr;
             </a>
+        }
+        else
+        {
+            <span class="badge bg-secondary rounded-pill px-3 py-2">
+                &#128274; Entry Locked
+            </span>
         }
     </div>
 </div>

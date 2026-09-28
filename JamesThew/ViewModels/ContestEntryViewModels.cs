@@ -70,6 +70,9 @@ public class MyContestEntryCardDto
     public string EntryTitle { get; set; } = string.Empty;
     public string Summary { get; set; } = string.Empty;
     public ContestEntryStatus Status { get; set; }
+    public string? DisqualificationReason { get; set; }
+    public bool IsWinner => Status == ContestEntryStatus.Selected;
+    public bool IsWinnerAnnounced { get; set; }
     public DateTime SubmittedAtUtc { get; set; }
     public DateTime? UpdatedAtUtc { get; set; }
     public string? ImageUrl { get; set; }
@@ -95,6 +98,9 @@ public class ContestEntryDetailViewModel
     public string Title { get; set; } = string.Empty;
     public string Summary { get; set; } = string.Empty;
     public ContestEntryStatus Status { get; set; }
+    public string? DisqualificationReason { get; set; }
+    public bool IsWinner => Status == ContestEntryStatus.Selected;
+    public bool IsWinnerAnnounced { get; set; }
     public DateTime SubmittedAtUtc { get; set; }
     public DateTime? UpdatedAtUtc { get; set; }
     public string? ContributorNotes { get; set; }
@@ -120,6 +126,11 @@ public class AdminContestEntryRowDto
     public string Title { get; set; } = string.Empty;
     public string Summary { get; set; } = string.Empty;
     public ContestEntryStatus Status { get; set; }
+    public string? AdminReviewNotes { get; set; }
+    public string? DisqualificationReason { get; set; }
+    public DateTime? ReviewedAtUtc { get; set; }
+    public string? ReviewedByDisplayName { get; set; }
+    public bool IsSelectedWinner { get; set; }
     public DateTime SubmittedAtUtc { get; set; }
     public DateTime? UpdatedAtUtc { get; set; }
     public string? Notes { get; set; }
@@ -147,5 +158,15 @@ public class AdminContestEntriesViewModel
     public DateTime OpensAtUtc { get; set; }
     public DateTime ClosesAtUtc { get; set; }
     public int TotalEntries { get; set; }
+    public int? WinningEntryId { get; set; }
+    public DateTime? WinnerSelectedAtUtc { get; set; }
+    public string? WinnerSelectedByDisplayName { get; set; }
+    public DateTime? WinnerAnnouncedAtUtc { get; set; }
+    public string? WinnerAnnouncedByDisplayName { get; set; }
+    public string? WinningEntryTitle { get; set; }
+    public string? WinningAuthorDisplayName { get; set; }
+    public bool CanSelectWinner { get; set; }
+    public bool HasSelectedWinner => WinningEntryId.HasValue;
+    public bool HasAnnouncedWinner => WinningEntryId.HasValue && WinnerAnnouncedAtUtc.HasValue;
     public IReadOnlyList<AdminContestEntryRowDto> Entries { get; set; } = [];
 }

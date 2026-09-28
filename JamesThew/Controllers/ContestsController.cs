@@ -37,10 +37,13 @@ public class ContestsController(IContestService contestService, IContestEntrySer
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!string.IsNullOrEmpty(userId))
             {
-                model.HasEntered = await contestEntryService.HasMemberEnteredAsync(model.Id, userId);
-                if (model.HasEntered)
+                var userEntry = await contestEntryService.GetMemberEntryByContestSlugAsync(slug, userId);
+                if (userEntry != null)
                 {
-                    model.UserEntryId = await contestEntryService.GetMemberEntryIdAsync(model.Id, userId);
+                    model.HasEntered = true;
+                    model.UserEntryId = userEntry.EntryId;
+                    model.CanEditEntry = userEntry.CanEdit;
+                    model.UserEntryStatus = userEntry.Status;
                 }
             }
         }

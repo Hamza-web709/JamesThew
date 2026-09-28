@@ -1,37 +1,138 @@
+@model JamesThew.ViewModels.ContestAnnouncementsViewModel
+@using JamesThew.Models
 @{
     ViewData["Title"] = "Announcements - Contest Winners & Culinary News";
 }
 
 <div class="text-center max-w-700 mx-auto mb-5">
-    <span class="jt-brand-tag">Hall of Fame</span>
+    <span class="jt-brand-tag">&#127942; Hall of Fame</span>
     <h1 class="mb-2">Contest Winner Announcements</h1>
     <p class="lead text-muted">
-        Celebrating outstanding culinary posts and community recipes awarded by Chef James Thew.
+        Celebrating outstanding culinary posts and community creations awarded by Chef James Thew.
     </p>
 </div>
 
+@if (Model.TotalCount == 0)
+{
+    <div class="p-5 text-center bg-white rounded-4 border shadow-sm max-w-800 mx-auto mb-5">
+        <div class="display-3 mb-3">&#127942;</div>
+        <h2 class="h4 jt-serif mb-2">No Competition Winners Announced Yet</h2>
+        <p class="text-muted max-w-500 mx-auto mb-4">
+            Submissions for current seasonal competitions are evaluated by Chef James Thew and the jury upon closing. Check back soon for official winner announcements, or submit your own formulation!
+        </p>
+        <div class="d-flex justify-content-center gap-2">
+            <a asp-controller="Contests" asp-action="Index" class="btn btn-primary px-4 py-2">
+                Explore Active Competitions &rarr;
+            </a>
+            <a asp-controller="Faq" asp-action="Index" class="btn btn-outline-secondary px-3 py-2">
+                Contest Rules &amp; FAQ
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="max-w-900 mx-auto mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted small">
+                Showing <strong>@Model.TotalCount</strong> announced @(Model.TotalCount == 1 ? "competition winner" : "competition winners")
+            </span>
+            <span class="small text-muted font-monospace">
+                &#9878; Official Chef James Thew Accolades
+            </span>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var announcement in Model.Announcements)
+            {
+                <div class="col-12">
+                    <div class="card border-warning border-2 rounded-4 shadow-sm overflow-hidden bg-white">
+                        <div class="card-header bg-warning-subtle py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom border-warning-subtle">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fs-5">&#127942;</span>
+                                <span class="fw-bold text-dark">Official Winner Accolade</span>
+                                @if (announcement.ContestType == ContestType.Recipe)
+                                {
+                                    <span class="badge bg-primary-subtle text-primary border rounded-pill px-2 py-1 small">
+                                        Recipe
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border rounded-pill px-2 py-1 small">
+                                        Cooking Tip
+                                    </span>
+                                }
+                            </div>
+                            <span class="small text-muted font-monospace">
+                                Announced @announcement.AnnouncedAtUtc.ToString("MMMM d, yyyy")
+                            </span>
+                        </div>
+
+                        <div class="card-body p-4 p-md-5">
+                            <div class="row g-4 align-items-center">
+                                <div class="col-lg-8">
+                                    <span class="small text-muted d-block mb-1">
+                                        Competition: <a asp-controller="Contests" asp-action="Detail" asp-route-slug="@announcement.ContestSlug" class="fw-semibold text-decoration-none">@announcement.ContestTitle</a>
+                                    </span>
+
+                                    <h2 class="h3 jt-serif mb-2 text-dark">
+                                        @announcement.EntryTitle
+                                    </h2>
+
+                                    <div class="mb-3">
+                                        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+                                            &#128100; Winning Chef: <strong>@announcement.WinnerDisplayName</strong>
+                                        </span>
+                                    </div>
+
+                                    <p class="text-muted mb-3">
+                                        @announcement.EntrySummary
+                                    </p>
+
+                                    @if (!string.IsNullOrWhiteSpace(announcement.PrizeDescription))
+                                    {
+                                        <div class="p-3 bg-light rounded-3 border mb-3">
+                                            <span class="small text-muted d-block font-monospace mb-1">&#127873; Award Distinction &amp; Prize</span>
+                                            <strong class="text-primary">@announcement.PrizeDescription</strong>
+                                        </div>
+                                    }
+
+                                    <div>
+                                        <a asp-controller="Contests" asp-action="Detail" asp-route-slug="@announcement.ContestSlug" class="btn btn-outline-secondary btn-sm">
+                                            View Competition Guidelines &rarr;
+                                        </a>
+                                    </div>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(announcement.EntryImageUrl))
+                                {
+                                    <div class="col-lg-4 text-center">
+                                        <img src="@announcement.EntryImageUrl" alt="@announcement.EntryTitle" class="img-fluid rounded-4 shadow-sm border max-h-220 object-fit-cover w-100" />
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
 <div class="p-4 p-md-5 bg-white rounded-4 border mb-5 shadow-sm max-w-860 mx-auto">
     <div class="d-flex align-items-center gap-3 mb-3">
-        <span class="jt-badge jt-badge-paid">&#127942; Competition Announcements</span>
-        <span class="text-muted small">Winner Showcase &amp; Updates</span>
+        <span class="jt-badge jt-badge-paid">&#127942; Competition Program</span>
+        <span class="text-muted small">Selection Standards</span>
     </div>
 
-    <h2 class="h4 jt-serif mb-3">Public Announcements &amp; Winner Recognition</h2>
-    <p class="text-muted">
-        Seasonal cooking and tip competitions are curated regularly. Visitors can browse all active and upcoming competitions, while winners are formally announced here following judging.
+    <h2 class="h5 jt-serif mb-2">How Winners Are Evaluated</h2>
+    <p class="small text-muted mb-3">
+        Chef James Thew and our culinary jury evaluate submissions on ingredient authenticity, clarity of instruction, technical difficulty, and culinary innovation. Winning recipes and tips earn lifetime recognition on our Hall of Fame.
     </p>
 
-    <div class="p-3 bg-light rounded-3 border mb-4">
-        <h3 class="h6 mb-2">&#128100; What Will Be Displayed:</h3>
-        <ul class="small text-muted mb-0 ps-3">
-            <li>Winning Member's public display name (private account emails and phone numbers are never published).</li>
-            <li>Contest category, title, and evaluation summary by Chef James Thew.</li>
-            <li>Complete winning recipe formula or cooking tip.</li>
-        </ul>
-    </div>
-
     <div class="d-flex flex-wrap gap-2">
-        <a asp-controller="Contests" asp-action="Index" class="jt-btn jt-btn-primary">Explore Seasonal Contests &rarr;</a>
-        <a asp-controller="Faq" asp-action="Index" class="jt-btn jt-btn-outline">Check Contest FAQ</a>
+        <a asp-controller="Contests" asp-action="Index" class="btn btn-primary btn-sm">Explore Seasonal Contests &rarr;</a>
+        <a asp-controller="Faq" asp-action="Index" class="btn btn-outline-secondary btn-sm">Read Contest FAQ</a>
     </div>
 </div>

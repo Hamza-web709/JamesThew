@@ -78,10 +78,31 @@ public class ContestService(ApplicationDbContext db) : IContestService
 
         var contest = await db.Contests
             .AsNoTracking()
+            .Include(c => c.WinningEntry)
+                .ThenInclude(w => w!.AuthorUser)
             .FirstOrDefaultAsync(c => c.Slug == slug && c.DeletedAtUtc == null && (c.Status == ContestStatus.Published || c.Status == ContestStatus.Closed));
 
         if (contest == null)
             return null;
+
+        ContestWinnerAnnouncementDto? announcedWinner = null;
+        if (contest.WinningEntryId.HasValue && contest.WinnerAnnouncedAtUtc.HasValue && contest.WinningEntry != null)
+        {
+            announcedWinner = new ContestWinnerAnnouncementDto
+            {
+                ContestId = contest.Id,
+                ContestTitle = contest.Title,
+                ContestSlug = contest.Slug,
+                ContestType = contest.Type,
+                PrizeDescription = contest.PrizeDescription,
+                WinningEntryId = contest.WinningEntry.Id,
+                EntryTitle = contest.WinningEntry.Title,
+                EntrySummary = contest.WinningEntry.Summary,
+                EntryImageUrl = contest.WinningEntry.ImageUrl ?? contest.ImageUrl,
+                WinnerDisplayName = contest.WinningEntry.AuthorUser?.DisplayName ?? "Culinary Member",
+                AnnouncedAtUtc = contest.WinnerAnnouncedAtUtc.Value
+            };
+        }
 
         return new ContestDetailViewModel
         {
@@ -97,7 +118,8 @@ public class ContestService(ApplicationDbContext db) : IContestService
             ClosesAtUtc = contest.ClosesAtUtc,
             PrizeDescription = contest.PrizeDescription,
             ImageUrl = contest.ImageUrl,
-            CreatedAtUtc = contest.CreatedAtUtc
+            CreatedAtUtc = contest.CreatedAtUtc,
+            AnnouncedWinner = announcedWinner
         };
     }
 

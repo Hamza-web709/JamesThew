@@ -108,9 +108,36 @@
                                     </span>
                                 }
 
-                                <span class="badge bg-light text-dark border rounded-pill px-2 py-1 small">
-                                    Status: @entry.Status
-                                </span>
+                                @if (entry.IsWinnerAnnounced)
+                                {
+                                    <span class="badge bg-warning text-dark border border-warning-subtle rounded-pill px-2 py-1 small fw-bold">
+                                        &#127942; Winner Announced!
+                                    </span>
+                                }
+                                else if (entry.Status == ContestEntryStatus.Selected)
+                                {
+                                    <span class="badge bg-success rounded-pill px-2 py-1 small fw-bold">
+                                        &#127942; Winner Selected
+                                    </span>
+                                }
+                                else if (entry.Status == ContestEntryStatus.UnderReview)
+                                {
+                                    <span class="badge bg-info text-dark rounded-pill px-2 py-1 small">
+                                        &#128269; Under Review
+                                    </span>
+                                }
+                                else if (entry.Status == ContestEntryStatus.Disqualified)
+                                {
+                                    <span class="badge bg-danger rounded-pill px-2 py-1 small">
+                                        &#10060; Disqualified
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-light text-dark border rounded-pill px-2 py-1 small">
+                                        Status: Submitted
+                                    </span>
+                                }
                             </div>
 
                             <span class="text-muted small font-monospace">
@@ -138,6 +165,22 @@
                                 @if (entry.CanEdit)
                                 {
                                     <span class="text-success">&#9889; Closes @entry.ClosesAtUtc.ToString("MMM d, yyyy HH:mm") UTC</span>
+                                }
+                                else if (entry.Status == ContestEntryStatus.UnderReview)
+                                {
+                                    <span class="text-info">&#128274; Under review by jury &bull; Editing locked</span>
+                                }
+                                else if (entry.Status == ContestEntryStatus.Selected)
+                                {
+                                    <span class="text-success fw-bold">&#127942; Selected as competition winner</span>
+                                }
+                                else if (entry.Status == ContestEntryStatus.Disqualified)
+                                {
+                                    <span class="text-danger">&#10060; Disqualified from competition</span>
+                                    @if (!string.IsNullOrWhiteSpace(entry.DisqualificationReason))
+                                    {
+                                        <div class="small text-danger mt-1">Reason: @entry.DisqualificationReason</div>
+                                    }
                                 }
                                 else
                                 {

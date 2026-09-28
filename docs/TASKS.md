@@ -281,6 +281,39 @@ Phase 5B successfully implemented and verified:
   - Playwright Chromium browser E2E test in `ContestEntryBrowserE2ETests.cs` (full lifecycle from guest challenge -> member login -> entry submission -> My Entries dashboard -> detail view -> pre-deadline edit -> guest privacy check -> admin read-only review).
   - `dotnet ef migrations has-pending-model-changes` verified clean: 0 pending model changes.
 
+## Phase 5C Completion Notes (Admin Judging, Winner Selection & Public Announcements)
+- **Admin Qualitative Review & Evaluation**:
+  - Qualitative entry evaluation with private review notes (`AdminReviewNotes`) and disqualification reason (`DisqualificationReason`).
+  - Admin audit trails track reviewer identity (`ReviewedByUserId`, `ReviewedByUser`) and review timestamp (`ReviewedAtUtc`).
+  - No structured scoring rubric, strictly qualitative as specified in PRD and demo rules.
+- **Winner Selection & Eligibility Rules**:
+  - Maximum 1 winner per contest from valid entries belonging to that contest (`ContestId == contest.Id`).
+  - Winner selection locked until submission window ends (`now > ClosesAtUtc`) OR when contest is explicitly `Closed` by an administrator. Premature winner selection is strictly rejected.
+  - Disqualified entries cannot be selected as winners.
+- **Decoupled Selection & Public Announcements**:
+  - Winner selection and public winner announcement are distinct, decoupled actions.
+  - Selected winners remain strictly private to the admin jury until explicitly announced via `AnnounceContestWinner`.
+  - Public `/announcements` and contest details show winners only after explicit announcement (`WinnerAnnouncedAtUtc != null`).
+- **Privacy & Zero Data Leakage**:
+  - Public announcements and contest detail showcase `#announcedWinnerBanner` display: contest title, winning chef display name, entry title, approved summary, and prize description.
+  - Private ingredients, preparation steps, entrant email addresses, and admin review notes are strictly withheld and never leaked.
+- **Member Entry Edit Locking**:
+  - Once an entry is placed `UnderReview`, `Disqualified`, or `Selected`, member editing is immediately locked (`CanEdit = false`), even if the contest window is still open.
+  - Disqualified members see clear disqualification reasons in their dashboard; private admin review notes remain strictly confidential.
+- **Winner Revocation & Atomic Transitions**:
+  - Admin can revoke winner selection with an explicit audit reason (`RevokeContestWinner`).
+  - Winning entry atomically reverts to `UnderReview` and public announcements are immediately withdrawn.
+  - Winner selection replacement resets any prior winner to `UnderReview` and resets announcement state, requiring explicit re-announcement.
+- **Relational Integrity & Database Guard**:
+  - Enforced at database level via SQL Server filtered unique index:
+    `IX_ContestEntries_ContestId_SingleWinner` on `ContestEntries([ContestId]) WHERE [Status] = 4`.
+  - Foreign key navigation relationships configured with `DeleteBehavior.Restrict` to prevent SQL Server cascade cycle errors.
+- **Testing & Verification**:
+  - 145/145 tests passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`).
+  - 12 new unit/integration tests in `ContestJudgingTests.cs` (premature selection rejection, wrong-contest rejection, disqualified entry rejection, private review notes privacy, member edit lock during review/disqualification/selection, unannounced winner privacy, public announcement verification, zero data leakage, winner revocation, atomic winner replacement, DB filtered unique index constraint, non-admin denial, and antiforgery enforcement).
+  - Playwright Chromium browser E2E test in `ContestJudgingBrowserE2ETests.cs` (13-step full lifecycle: member submit -> admin review under review -> member edit lock verification -> admin close contest -> admin select winner -> guest unannounced privacy check -> admin announce winner -> guest public accolade verification -> contest detail golden banner -> member my-entries accolade -> admin revoke winner -> guest public withdrawal verification).
+  - `dotnet ef migrations has-pending-model-changes` verified clean: 0 pending model changes.
+
 | Item | Current status / evidence |
 |---|---|
 | T-11 | Complete (Phase 3A): Demo plan requests ($10 monthly, $100 yearly), pending queue, admin approval/rejection, activation window, zero real gateway |
@@ -293,8 +326,9 @@ Phase 5B successfully implemented and verified:
 | T-13 media management | Complete (Phase 4 Step 2): Admin media library (`/admin/media`), upload validation, magic bytes check, safe storage (`/uploads/editorial/`), recipe/tip form integration, safe deletion unlinking, orphan prevention, and Playwright Chromium E2E QA |
 | T-16 | Complete (Phase 5A): Admin contest management (create/edit/publish/close/archive), auto-slug resolution, date validation, and public read-only discovery at /contests |
 | T-17 | Complete (Phase 5B): Member contest entry intake, pre-deadline editing, one entry per member DB constraint, My Entries dashboard, private isolation, and admin read-only review |
+| T-18 | Complete (Phase 5C): Admin judging, qualitative review, private notes, winner selection, decoupled public announcement, member edit lock, winner revocation, and public accolades |
 | T-10 | Auth complete in Phase 1; Profile edit deferred |
-| Phase 5B verification | Build 0 warnings/0 errors; 128/128 tests pass; Playwright Chromium 10/10 Phase 5A + full Phase 5B lifecycle pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
+| Phase 5C verification | Build 0 warnings/0 errors; 145/145 tests pass; Playwright Chromium 10/10 Phase 5A + full Phase 5B + full Phase 5C lifecycle pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
@@ -322,7 +356,7 @@ Phase 5B successfully implemented and verified:
 |---|---|---|---|---|
 | T-16 / REQ-016, REQ-017 | Admin contests create/archive; public list/detail | T-12, T-02 | Rules/type/window displayed; removed contest closed to new entries | TC-016, server time/invalid window/role tests |
 | T-17 / REQ-017, REQ-018 | Member-only MVC recipe/tip entry forms/services and admin review | T-16, T-14 | Guest GET/POST entry blocked; active member login required; complete snapshots and admin review | TC-017/018; anonymous denial, duplicate/type/window/member ownership |
-| T-18 / REQ-019 | Winner choice, atomic announcement, archive display | T-17 | Valid reviewed same-contest winner; public result | TC-019 concurrency/cross-contest/zero-entry tests; G |
+| T-18 / REQ-019 | Winner choice, atomic announcement, archive display | T-17 | Valid reviewed same-contest winner; public result | Complete (Phase 5C): Passed TC-019, 12 integration tests in ContestJudgingTests.cs, Playwright browser E2E test; G |
 
 ## Phase 6 - Polish
 

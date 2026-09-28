@@ -47,6 +47,19 @@ public class ContestEntry
 
     public ContestEntryStatus Status { get; set; } = ContestEntryStatus.Submitted;
 
+    [StringLength(2000)]
+    public string? AdminReviewNotes { get; set; }
+
+    [StringLength(1000)]
+    public string? DisqualificationReason { get; set; }
+
+    public DateTime? ReviewedAtUtc { get; set; }
+
+    public string? ReviewedByUserId { get; set; }
+
+    [ForeignKey(nameof(ReviewedByUserId))]
+    public ApplicationUser? ReviewedByUser { get; set; }
+
     public DateTime SubmittedAtUtc { get; set; } = DateTime.UtcNow;
 
     public DateTime? UpdatedAtUtc { get; set; }

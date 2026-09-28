@@ -65,6 +65,44 @@
         </p>
     </header>
 
+    @if (Model.HasAnnouncedWinner && Model.AnnouncedWinner != null)
+    {
+        <!-- Official Announced Winner Showcase Card -->
+        <div class="card border-warning bg-warning-subtle shadow-sm rounded-4 p-4 mb-4" id="announcedWinnerBanner">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-warning text-dark border border-warning-subtle rounded-pill px-3 py-1 fw-bold fs-6">
+                        &#127942; Official Competition Winner
+                    </span>
+                    <span class="text-muted small font-monospace">
+                        Announced @Model.AnnouncedWinner.AnnouncedAtUtc.ToString("MMMM d, yyyy")
+                    </span>
+                </div>
+                <a asp-controller="Announcements" asp-action="Index" class="btn btn-sm btn-outline-warning text-dark bg-white">
+                    Hall of Fame &rarr;
+                </a>
+            </div>
+
+            <h2 class="h3 jt-serif text-dark mb-2">@Model.AnnouncedWinner.EntryTitle</h2>
+
+            <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                <div class="text-dark">
+                    <strong>Winner:</strong> <span class="badge bg-white text-dark border px-2 py-1 fs-6">@Model.AnnouncedWinner.WinnerDisplayName</span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.AnnouncedWinner.PrizeDescription))
+                {
+                    <div class="text-dark small">
+                        &#127873; <strong>Prize Distinction:</strong> @Model.AnnouncedWinner.PrizeDescription
+                    </div>
+                }
+            </div>
+
+            <p class="text-secondary mb-0">
+                @Model.AnnouncedWinner.EntrySummary
+            </p>
+        </div>
+    }
+
     <!-- Cover Image -->
     @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
     {
@@ -145,17 +183,33 @@
                     <div class="p-3 rounded-3 bg-light border mb-0">
                         <div class="d-flex align-items-center gap-2 text-success fw-semibold mb-1">
                             <span>&#10004;</span> You have submitted an entry for this competition!
+                            @if (Model.UserEntryStatus.HasValue)
+                            {
+                                <span class="badge bg-secondary-subtle text-dark border rounded-pill px-2 py-1 ms-2 small">
+                                    Status: @Model.UserEntryStatus
+                                </span>
+                            }
                         </div>
                         <p class="small text-muted mb-3">
-                            Your submission is officially registered with the jury. You may review your entry details or refine your instructions before the submission deadline.
+                            @if (Model.CanEditEntry)
+                            {
+                                <span>Your submission is officially registered with the jury. You may review your entry details or refine your instructions before the submission deadline.</span>
+                            }
+                            else
+                            {
+                                <span>Your submission is currently locked from editing because it is under jury review, selected, disqualified, or the contest deadline has passed.</span>
+                            }
                         </p>
                         <div class="d-flex flex-wrap gap-2">
                             <a asp-action="MyEntryDetail" asp-route-slug="@Model.Slug" class="btn btn-outline-secondary btn-sm">
                                 View Your Entry &rarr;
                             </a>
-                            <a asp-action="Entry" asp-route-slug="@Model.Slug" class="btn btn-primary btn-sm">
-                                &#9998; Edit Your Entry
-                            </a>
+                            @if (Model.CanEditEntry)
+                            {
+                                <a asp-action="Entry" asp-route-slug="@Model.Slug" class="btn btn-primary btn-sm">
+                                    &#9998; Edit Your Entry
+                                </a>
+                            }
                         </div>
                     </div>
                 }

@@ -143,9 +143,25 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasIndex(x => x.Status);
             entity.HasIndex(x => x.OpensAtUtc);
             entity.HasIndex(x => x.ClosesAtUtc);
+            entity.HasIndex(x => x.WinnerAnnouncedAtUtc);
             entity.HasOne(x => x.CreatedByUser)
                 .WithMany()
                 .HasForeignKey(x => x.CreatedByUserId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.WinningEntry)
+                .WithMany()
+                .HasForeignKey(x => x.WinningEntryId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.WinnerSelectedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.WinnerSelectedByUserId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.WinnerAnnouncedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.WinnerAnnouncedByUserId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
         });
@@ -158,14 +174,28 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(x => x.TipBody).HasMaxLength(10000);
             entity.Property(x => x.ContributorNotes).HasMaxLength(1000);
             entity.Property(x => x.ImageUrl).HasMaxLength(300);
+            entity.Property(x => x.AdminReviewNotes).HasMaxLength(2000);
+            entity.Property(x => x.DisqualificationReason).HasMaxLength(1000);
 
             // One entry per member per contest
             entity.HasIndex(x => new { x.ContestId, x.AuthorUserId }).IsUnique();
+
+            // Relational single winner guard: maximum one entry per contest can have Status == Selected (4)
+            entity.HasIndex(x => x.ContestId)
+                .IsUnique()
+                .HasFilter("[Status] = 4")
+                .HasDatabaseName("IX_ContestEntries_ContestId_SingleWinner");
 
             entity.HasIndex(x => x.ContestId);
             entity.HasIndex(x => x.AuthorUserId);
             entity.HasIndex(x => x.SubmittedAtUtc);
             entity.HasIndex(x => x.Status);
+
+            entity.HasOne(x => x.ReviewedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.ReviewedByUserId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(x => x.Contest)
                 .WithMany(c => c.Entries)

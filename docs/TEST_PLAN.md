@@ -625,6 +625,61 @@ Scope: Member contest entry intake and "My Contest Entries" (`T-17`). Support fo
 | Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Documented Phase 5B verification results, scenario coverage, and changed-file inventory |
 | Updated | [README.md](../README.md) | Updated Phase 5B capabilities, contest entry routes, and test status |
 
+## Phase 5C actual verification - 28 September 2026
+
+Scope: Admin judging and qualitative entry evaluation, private review notes, member edit lock during evaluation, maximum one winner selection per contest, selection restricted to closed window or closed contests, decoupled public winner announcements, public winner showcases on `/announcements` and contest details (`#announcedWinnerBanner`), zero data leakage (ingredients, steps, entrant emails, and private admin notes withheld), winner revocation/replacement workflows with audit reasons, and relational unique filtered index single-winner constraint.
+
+| Evidence | Actual result |
+|---|---|
+| Build | Solution build succeeded, 0 warnings / 0 errors (`dotnet build JamesThew.slnx`) |
+| Test suite run | 145 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) across Foundation, PublicContent, Subscription, ContributionAndFeedback, Moderation, EditorialContentCrud, EditorialBrowserE2E, AdminMedia, AdminMediaBrowserE2E, Contest, ContestBrowserE2E, ContestEntry, ContestEntryBrowserE2E, ContestJudging, and ContestJudgingBrowserE2E test classes |
+| Migration check | `dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj` verified clean: 0 pending model changes |
+| Browser E2E QA | 13 Playwright Chromium lifecycle scenarios verified in `ContestJudgingBrowserE2ETests.cs`: member submission -> admin qualitative review & private note -> member edit lock verification -> admin close contest -> admin select winner -> guest unannounced privacy check -> admin announce winner -> guest public hall of fame accolade -> contest detail golden banner -> member my-entries accolade -> admin revoke winner -> guest public withdrawal verification |
+| Qualitative review | Admin evaluates submitted formulations and records private review notes (`AdminReviewNotes`); no structured scoring rubric enforced, adhering strictly to PRD demo rules |
+| Disqualification flow | Admin records clear disqualification reasons (`DisqualificationReason`); member dashboard displays reason; private review notes remain strictly confidential |
+| Member edit lock | Entries placed `UnderReview`, `Disqualified`, or `Selected` immediately lock member editing (`CanEdit = false`), even while contest submission window is open |
+| Premature selection rejection | Selection attempts before `ClosesAtUtc` on open contests return failure; winner selection allowed ONLY after submission window closes or when contest is `Closed` |
+| Contest boundary enforcement | Selected winning entry must belong to the target contest (`ContestId == contest.Id`); cross-contest entry selection is strictly rejected |
+| Disqualified entry rejection | Entries marked `Disqualified` cannot be selected as competition winners |
+| Decoupled announcement | Selecting a winner does NOT make the winner public; winner remains private to admin jury until explicitly announced via `AnnounceContestWinner` (`WinnerAnnouncedAtUtc != null`) |
+| Public accolades & Zero leakage | `/announcements` and `/contests/{slug}` showcase announced winners (title, category, winning chef display name, entry title, approved summary, and prize description). Private ingredients, preparation steps, entrant email addresses, and admin review notes are 100% withheld |
+| Winner revocation & replacement | Admin can revoke winner selection with an explicit audit reason (`RevokeContestWinner`); winner status reverts to `UnderReview` and public announcements are immediately withdrawn; winner replacement atomically transitions old winner to `UnderReview` and resets announcement |
+| Relational single-winner guard | SQL Server filtered unique index `IX_ContestEntries_ContestId_SingleWinner` on `ContestEntries([ContestId]) WHERE [Status] = 4` guarantees at the database level that no contest can ever have more than one winning entry |
+| Data preservation | All 16 `ContentItems` (including all 9 QA items), all 7 `FaqItems`, and all 20 tables in `JamesThew_Development` are 100% intact and preserved |
+
+### Phase 5C changed-file inventory
+
+| Status | File path | Description |
+|---|---|---|
+| Updated | [JamesThew/Models/Contest.cs](../JamesThew/Models/Contest.cs) | Added `WinningEntryId`, `WinningEntry`, `WinnerSelectedAtUtc`, `WinnerSelectedByUserId`, `WinnerSelectedByUser`, `WinnerAnnouncedAtUtc`, `WinnerAnnouncedByUserId`, `WinnerAnnouncedByUser`, `HasSelectedWinner`, `HasAnnouncedWinner` |
+| Updated | [JamesThew/Models/ContestEntry.cs](../JamesThew/Models/ContestEntry.cs) | Added `AdminReviewNotes`, `DisqualificationReason`, `ReviewedAtUtc`, `ReviewedByUserId`, `ReviewedByUser` |
+| Updated | [JamesThew/Data/ApplicationDbContext.cs](../JamesThew/Data/ApplicationDbContext.cs) | Configured restricted foreign key relationships for winner navigation and added single-winner filtered unique index `IX_ContestEntries_ContestId_SingleWinner` on `[Status] = 4` |
+| New | [JamesThew/Data/Migrations/20260928015849_Phase5CJudgingAndWinners.cs](../JamesThew/Data/Migrations/20260928015849_Phase5CJudgingAndWinners.cs) | EF Core migration creating judging audit columns, winning foreign keys, and filtered unique index |
+| New | [JamesThew/Data/Migrations/20260928015849_Phase5CJudgingAndWinners.Designer.cs](../JamesThew/Data/Migrations/20260928015849_Phase5CJudgingAndWinners.Designer.cs) | EF Core migration designer metadata snapshot |
+| Updated | [JamesThew/Data/Migrations/ApplicationDbContextModelSnapshot.cs](../JamesThew/Data/Migrations/ApplicationDbContextModelSnapshot.cs) | Updated EF Core model snapshot for Phase 5C entities |
+| New | [JamesThew/ViewModels/ContestJudgingViewModels.cs](../JamesThew/ViewModels/ContestJudgingViewModels.cs) | View models for announcements DTO, judging inputs, winner selection, and winner revocation |
+| Updated | [JamesThew/ViewModels/ContestEntryViewModels.cs](../JamesThew/ViewModels/ContestEntryViewModels.cs) | Updated entry DTOs with judging audit data, edit locks on review/disqualification/selection, and admin row evaluation fields |
+| Updated | [JamesThew/ViewModels/ContestViewModels.cs](../JamesThew/ViewModels/ContestViewModels.cs) | Added `AnnouncedWinner`, `HasAnnouncedWinner`, `CanEditEntry`, and `UserEntryStatus` to `ContestDetailViewModel` |
+| New | [JamesThew/Services/IContestJudgingService.cs](../JamesThew/Services/IContestJudgingService.cs) | Service interface for entry review, winner selection, winner announcement, winner revocation, and public announcements query |
+| New | [JamesThew/Services/ContestJudgingService.cs](../JamesThew/Services/ContestJudgingService.cs) | Service implementation with atomic transitions, eligibility validations, decoupled announcement, and zero data leakage projections |
+| Updated | [JamesThew/Services/ContestEntryService.cs](../JamesThew/Services/ContestEntryService.cs) | Updated edit lock rules to deny member edits when entry is `UnderReview`, `Disqualified`, or `Selected` |
+| Updated | [JamesThew/Services/ContestService.cs](../JamesThew/Services/ContestService.cs) | Projected announced winner accolades and user entry edit status on contest detail |
+| Updated | [JamesThew/Program.cs](../JamesThew/Program.cs) | Registered `IContestJudgingService` in DI container |
+| Updated | [JamesThew/Controllers/AdminController.cs](../JamesThew/Controllers/AdminController.cs) | Added `ReviewContestEntry`, `SelectContestWinner`, `AnnounceContestWinner`, and `RevokeContestWinner` actions with antiforgery and Admin policy |
+| Updated | [JamesThew/Controllers/AnnouncementsController.cs](../JamesThew/Controllers/AnnouncementsController.cs) | Injected `IContestJudgingService` and rendered announced winners hall of fame |
+| Updated | [JamesThew/Controllers/ContestsController.cs](../JamesThew/Controllers/ContestsController.cs) | Injected `IContestJudgingService` and populated announced winner accolade card on contest detail |
+| Updated | [JamesThew/Views/Admin/ContestEntries.cshtml](../JamesThew/Views/Admin/ContestEntries.cshtml) | Added winner status card, unannounced/announced indicators, announce button, revoke modal, and entry evaluation review forms |
+| Updated | [JamesThew/Views/Announcements/Index.cshtml](../JamesThew/Views/Announcements/Index.cshtml) | Added culinary hall of fame showcase for announced winners with zero data leakage |
+| Updated | [JamesThew/Views/Contests/Detail.cshtml](../JamesThew/Views/Contests/Detail.cshtml) | Added `#announcedWinnerBanner` accolade card for announced winner and updated edit button lock states |
+| Updated | [JamesThew/Views/Contests/EntryForm.cshtml](../JamesThew/Views/Contests/EntryForm.cshtml) | Updated readonly banner text for entries locked under evaluation or judging |
+| Updated | [JamesThew/Views/Contests/MyEntries.cshtml](../JamesThew/Views/Contests/MyEntries.cshtml) | Added badges for `UnderReview`, `Disqualified`, `Selected`, locked states, and winner accolades |
+| Updated | [JamesThew/Views/Contests/MyEntryDetail.cshtml](../JamesThew/Views/Contests/MyEntryDetail.cshtml) | Added status banners for `UnderReview`, `Disqualified`, `Selected`, and announced winner distinction |
+| New | [tests/JamesThew.Tests/ContestJudgingTests.cs](../tests/JamesThew.Tests/ContestJudgingTests.cs) | 12 comprehensive integration tests covering premature judging rejection, wrong-contest rejection, disqualified entry rejection, private review notes privacy, member edit lock, unannounced winner privacy, public announcement verification, zero data leakage, winner revocation, atomic winner replacement, DB filtered unique index constraint, non-admin denial, and antiforgery enforcement |
+| New | [tests/JamesThew.Tests/ContestJudgingBrowserE2ETests.cs](../tests/JamesThew.Tests/ContestJudgingBrowserE2ETests.cs) | Playwright Chromium browser E2E test covering the 13-step admin judging to public announcement lifecycle |
+| Updated | [docs/TASKS.md](../docs/TASKS.md) | Documented Phase 5C completion, status matrix updates, and verification evidence |
+| Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Documented Phase 5C verification results, scenario coverage, and changed-file inventory |
+| Updated | [README.md](../README.md) | Updated Phase 5C capabilities, migrations list, and feature documentation |
+
 
 
 

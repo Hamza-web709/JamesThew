@@ -78,6 +78,7 @@ public partial class Program
         builder.Services.AddScoped<IMediaService, MediaService>();
         builder.Services.AddScoped<IContestService, ContestService>();
         builder.Services.AddScoped<IContestEntryService, ContestEntryService>();
+        builder.Services.AddScoped<IContestJudgingService, ContestJudgingService>();
         builder.Services.AddControllersWithViews(options =>
             options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()))
             .AddApplicationPart(typeof(Program).Assembly);

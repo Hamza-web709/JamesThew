@@ -46,6 +46,25 @@ public class Contest
 
     public ICollection<ContestEntry> Entries { get; set; } = new List<ContestEntry>();
 
+    public int? WinningEntryId { get; set; }
+
+    [ForeignKey(nameof(WinningEntryId))]
+    public ContestEntry? WinningEntry { get; set; }
+
+    public DateTime? WinnerSelectedAtUtc { get; set; }
+
+    public string? WinnerSelectedByUserId { get; set; }
+
+    [ForeignKey(nameof(WinnerSelectedByUserId))]
+    public ApplicationUser? WinnerSelectedByUser { get; set; }
+
+    public DateTime? WinnerAnnouncedAtUtc { get; set; }
+
+    public string? WinnerAnnouncedByUserId { get; set; }
+
+    [ForeignKey(nameof(WinnerAnnouncedByUserId))]
+    public ApplicationUser? WinnerAnnouncedByUser { get; set; }
+
     public ContestTimelinePhase GetTimelinePhase(DateTime asOfUtc)
     {
         if (Status == ContestStatus.Closed) return ContestTimelinePhase.Ended;
@@ -61,4 +80,10 @@ public class Contest
     public bool IsActiveOpen => Status == ContestStatus.Published &&
                                 DeletedAtUtc == null &&
                                 TimelinePhase == ContestTimelinePhase.Open;
+
+    [NotMapped]
+    public bool HasSelectedWinner => WinningEntryId.HasValue;
+
+    [NotMapped]
+    public bool HasAnnouncedWinner => WinningEntryId.HasValue && WinnerAnnouncedAtUtc.HasValue;
 }

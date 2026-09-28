@@ -49,6 +49,11 @@ public class ContestDetailViewModel
 
     public bool HasEntered { get; set; }
     public int? UserEntryId { get; set; }
+    public bool CanEditEntry { get; set; }
+    public ContestEntryStatus? UserEntryStatus { get; set; }
+
+    public ContestWinnerAnnouncementDto? AnnouncedWinner { get; set; }
+    public bool HasAnnouncedWinner => AnnouncedWinner != null;
 }
 
 public class AdminContestRowDto

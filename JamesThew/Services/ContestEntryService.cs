@@ -35,6 +35,11 @@ public class ContestEntryService(ApplicationDbContext db) : IContestEntryService
 
         if (existing is not null)
         {
+            if (existing.Status != ContestEntryStatus.Submitted)
+            {
+                isReadonly = true;
+            }
+
             return new ContestEntryFormViewModel
             {
                 ContestId = contest.Id,
@@ -89,7 +94,8 @@ public class ContestEntryService(ApplicationDbContext db) : IContestEntryService
         var phase = contest.GetTimelinePhase(now);
         var canEdit = phase == ContestTimelinePhase.Open &&
                       contest.Status == ContestStatus.Published &&
-                      contest.DeletedAtUtc == null;
+                      contest.DeletedAtUtc == null &&
+                      entry.Status == ContestEntryStatus.Submitted;
 
         return new ContestEntryDetailViewModel
         {
@@ -104,6 +110,8 @@ public class ContestEntryService(ApplicationDbContext db) : IContestEntryService
             Title = entry.Title,
             Summary = entry.Summary,
             Status = entry.Status,
+            DisqualificationReason = entry.Status == ContestEntryStatus.Disqualified ? entry.DisqualificationReason : null,
+            IsWinnerAnnounced = entry.Status == ContestEntryStatus.Selected && contest.WinnerAnnouncedAtUtc != null,
             SubmittedAtUtc = entry.SubmittedAtUtc,
             UpdatedAtUtc = entry.UpdatedAtUtc,
             ContributorNotes = entry.ContributorNotes,
@@ -213,6 +221,9 @@ public class ContestEntryService(ApplicationDbContext db) : IContestEntryService
             // Edit existing entry
             if (now > contest.ClosesAtUtc || contest.Status == ContestStatus.Closed)
                 return (false, "Contest submissions have closed. Edits are no longer permitted.", null);
+
+            if (existing.Status != ContestEntryStatus.Submitted)
+                return (false, "This entry is under evaluation or has been judged and can no longer be edited.", null);
 
             existing.Title = title;
             existing.Summary = summary;
@@ -341,10 +352,13 @@ public class ContestEntryService(ApplicationDbContext db) : IContestEntryService
                 CanEdit = e.Contest.Status == ContestStatus.Published &&
                           e.Contest.DeletedAtUtc == null &&
                           now <= e.Contest.ClosesAtUtc &&
-                          now >= e.Contest.OpensAtUtc,
+                          now >= e.Contest.OpensAtUtc &&
+                          e.Status == ContestEntryStatus.Submitted,
                 EntryTitle = e.Title,
                 Summary = e.Summary,
                 Status = e.Status,
+                DisqualificationReason = e.Status == ContestEntryStatus.Disqualified ? e.DisqualificationReason : null,
+                IsWinnerAnnounced = e.Status == ContestEntryStatus.Selected && e.Contest.WinnerAnnouncedAtUtc != null,
                 SubmittedAtUtc = e.SubmittedAtUtc,
                 UpdatedAtUtc = e.UpdatedAtUtc,
                 ImageUrl = e.ImageUrl
@@ -365,8 +379,14 @@ public class ContestEntryService(ApplicationDbContext db) : IContestEntryService
 
         var contest = await db.Contests
             .AsNoTracking()
+            .Include(c => c.WinningEntry)
+                .ThenInclude(w => w!.AuthorUser)
+            .Include(c => c.WinnerSelectedByUser)
+            .Include(c => c.WinnerAnnouncedByUser)
             .Include(c => c.Entries)
                 .ThenInclude(e => e.AuthorUser)
+            .Include(c => c.Entries)
+                .ThenInclude(e => e.ReviewedByUser)
             .Include(c => c.Entries)
                 .ThenInclude(e => e.Ingredients)
             .Include(c => c.Entries)
@@ -387,6 +407,11 @@ public class ContestEntryService(ApplicationDbContext db) : IContestEntryService
                 Title = e.Title,
                 Summary = e.Summary,
                 Status = e.Status,
+                AdminReviewNotes = e.AdminReviewNotes,
+                DisqualificationReason = e.DisqualificationReason,
+                ReviewedAtUtc = e.ReviewedAtUtc,
+                ReviewedByDisplayName = e.ReviewedByUser?.DisplayName,
+                IsSelectedWinner = contest.WinningEntryId == e.Id || e.Status == ContestEntryStatus.Selected,
                 SubmittedAtUtc = e.SubmittedAtUtc,
                 UpdatedAtUtc = e.UpdatedAtUtc,
                 Notes = e.ContributorNotes,
@@ -401,6 +426,7 @@ public class ContestEntryService(ApplicationDbContext db) : IContestEntryService
             .ToList();
 
         var now = DateTime.UtcNow;
+        var canSelectWinner = now > contest.ClosesAtUtc || contest.Status == ContestStatus.Closed;
         return new AdminContestEntriesViewModel
         {
             ContestId = contest.Id,
@@ -412,6 +438,14 @@ public class ContestEntryService(ApplicationDbContext db) : IContestEntryService
             OpensAtUtc = contest.OpensAtUtc,
             ClosesAtUtc = contest.ClosesAtUtc,
             TotalEntries = rows.Count,
+            WinningEntryId = contest.WinningEntryId,
+            WinnerSelectedAtUtc = contest.WinnerSelectedAtUtc,
+            WinnerSelectedByDisplayName = contest.WinnerSelectedByUser?.DisplayName,
+            WinnerAnnouncedAtUtc = contest.WinnerAnnouncedAtUtc,
+            WinnerAnnouncedByDisplayName = contest.WinnerAnnouncedByUser?.DisplayName,
+            WinningEntryTitle = contest.WinningEntry?.Title,
+            WinningAuthorDisplayName = contest.WinningEntry?.AuthorUser?.DisplayName,
+            CanSelectWinner = canSelectWinner && contest.Status != ContestStatus.Draft && contest.Status != ContestStatus.Archived,
             Entries = rows
         };
     }

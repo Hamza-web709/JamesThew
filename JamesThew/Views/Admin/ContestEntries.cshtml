@@ -15,6 +15,22 @@
         </a>
     </div>
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            &#10004; @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <!-- Header Card -->
     <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-2">
@@ -35,6 +51,10 @@
 
                     <span class="badge bg-light text-dark border rounded-pill px-3 py-1">
                         Status: @Model.ContestStatus
+                    </span>
+
+                    <span class="badge bg-secondary-subtle text-secondary border rounded-pill px-3 py-1">
+                        &#128065; Read-Only Intake Review &amp; Judging
                     </span>
 
                     @if (Model.TimelinePhase == ContestTimelinePhase.Open)
@@ -70,18 +90,105 @@
         </div>
     </div>
 
-    <!-- Phase 5B Read-Only Callout -->
-    <div class="alert alert-info border shadow-sm mb-4" role="alert">
-        <div class="d-flex align-items-center gap-2">
-            <span class="fs-5">&#9432;</span>
-            <div>
-                <strong class="d-block">Read-Only Intake Review</strong>
-                <span class="small">
-                    Contest submission intake is active. All entries are captured as immutable snapshots. Scoring rubrics, judging evaluations, and seasonal winner announcements are scheduled for Phase 5C.
-                </span>
+    <!-- Phase 5C Winner Status Panel -->
+    @if (Model.HasSelectedWinner)
+    {
+        <div class="card border-warning border-2 shadow-sm rounded-4 mb-4 bg-warning-subtle p-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <span class="badge bg-warning text-dark border rounded-pill px-3 py-1 mb-2">
+                        &#127942; Competition Winner
+                    </span>
+                    <h2 class="h4 jt-serif mb-1 text-dark">
+                        @Model.WinningEntryTitle
+                    </h2>
+                    <p class="small text-muted mb-1">
+                        Submitted by: <strong>@Model.WinningAuthorDisplayName</strong> &bull; Selected: @(Model.WinnerSelectedAtUtc?.ToString("MMM d, yyyy HH:mm") ?? "—") UTC
+                    </p>
+                    @if (Model.HasAnnouncedWinner)
+                    {
+                        <div class="badge bg-success text-white px-3 py-1 rounded-pill small">
+                            &#10004; Publicly Announced (@Model.WinnerAnnouncedAtUtc?.ToString("MMM d, yyyy HH:mm") UTC)
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="badge bg-secondary text-white px-3 py-1 rounded-pill small">
+                            &#128274; Unannounced (Visible only to Admin jury)
+                        </div>
+                    }
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    @if (!Model.HasAnnouncedWinner)
+                    {
+                        <form asp-action="AnnounceContestWinner" asp-route-id="@Model.ContestId" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success btn-sm px-3 py-2 fw-semibold" onclick="return confirm('Publish this winner to the public announcements board and contest page?');">
+                                &#128227; Announce Winner Publicly
+                            </button>
+                        </form>
+                    }
+
+                    <button type="button" class="btn btn-outline-danger btn-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#revokeWinnerModal">
+                        &#10008; Revoke Winner
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
+
+        <!-- Revoke Winner Modal -->
+        <div class="modal fade" id="revokeWinnerModal" tabindex="-1" aria-labelledby="revokeWinnerModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form asp-action="RevokeContestWinner" asp-route-id="@Model.ContestId" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="modal-header">
+                            <h5 class="modal-title h6" id="revokeWinnerModalLabel">Revoke Competition Winner</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="small text-muted">
+                                Revoking the winner will return the winning entry to <strong>Under Review</strong> and withdraw any public announcements for this contest.
+                            </p>
+                            <div class="mb-3">
+                                <label for="revokeReason" class="form-label small fw-semibold">Reason for Revocation (optional):</label>
+                                <textarea name="reason" id="revokeReason" class="form-control" rows="3" placeholder="e.g., Eligibility disqualification or judging reconsideration."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger btn-sm">Confirm Revocation</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert @(Model.CanSelectWinner ? "alert-primary" : "alert-light border") shadow-sm rounded-4 mb-4 p-3" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <span class="fs-4">&#9878;</span>
+                <div>
+                    @if (Model.CanSelectWinner)
+                    {
+                        <strong class="d-block text-primary">Submissions Concluded &mdash; Ready for Final Winner Selection</strong>
+                        <span class="small text-muted">
+                            Review submitted entries below. Expand an entry to evaluate its formulation, record qualitative review notes, and select the winning dish.
+                        </span>
+                    }
+                    else
+                    {
+                        <strong class="d-block text-muted">Competition Active &mdash; Submissions Open</strong>
+                        <span class="small text-muted">
+                            Members are actively submitting entries. Final winner selection unlocks once the submission deadline passes or when the competition is closed.
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
 
     @if (Model.TotalEntries == 0)
     {
@@ -94,8 +201,9 @@
     else
     {
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-            <div class="card-header bg-white py-3 border-bottom">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                 <h2 class="h6 mb-0 jt-serif">Submitted Contest Entries (@Model.TotalEntries)</h2>
+                <span class="small text-muted font-monospace">Qualitative Judging &amp; Selection</span>
             </div>
 
             <div class="accordion accordion-flush" id="entriesAccordion">
@@ -115,9 +223,31 @@
                                         <span class="text-muted small ms-2">&mdash; by @entry.AuthorDisplayName (@entry.AuthorEmail)</span>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
-                                        <span class="badge bg-light text-dark border rounded-pill px-2 py-1 small">
-                                            @entry.Status
-                                        </span>
+                                        @if (entry.IsSelectedWinner)
+                                        {
+                                            <span class="badge bg-warning text-dark border rounded-pill px-2 py-1 small">
+                                                &#127942; Winner
+                                            </span>
+                                        }
+                                        else if (entry.Status == ContestEntryStatus.UnderReview)
+                                        {
+                                            <span class="badge bg-info-subtle text-info-emphasis border rounded-pill px-2 py-1 small">
+                                                &#128065; Under Review
+                                            </span>
+                                        }
+                                        else if (entry.Status == ContestEntryStatus.Disqualified)
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger border rounded-pill px-2 py-1 small">
+                                                &#10008; Disqualified
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-dark border rounded-pill px-2 py-1 small">
+                                                Submitted
+                                            </span>
+                                        }
+
                                         <span class="small text-muted font-monospace">
                                             @entry.SubmittedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC
                                         </span>
@@ -128,6 +258,7 @@
 
                         <div id="@collapseId" class="accordion-collapse collapse" aria-labelledby="@headingId" data-bs-parent="#entriesAccordion">
                             <div class="accordion-body bg-light p-4">
+                                <!-- Teaser Summary -->
                                 <div class="p-3 bg-white rounded-3 border mb-3">
                                     <h4 class="small text-muted font-monospace mb-1">Summary Teaser</h4>
                                     <p class="mb-0">@entry.Summary</p>
@@ -201,18 +332,110 @@
 
                                 @if (!string.IsNullOrWhiteSpace(entry.Notes))
                                 {
-                                    <div class="p-3 bg-white rounded-3 border">
+                                    <div class="p-3 bg-white rounded-3 border mb-3">
                                         <h4 class="small text-muted font-monospace mb-1">&#128221; Author Remarks</h4>
                                         <p class="small text-muted mb-0">@entry.Notes</p>
                                     </div>
                                 }
 
-                                @if (entry.UpdatedAtUtc.HasValue)
-                                {
-                                    <div class="small text-muted font-monospace mt-2">
-                                        &#9998; Last updated: @entry.UpdatedAtUtc.Value.ToString("yyyy-MM-dd HH:mm") UTC
+                                <!-- Admin Judging & Review Section -->
+                                <div class="p-3 bg-white rounded-3 border mb-3">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-2 border-bottom">
+                                        <h4 class="h6 jt-serif mb-0 text-dark">&#9878; Admin Qualitative Review</h4>
+                                        @if (entry.ReviewedAtUtc.HasValue)
+                                        {
+                                            <span class="small text-muted font-monospace">
+                                                Last Reviewed: @entry.ReviewedAtUtc.Value.ToString("yyyy-MM-dd HH:mm") UTC
+                                                @(entry.ReviewedByDisplayName != null ? $"by {entry.ReviewedByDisplayName}" : "")
+                                            </span>
+                                        }
                                     </div>
-                                }
+
+                                    @if (!string.IsNullOrWhiteSpace(entry.AdminReviewNotes))
+                                    {
+                                        <div class="alert alert-light border small mb-3">
+                                            <strong>Private Notes:</strong>
+                                            <div style="white-space: pre-line;">@entry.AdminReviewNotes</div>
+                                        </div>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(entry.DisqualificationReason))
+                                    {
+                                        <div class="alert alert-danger small mb-3">
+                                            <strong>Disqualification Reason:</strong> @entry.DisqualificationReason
+                                        </div>
+                                    }
+
+                                    <form asp-action="ReviewContestEntry" asp-route-id="@Model.ContestId" asp-route-entryId="@entry.EntryId" method="post" class="row g-2 align-items-end">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="ContestId" value="@Model.ContestId" />
+                                        <input type="hidden" name="EntryId" value="@entry.EntryId" />
+
+                                        <div class="col-md-3">
+                                            <label class="form-label small fw-semibold">Status Decision</label>
+                                            <select name="Status" class="form-select form-select-sm">
+                                                <option value="@((int)ContestEntryStatus.Submitted)" selected="@(entry.Status == ContestEntryStatus.Submitted ? "selected" : null)">Submitted</option>
+                                                <option value="@((int)ContestEntryStatus.UnderReview)" selected="@(entry.Status == ContestEntryStatus.UnderReview ? "selected" : null)">Under Review</option>
+                                                <option value="@((int)ContestEntryStatus.Disqualified)" selected="@(entry.Status == ContestEntryStatus.Disqualified ? "selected" : null)">Disqualified</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-semibold">Private Notes</label>
+                                            <textarea name="AdminReviewNotes" rows="2" class="form-control form-control-sm" placeholder="Notes for jury panel...">@entry.AdminReviewNotes</textarea>
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <label class="form-label small fw-semibold">Disqualification Reason</label>
+                                            <textarea name="DisqualificationReason" rows="2" class="form-control form-control-sm" placeholder="Reason if disqualified...">@entry.DisqualificationReason</textarea>
+                                        </div>
+
+                                        <div class="col-md-2">
+                                            <button type="submit" class="btn btn-secondary btn-sm w-100">
+                                                Save Review
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <!-- Winner Selection Action -->
+                                    <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                                        <div>
+                                            @if (entry.IsSelectedWinner)
+                                            {
+                                                <span class="badge bg-warning text-dark border px-3 py-2 fs-6">
+                                                    &#127942; Designated Competition Winner
+                                                </span>
+                                            }
+                                        </div>
+
+                                        <div>
+                                            @if (!entry.IsSelectedWinner)
+                                            {
+                                                @if (Model.CanSelectWinner && entry.Status != ContestEntryStatus.Disqualified)
+                                                {
+                                                    <form asp-action="SelectContestWinner" asp-route-id="@Model.ContestId" asp-route-entryId="@entry.EntryId" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-primary btn-sm px-3 py-2 fw-semibold" onclick="return confirm('Designate \'@entry.Title\' as the official winner of this competition?');">
+                                                            &#127942; Select as Winner
+                                                        </button>
+                                                    </form>
+                                                }
+                                                else if (!Model.CanSelectWinner)
+                                                {
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Submission window must conclude before selecting winner">
+                                                        &#128274; Selection Locked (Window Active)
+                                                    </button>
+                                                }
+                                                else if (entry.Status == ContestEntryStatus.Disqualified)
+                                                {
+                                                    <button type="button" class="btn btn-outline-danger btn-sm" disabled title="Disqualified entry cannot win">
+                                                        &#10008; Disqualified from Winning
+                                                    </button>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
