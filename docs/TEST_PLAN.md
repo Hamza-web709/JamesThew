@@ -693,7 +693,7 @@ Scope: Release-readiness review, neutral winner fallback, decoupled announcement
 | Test suite run | 153 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) |
 | EF Core model check | `dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj` verified clean: 0 pending model changes |
 | Dedicated Demo DB | `JamesThew_Demo` created, migrated through all 8 migrations, seeded with baseline data (7 ContentItems, 7 FAQs, 4 Contests, 1 Admin User, 2 Roles). Admin credentials configured in User Secrets |
-| Dev DB preservation | `JamesThew_Development` and its 16 `ContentItems` (including all 9 QA items) are 100% intact and preserved |
+| Dev DB verification | Read-only inspection verified `JamesThew_Development` preserves all 16 `ContentItems` (including all 9 QA items), 7 Faqs, and 6 Users intact; its Contests table contains 0 rows (0 rows affected by contest update). Clean demo DB `JamesThew_Demo` contains 4 Contests (with `summer-artisanal-seafood-showcase` ImageUrl pointing to `/images/recipes/seafood-saffron-risotto.jpg`), 7 ContentItems, 7 Faqs, and 1 Admin User |
 | Neutral winner fallback | `WinnerDisplayName` and `WinningAuthorDisplayName` evaluate to neutral fallback `"Culinary Member"` when display name is missing or whitespace. No email or email prefix is exposed in public HTML |
 | Atomic winner replacement | Replacing an announced winner atomically clears public announcement state (`WinnerAnnouncedAtUtc = null`). New winner is never public until explicitly announced |
 | Durable multi-revocation audit | Repeated revocations across entries or contests append timestamped audit entries (`[yyyy-MM-dd HH:mm UTC] reason`), permanently retaining full historical records without overwriting |

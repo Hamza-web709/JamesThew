@@ -369,7 +369,7 @@ Phase 5B successfully implemented and verified:
 Phase 6A successfully verified and completed on 28 September 2026:
 - Neutral winner fallback: Missing or whitespace entrant display names evaluate to `"Culinary Member"`; email addresses and prefixes are never exposed in public views.
 - Winner replacement & durable revocation audit: Replacing an announced winner atomically clears announcement state (`WinnerAnnouncedAtUtc = null`). Repeated revocations maintain timestamped historical audit entries in `Contest.WinnerRevocationReason` and `ContestEntry.RevocationReason`.
-- Dedicated demo database: Clean `JamesThew_Demo` database provisioned with 8 migrations, seeded baseline demo data (7 ContentItems, 7 FAQs, 4 Contests, 1 Admin User, 2 Roles), with admin credentials stored in User Secrets. Existing `JamesThew_Development` (16 ContentItems including 9 QA items) is preserved 100% untouched.
+- Dedicated demo database: Clean `JamesThew_Demo` database provisioned with 8 migrations, seeded baseline demo data (7 ContentItems, 7 FAQs, 4 Contests, 1 Admin User, 2 Roles), with admin credentials stored in User Secrets. Existing `JamesThew_Development` (16 ContentItems including 9 QA items, 7 Faqs, 6 Users, 0 Contests) is preserved intact (0 rows affected by contest update).
 - Automated browser E2E QA: Playwright test `ReleaseReadinessBrowserE2ETests.cs` verified Guest browsing (desktop & mobile 390px), registration/login, subscription lifecycle, community contributions & admin moderation, editorial media upload, contest lifecycle, judging, announcement, durable revocation, zero horizontal overflow, zero broken images, and zero console/server errors.
 - Verification: 153/153 tests pass, 0 warnings/errors, 0 pending EF model changes.
 

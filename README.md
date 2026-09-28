@@ -18,8 +18,7 @@ James Thew ki recipes, cooking tips, paid membership, feedback aur contests ke A
    - Connection String: `Server=(localdb)\MSSQLLocalDB;Database=JamesThew_Demo;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True`
    - Migrated through all 8 EF Core migrations up to `20260928074105_Phase5CDurableRevocationAudit`.
    - Seeded with clean baseline data: 7 ContentItems (recipes/tips), 7 Faqs, 4 Contests, 1 Admin User, 2 Roles.
-   - Admin credentials configured securely in User Secrets (`LocalAdmin:Email = "admin@jamesthew.com"`, `LocalAdmin:Password = "Admin@Pass1234!"`).
-   - Development database `JamesThew_Development` and its 16 ContentItems (including all 9 QA items) are 100% preserved and untouched.
+   - Development database `JamesThew_Development` is preserved intact with all 16 ContentItems (including all 9 QA items), 7 Faqs, and 6 Users; its Contests table contains 0 rows (0 rows affected by the contest image update). Contest demo data (4 contests) resides in `JamesThew_Demo`, where contest `summer-artisanal-seafood-showcase` ImageUrl points to `/images/recipes/seafood-saffron-risotto.jpg`.
 4. **Automated End-to-End Browser QA (`ReleaseReadinessBrowserE2ETests.cs`)**:
    - Chromium Playwright E2E testing across 7 comprehensive lifecycle phases:
      - Part 1: Guest browsing & responsive layout on Desktop (1280x800) and Mobile (390x844). Verified 0 horizontal overflow, 0 broken images, free content access vs members-only locked state.
