@@ -10,5 +10,6 @@ public class ApplicationUser : IdentityUser
     public ICollection<SubscriptionRequest> SubscriptionRequests { get; set; } = [];
     public ICollection<Feedback> Feedbacks { get; set; } = [];
     public ICollection<ContentItem> ContributedContentItems { get; set; } = [];
+    public ICollection<ContestEntry> ContestEntries { get; set; } = [];
 }
 

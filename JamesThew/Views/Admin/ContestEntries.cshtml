@@ -1,0 +1,223 @@
+@model JamesThew.ViewModels.AdminContestEntriesViewModel
+@using JamesThew.Models
+@{
+    ViewData["Title"] = $"Submissions: {Model.ContestTitle} - Admin Portal";
+}
+
+<div class="mb-5 max-w-1000 mx-auto">
+    <!-- Breadcrumbs -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a asp-action="Contests" class="text-decoration-none text-muted small">
+            &larr; Back to Contest Management
+        </a>
+        <a href="/contests/@Model.ContestSlug" target="_blank" class="text-decoration-none text-muted small">
+            View Public Contest Page &#8599;
+        </a>
+    </div>
+
+    <!-- Header Card -->
+    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-2">
+            <div>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    @if (Model.ContestType == ContestType.Recipe)
+                    {
+                        <span class="badge bg-primary-subtle text-primary border rounded-pill px-3 py-1">
+                            &#127859; Recipe Competition
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning-subtle text-warning-emphasis border rounded-pill px-3 py-1">
+                            &#128161; Cooking Tip Competition
+                        </span>
+                    }
+
+                    <span class="badge bg-light text-dark border rounded-pill px-3 py-1">
+                        Status: @Model.ContestStatus
+                    </span>
+
+                    @if (Model.TimelinePhase == ContestTimelinePhase.Open)
+                    {
+                        <span class="badge bg-success rounded-pill px-3 py-1">
+                            &#9889; Open for Entries
+                        </span>
+                    }
+                    else if (Model.TimelinePhase == ContestTimelinePhase.Upcoming)
+                    {
+                        <span class="badge bg-info-subtle text-info-emphasis rounded-pill px-3 py-1">
+                            Upcoming
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary rounded-pill px-3 py-1">
+                            &#128274; Concluded
+                        </span>
+                    }
+                </div>
+
+                <h1 class="h2 jt-serif mb-1">@Model.ContestTitle</h1>
+                <p class="text-muted small font-monospace mb-0">
+                    Window: @Model.OpensAtUtc.ToString("MMM d, yyyy HH:mm") UTC &rarr; @Model.ClosesAtUtc.ToString("MMM d, yyyy HH:mm") UTC
+                </p>
+            </div>
+
+            <div class="text-md-end">
+                <span class="display-6 fw-bold text-primary">@Model.TotalEntries</span>
+                <span class="d-block small text-muted">Total Submissions</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 5B Read-Only Callout -->
+    <div class="alert alert-info border shadow-sm mb-4" role="alert">
+        <div class="d-flex align-items-center gap-2">
+            <span class="fs-5">&#9432;</span>
+            <div>
+                <strong class="d-block">Read-Only Intake Review</strong>
+                <span class="small">
+                    Contest submission intake is active. All entries are captured as immutable snapshots. Scoring rubrics, judging evaluations, and seasonal winner announcements are scheduled for Phase 5C.
+                </span>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.TotalEntries == 0)
+    {
+        <div class="p-5 text-center bg-white rounded-4 border shadow-sm text-muted">
+            <div class="fs-1 mb-2">&#128221;</div>
+            <h2 class="h5 jt-serif">No Submissions Yet</h2>
+            <p class="small mb-0">No registered members have submitted recipes or tips for this competition so far.</p>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h2 class="h6 mb-0 jt-serif">Submitted Contest Entries (@Model.TotalEntries)</h2>
+            </div>
+
+            <div class="accordion accordion-flush" id="entriesAccordion">
+                @for (int i = 0; i < Model.Entries.Count; i++)
+                {
+                    var entry = Model.Entries[i];
+                    var headingId = $"heading{entry.EntryId}";
+                    var collapseId = $"collapse{entry.EntryId}";
+
+                    <div class="accordion-item border-bottom">
+                        <h3 class="accordion-header" id="@headingId">
+                            <button class="accordion-button collapsed py-3 px-4" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between w-100 me-3 gap-2">
+                                    <div>
+                                        <span class="badge bg-secondary-subtle text-secondary me-2">#@entry.EntryId</span>
+                                        <strong class="text-dark">@entry.Title</strong>
+                                        <span class="text-muted small ms-2">&mdash; by @entry.AuthorDisplayName (@entry.AuthorEmail)</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-light text-dark border rounded-pill px-2 py-1 small">
+                                            @entry.Status
+                                        </span>
+                                        <span class="small text-muted font-monospace">
+                                            @entry.SubmittedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC
+                                        </span>
+                                    </div>
+                                </div>
+                            </button>
+                        </h3>
+
+                        <div id="@collapseId" class="accordion-collapse collapse" aria-labelledby="@headingId" data-bs-parent="#entriesAccordion">
+                            <div class="accordion-body bg-light p-4">
+                                <div class="p-3 bg-white rounded-3 border mb-3">
+                                    <h4 class="small text-muted font-monospace mb-1">Summary Teaser</h4>
+                                    <p class="mb-0">@entry.Summary</p>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(entry.ImageUrl))
+                                {
+                                    <div class="mb-3">
+                                        <h4 class="small text-muted font-monospace mb-1">Attached Photo URL</h4>
+                                        <a href="@entry.ImageUrl" target="_blank" class="small text-truncate d-block">@entry.ImageUrl</a>
+                                    </div>
+                                }
+
+                                @if (Model.ContestType == ContestType.Recipe)
+                                {
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-sm-4">
+                                            <div class="p-2 bg-white rounded border small text-center">
+                                                <span class="text-muted d-block">Servings</span>
+                                                <strong>@(entry.Servings?.ToString() ?? "—")</strong>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="p-2 bg-white rounded border small text-center">
+                                                <span class="text-muted d-block">Prep Minutes</span>
+                                                <strong>@(entry.PrepMinutes?.ToString() ?? "—")</strong>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="p-2 bg-white rounded border small text-center">
+                                                <span class="text-muted d-block">Cook Minutes</span>
+                                                <strong>@(entry.CookMinutes?.ToString() ?? "—")</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <div class="p-3 bg-white rounded-3 border h-100">
+                                                <h4 class="h6 jt-serif mb-2 text-primary">&#129367; Ingredients (@entry.Ingredients.Count)</h4>
+                                                <ul class="list-unstyled mb-0 small">
+                                                    @foreach (var ing in entry.Ingredients)
+                                                    {
+                                                        <li class="py-1 border-bottom">&#8226; @ing</li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="p-3 bg-white rounded-3 border h-100">
+                                                <h4 class="h6 jt-serif mb-2 text-primary">&#127859; Preparation Steps (@entry.Steps.Count)</h4>
+                                                <ol class="mb-0 small ps-3">
+                                                    @foreach (var step in entry.Steps)
+                                                    {
+                                                        <li class="py-1">@step</li>
+                                                    }
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="p-3 bg-white rounded-3 border mb-3">
+                                        <h4 class="h6 jt-serif mb-2 text-warning-emphasis">&#128161; Technique &amp; Wisdom Body</h4>
+                                        <div class="small text-body lh-base" style="white-space: pre-line;">
+                                            @entry.TipBody
+                                        </div>
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(entry.Notes))
+                                {
+                                    <div class="p-3 bg-white rounded-3 border">
+                                        <h4 class="small text-muted font-monospace mb-1">&#128221; Author Remarks</h4>
+                                        <p class="small text-muted mb-0">@entry.Notes</p>
+                                    </div>
+                                }
+
+                                @if (entry.UpdatedAtUtc.HasValue)
+                                {
+                                    <div class="small text-muted font-monospace mt-2">
+                                        &#9998; Last updated: @entry.UpdatedAtUtc.Value.ToString("yyyy-MM-dd HH:mm") UTC
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>

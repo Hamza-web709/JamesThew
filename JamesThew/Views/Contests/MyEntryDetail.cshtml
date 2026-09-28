@@ -1,0 +1,157 @@
+@model JamesThew.ViewModels.ContestEntryDetailViewModel
+@using JamesThew.Models
+@{
+    ViewData["Title"] = $"{Model.Title} - My Entry - James Thew";
+}
+
+<div class="mb-5 max-w-800 mx-auto">
+    <!-- Breadcrumbs -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a asp-action="MyEntries" class="text-decoration-none text-muted small">
+            &larr; Back to My Contest Entries
+        </a>
+        <a asp-action="Detail" asp-route-slug="@Model.ContestSlug" class="text-decoration-none text-muted small">
+            Contest: @Model.ContestTitle &rarr;
+        </a>
+    </div>
+
+    <!-- Header Card -->
+    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                @if (Model.ContestType == ContestType.Recipe)
+                {
+                    <span class="badge bg-primary-subtle text-primary border rounded-pill px-3 py-1">
+                        &#127859; Recipe Competition Entry
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-warning-subtle text-warning-emphasis border rounded-pill px-3 py-1">
+                        &#128161; Cooking Tip Entry
+                    </span>
+                }
+
+                <span class="badge bg-light text-dark border rounded-pill px-3 py-1">
+                    Status: @Model.Status
+                </span>
+            </div>
+
+            @if (Model.CanEdit)
+            {
+                <a asp-action="Entry" asp-route-slug="@Model.ContestSlug" class="btn btn-sm btn-primary">
+                    &#9998; Edit Entry
+                </a>
+            }
+            else
+            {
+                <span class="badge bg-secondary rounded-pill px-3 py-1">
+                    &#128274; Read-Only (Closed)
+                </span>
+            }
+        </div>
+
+        <h1 class="h3 jt-serif mb-2">@Model.Title</h1>
+        <p class="lead text-muted mb-2">@Model.Summary</p>
+
+        <div class="d-flex flex-wrap gap-3 text-muted small font-monospace pt-2 border-top">
+            <span>&#128197; Submitted: @Model.SubmittedAtUtc.ToString("MMM d, yyyy HH:mm") UTC</span>
+            @if (Model.UpdatedAtUtc.HasValue)
+            {
+                <span>&#9998; Updated: @Model.UpdatedAtUtc.Value.ToString("MMM d, yyyy HH:mm") UTC</span>
+            }
+            <span>&#128203; Contest: @Model.ContestTitle</span>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+    {
+        <div class="rounded-4 overflow-hidden mb-4 border shadow-sm" style="max-height: 400px;">
+            <img src="@Model.ImageUrl" alt="@Model.Title" class="w-100 h-100 object-fit-cover" />
+        </div>
+    }
+
+    @if (Model.ContestType == ContestType.Recipe)
+    {
+        <!-- Recipe Metadata Facts -->
+        <div class="row g-3 mb-4">
+            <div class="col-4">
+                <div class="p-3 bg-white rounded-3 border text-center shadow-sm">
+                    <span class="small text-muted d-block">Servings</span>
+                    <strong class="fs-5">@(Model.Servings?.ToString() ?? "—")</strong>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="p-3 bg-white rounded-3 border text-center shadow-sm">
+                    <span class="small text-muted d-block">Prep Time</span>
+                    <strong class="fs-5">@(Model.PrepMinutes.HasValue ? $"{Model.PrepMinutes} min" : "—")</strong>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="p-3 bg-white rounded-3 border text-center shadow-sm">
+                    <span class="small text-muted d-block">Cook Time</span>
+                    <strong class="fs-5">@(Model.CookMinutes.HasValue ? $"{Model.CookMinutes} min" : "—")</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ingredients Panel -->
+        <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4">
+            <h2 class="h5 jt-serif mb-3 text-primary border-bottom pb-2">&#129367; Formulation Ingredients</h2>
+            <ul class="list-group list-group-flush">
+                @foreach (var ing in Model.Ingredients)
+                {
+                    <li class="list-group-item px-0 py-2 border-bottom-0 d-flex align-items-center gap-2">
+                        <span class="text-primary">&#8226;</span>
+                        <span>@ing</span>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <!-- Preparation Steps Panel -->
+        <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4">
+            <h2 class="h5 jt-serif mb-3 text-primary border-bottom pb-2">&#127859; Preparation Instructions</h2>
+            <ol class="list-group list-group-numbered list-group-flush">
+                @foreach (var step in Model.Steps)
+                {
+                    <li class="list-group-item px-0 py-3 border-bottom d-flex align-items-start gap-2">
+                        <div class="ms-2">@step</div>
+                    </li>
+                }
+            </ol>
+        </div>
+    }
+    else
+    {
+        <!-- Tip Technique Panel -->
+        <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4">
+            <h2 class="h5 jt-serif mb-3 text-warning-emphasis border-bottom pb-2">&#128161; Technique &amp; Culinary Wisdom</h2>
+            <div class="fs-6 lh-lg text-body" style="white-space: pre-line;">
+                @Model.TipBody
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ContributorNotes))
+    {
+        <div class="p-4 bg-light rounded-4 border shadow-sm mb-4">
+            <h3 class="h6 jt-serif mb-2 text-muted">&#128221; Author Remarks / Context</h3>
+            <p class="small text-muted mb-0">@Model.ContributorNotes</p>
+        </div>
+    }
+
+    <!-- Bottom Actions -->
+    <div class="d-flex justify-content-between align-items-center pt-3">
+        <a asp-action="MyEntries" class="btn btn-outline-secondary btn-sm">
+            &larr; Back to My Entries
+        </a>
+
+        @if (Model.CanEdit)
+        {
+            <a asp-action="Entry" asp-route-slug="@Model.ContestSlug" class="btn btn-primary btn-sm">
+                &#9998; Edit Entry &rarr;
+            </a>
+        }
+    </div>
+</div>

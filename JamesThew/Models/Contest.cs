@@ -44,6 +44,8 @@ public class Contest
     [ForeignKey(nameof(CreatedByUserId))]
     public ApplicationUser? CreatedByUser { get; set; }
 
+    public ICollection<ContestEntry> Entries { get; set; } = new List<ContestEntry>();
+
     public ContestTimelinePhase GetTimelinePhase(DateTime asOfUtc)
     {
         if (Status == ContestStatus.Closed) return ContestTimelinePhase.Ended;

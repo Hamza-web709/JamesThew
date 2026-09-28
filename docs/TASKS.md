@@ -243,6 +243,44 @@ Phase 5A successfully implemented and verified:
   - Playwright Chromium browser E2E test in `ContestBrowserE2ETests.cs` (10-step full lifecycle test using isolated loopback server and ephemeral test DB).
   - `dotnet ef migrations has-pending-model-changes` verified clean: 0 pending model changes.
 
+### Actual scoped completion - Phase 5B: Member Contest Entry Intake & "My Contest Entries"
+
+Phase 5B successfully implemented and verified:
+- **Domain Models & Entities**:
+  - `ContestEntryStatus` enum: `Submitted`, `UnderReview`, `Disqualified`, `Selected`.
+  - `ContestEntry` entity with `ContestId`, `AuthorUserId`, `EntryKind` (`Recipe` vs `Tip`), `Title`, `Summary`, `Servings`, `PrepMinutes`, `CookMinutes`, `TipBody`, `ContributorNotes`, `ImageUrl`, `Status`, `SubmittedAtUtc`, `UpdatedAtUtc`.
+  - Child snapshot entities: `ContestEntryIngredient` (`Position`, `Name`, `QuantityText`, `Unit`) and `ContestEntryStep` (`Position`, `Instruction`).
+  - Database unique index `new { x.ContestId, x.AuthorUserId }` strictly enforcing one entry per member per contest at the relational database level.
+  - Foreign keys with cascade deletes to `Contests` and `AspNetUsers`.
+  - Migration `20260927221035_Phase5BContestEntries` generated and applied to `JamesThew_Development`; confirmed 0 pending model changes.
+- **Service Layer (`IContestEntryService` / `ContestEntryService`)**:
+  - Validates contest is `Published`, not deleted, and within the open submission window (`OpensAtUtc <= now <= ClosesAtUtc`).
+  - Server-side rejection for `Draft`, `Archived`, `Closed`, `Upcoming`, or deadline-passed contests.
+  - Enforces type matching: Recipe contests accept only Recipe submissions; Tip contests accept only Tip submissions.
+  - Structured recipe validation: requires at least 1 non-empty ingredient line and 1 non-empty step instruction line; parses servings, prep/cook times.
+  - Structured tip validation: requires technique wisdom body (10 to 10,000 characters).
+  - Single entry rule & pre-deadline edit lifecycle: if an entry already exists and deadline has not passed, updates existing record with `UpdatedAtUtc` timestamp; post-closing edits are rejected.
+  - Admin media isolation: direct file upload and media library endpoints are not exposed to members; members may provide an optional public photo URL.
+- **Member UI & Workflows**:
+  - Interactive entry form (`/contests/{slug}/entry`) supporting both creation and pre-populated editing before deadline.
+  - "My Contest Entries" dashboard (`/contests/my-entries`) displaying submitted entries, contest links, timeline phase badges, timestamps, and status badges.
+  - Detailed personal entry inspection view (`/contests/{slug}/my-entry`).
+  - Navigation integration: quick link in top navbar `_LoginPartial.cshtml` and card on `/account/status`.
+  - Contest detail page (`/contests/{slug}`) dynamically displays participation status: "Submit Your Official Entry", "You have submitted an entry", "Edit Your Entry", and "View Your Entry (Read-Only)".
+- **Privacy & Security**:
+  - Entries are strictly private: excluded from public contest pages, search, recipe/tip catalogs, and other members' views.
+  - Anti-forgery (`[ValidateAntiForgeryToken]`) enforced on all mutation endpoints.
+  - Role-protected (`Member,Admin`) endpoints challenge unauthenticated visitors to login.
+- **Admin Review UI**:
+  - Read-only contest entries inbox (`/admin/contests/{id}/entries`) with contest header, total submission count, author details (name, email), submission timestamps, and expandable formulations (ingredients/steps or tip body).
+  - Contests management table (`/admin/contests`) updated with live `Entries` count column and direct navigation link.
+  - Explicit read-only notice: judging rubrics, scoring, and winner selection are deferred to Phase 5C.
+- **Testing & Verification**:
+  - 128/128 tests passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`).
+  - 12 new unit/integration tests in `ContestEntryTests.cs` (guest denial, recipe submission, tip submission, upcoming rejection, closed/deadline rejection, draft/archive 404, type mismatch, pre-deadline edit, post-deadline edit denial, DB unique constraint exception, public privacy isolation, admin read-only review with 403 non-admin denial).
+  - Playwright Chromium browser E2E test in `ContestEntryBrowserE2ETests.cs` (full lifecycle from guest challenge -> member login -> entry submission -> My Entries dashboard -> detail view -> pre-deadline edit -> guest privacy check -> admin read-only review).
+  - `dotnet ef migrations has-pending-model-changes` verified clean: 0 pending model changes.
+
 | Item | Current status / evidence |
 |---|---|
 | T-11 | Complete (Phase 3A): Demo plan requests ($10 monthly, $100 yearly), pending queue, admin approval/rejection, activation window, zero real gateway |
@@ -254,8 +292,9 @@ Phase 5A successfully implemented and verified:
 | T-13 editorial CRUD | Complete (Phase 4 Step 1): Admin recipe & tip list, create, edit, unpublish (soft delete), restore, auto-slug collisions, and subscription lock preservation |
 | T-13 media management | Complete (Phase 4 Step 2): Admin media library (`/admin/media`), upload validation, magic bytes check, safe storage (`/uploads/editorial/`), recipe/tip form integration, safe deletion unlinking, orphan prevention, and Playwright Chromium E2E QA |
 | T-16 | Complete (Phase 5A): Admin contest management (create/edit/publish/close/archive), auto-slug resolution, date validation, and public read-only discovery at /contests |
+| T-17 | Complete (Phase 5B): Member contest entry intake, pre-deadline editing, one entry per member DB constraint, My Entries dashboard, private isolation, and admin read-only review |
 | T-10 | Auth complete in Phase 1; Profile edit deferred |
-| Phase 5A verification | Build 0 warnings/0 errors; 115/115 tests pass; Playwright Chromium 10/10 scenarios pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
+| Phase 5B verification | Build 0 warnings/0 errors; 128/128 tests pass; Playwright Chromium 10/10 Phase 5A + full Phase 5B lifecycle pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|

@@ -140,14 +140,39 @@
 
             @if (User.Identity?.IsAuthenticated == true)
             {
-                <div class="p-3 rounded-3 bg-light border mb-0">
-                    <div class="d-flex align-items-center gap-2 text-success fw-semibold mb-1">
-                        <span>&#10004;</span> Authenticated Member Account Active
+                @if (Model.HasEntered)
+                {
+                    <div class="p-3 rounded-3 bg-light border mb-0">
+                        <div class="d-flex align-items-center gap-2 text-success fw-semibold mb-1">
+                            <span>&#10004;</span> You have submitted an entry for this competition!
+                        </div>
+                        <p class="small text-muted mb-3">
+                            Your submission is officially registered with the jury. You may review your entry details or refine your instructions before the submission deadline.
+                        </p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a asp-action="MyEntryDetail" asp-route-slug="@Model.Slug" class="btn btn-outline-secondary btn-sm">
+                                View Your Entry &rarr;
+                            </a>
+                            <a asp-action="Entry" asp-route-slug="@Model.Slug" class="btn btn-primary btn-sm">
+                                &#9998; Edit Your Entry
+                            </a>
+                        </div>
                     </div>
-                    <p class="small text-muted mb-0">
-                        Formal structured online entry intake (ingredients, step directions, and photo uploads) will be unlocked in <strong>Phase 5B</strong>. Prepare your recipe formulation in accordance with the guidelines above!
-                    </p>
-                </div>
+                }
+                else
+                {
+                    <div class="p-3 rounded-3 bg-light border mb-0">
+                        <div class="d-flex align-items-center gap-2 text-success fw-semibold mb-1">
+                            <span>&#10004;</span> Authenticated Member Account Active
+                        </div>
+                        <p class="small text-muted mb-3">
+                            You are eligible to participate in this competition. Submit your structured formulation or culinary wisdom to enter the contest!
+                        </p>
+                        <a asp-action="Entry" asp-route-slug="@Model.Slug" id="btnEnterContest" class="btn btn-primary btn-sm px-3 py-2">
+                            Submit Your Official Entry &rarr;
+                        </a>
+                    </div>
+                }
             }
             else
             {
@@ -181,9 +206,17 @@
             <p class="small text-muted mb-3">
                 The submission window for this competition has concluded. Chef James Thew and the culinary moderation panel evaluate submissions based on creativity, authenticity, and presentation.
             </p>
-            <a asp-controller="Announcements" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm">
-                Check Seasonal Announcements &rarr;
-            </a>
+            <div class="d-flex flex-wrap gap-2">
+                @if (User.Identity?.IsAuthenticated == true && Model.HasEntered)
+                {
+                    <a asp-action="MyEntryDetail" asp-route-slug="@Model.Slug" class="btn btn-outline-secondary btn-sm">
+                        View Your Submitted Entry (Read-Only) &rarr;
+                    </a>
+                }
+                <a asp-controller="Announcements" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm">
+                    Check Seasonal Announcements &rarr;
+                </a>
+            </div>
         }
     </div>
 

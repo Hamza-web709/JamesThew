@@ -46,6 +46,9 @@ public class ContestDetailViewModel
     public DateTime CreatedAtUtc { get; set; }
 
     public bool IsOpenForEntries => TimelinePhase == ContestTimelinePhase.Open && Status == ContestStatus.Published;
+
+    public bool HasEntered { get; set; }
+    public int? UserEntryId { get; set; }
 }
 
 public class AdminContestRowDto
@@ -62,6 +65,7 @@ public class AdminContestRowDto
     public string? PrizeDescription { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public bool IsDeleted { get; set; }
+    public int EntriesCount { get; set; }
 }
 
 public class AdminContestListViewModel

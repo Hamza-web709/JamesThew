@@ -105,7 +105,7 @@ public class ContestService(ApplicationDbContext db) : IContestService
     {
         var now = DateTime.UtcNow;
 
-        var query = db.Contests.AsNoTracking();
+        var query = db.Contests.AsNoTracking().Include(c => c.Entries).AsQueryable();
 
         if (!includeArchived)
         {
@@ -156,7 +156,8 @@ public class ContestService(ApplicationDbContext db) : IContestService
                 ImageUrl = c.ImageUrl,
                 PrizeDescription = c.PrizeDescription,
                 CreatedAtUtc = c.CreatedAtUtc,
-                IsDeleted = c.DeletedAtUtc != null
+                IsDeleted = c.DeletedAtUtc != null,
+                EntriesCount = c.Entries.Count
             })
             .ToList();
 

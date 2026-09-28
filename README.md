@@ -74,7 +74,7 @@ dotnet ef database update --project JamesThew/JamesThew.csproj
 dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj
 ```
 
-Migrations `20260926181611_InitialIdentity`, `20260927100700_Phase2PublicContent`, `20260927143304_Phase3AMembershipSubscriptions`, aur `20260927150554_Phase3BMemberFeedbackAndContributions` Development database par apply ho chuki hain. `database update` repeat karna safe hai. Startup schema migrate nahi karta; migration pehle run karein. Startup Member/Admin role names idempotently ensure karta hai aur demo content (`ContentSeeder.cs`) seed karta hai.
+Migrations `20260926181611_InitialIdentity`, `20260927100700_Phase2PublicContent`, `20260927143304_Phase3AMembershipSubscriptions`, `20260927150554_Phase3BMemberFeedbackAndContributions`, `20260927212751_Phase5AContests`, aur `20260927221035_Phase5BContestEntries` Development database par apply ho chuki hain. `database update` repeat karna safe hai. Startup schema migrate nahi karta; migration pehle run karein. Startup Member/Admin role names idempotently ensure karta hai aur demo content (`ContentSeeder.cs`) seed karta hai.
 
 ## Run aur test
 
@@ -115,7 +115,7 @@ dotnet user-secrets remove 'LocalAdmin:Password' --project JamesThew/JamesThew.c
 
 Seed existing Admin ko duplicate/reset nahi karta; existing Member ko promote karne se refuse karta hai. Missing/weak credentials ya non-Development environment fail hota hai. User creation aur Admin role assignment atomic hain. Credentials logs mein print nahi hote. Admin ka apna chosen password login ke liye retain karein; recovery/email sending abhi implement nahi.
 
-## Phase 3 access aur limits
+## Application features aur access boundaries
  
 - Public Home (`/`): Culinary hero presentation, quick search bar, featured Free/Paid recipes and tips, membership tier comparison cards ($10/mo, $100/yr demo), contests teaser, FAQ accordion preview.
 - Public Recipes (`/recipes`, `/recipes/{slug}`): Catalog with search and filter tabs (All, Free, Members-Only). Free recipes show full ingredients and preparation steps. Members-Only recipes show locked preview box, login/join CTA, zero ingredients/steps exposed, and `Cache-Control: no-cache, no-store, must-revalidate` response header.
@@ -132,7 +132,8 @@ Seed existing Admin ko duplicate/reset nahi karta; existing Member ko promote ka
 - Admin Editorial Management (`/admin/content`): Catalog dashboard with live metrics, multi-dimensional filters, recipe and tip authoring/editing, kebab-case auto-slugs, unpublishing/soft-deletion policy, and Members-Only subscription lock preservation.
 - Admin Media Management (`/admin/media`): Secure visual media library with upload validation (JPEG/PNG/WebP, magic bytes, 5 MB limit), path traversal defense, safe storage under `wwwroot/uploads/editorial/`, recipe/tip form integration with interactive picker modal, image unlinking, orphan file prevention, safe deletion unlinking, and full Playwright Chromium browser E2E test coverage.
 - Public Culinary Contests (`/contests`, `/contests/{slug}`): Public read-only competition discovery for guests and members. Category filtering (Recipe vs Cooking Tip), timeline tabs (All, Open Now, Upcoming, Past), responsive card grid with timeline status badges, rich detail view with guidelines/rules, award distinctions, and clear member entry eligibility guidance. Draft and archived contests strictly return HTTP 404 for public visitors.
-- Admin Contests Management (`/admin/contests`): Comprehensive contest management for site administrators. Create, edit, draft/publish toggle, close, archive, and restore. Automatic kebab-case slug resolution with collision suffixing (`-2`), strict UTC date validation (`ClosesAtUtc > OpensAtUtc`), role authorization, and Media Picker Modal integration.
+- Member Contest Entries (`/contests/{slug}/entry`, `/contests/my-entries`, `/contests/my-entries/{id}`): Authenticated members can submit official entries to open recipe or cooking tip contests. Features structured recipe ingredients/steps and tip technique validation, single-entry-per-member enforcement via database unique index and service rules, pre-deadline editing lifecycle with form auto-population, post-deadline read-only locking, private "My Contest Entries" dashboard, and complete isolation from public recipe/tip catalogs and search.
+- Admin Contests Management (`/admin/contests`, `/admin/contests/{id}/entries`): Comprehensive contest management for site administrators. Create, edit, draft/publish toggle, close, archive, restore, and read-only contest entry submissions inbox. Automatic kebab-case slug resolution with collision suffixing (`-2`), strict UTC date validation (`ClosesAtUtc > OpensAtUtc`), role authorization, and Media Picker Modal integration.
 - Public Announcements (`/announcements`): Dedicated contest winner recognition and hall of fame showcase within PRD scope; links visitors directly to active seasonal competitions.
 - Account & Admin (`/account/status`, `/admin`): Preserved from Phase 1. Logout remains antiforgery-protected POST only. External return URLs rejected. Lockout and password policies remain active.
 

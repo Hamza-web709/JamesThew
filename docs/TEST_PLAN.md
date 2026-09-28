@@ -564,6 +564,65 @@ Scope: Admin-managed recipe/tip contests and public read-only discovery. Support
 | Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Documented Phase 5A verification results, scenario coverage, and changed-file inventory |
 | Updated | [README.md](../README.md) | Updated Phase 5A capabilities, contest routes, and test status |
 
+## Phase 5B actual verification - 27 September 2026
+
+Scope: Member contest entry intake and "My Contest Entries" (`T-17`). Support for authenticated member submissions for both Recipe and Tip contests (`/contests/{slug}/entry`), one entry per member per contest enforcement (database unique index and service validation), pre-deadline entry edit lifecycle, post-deadline read-only lock, structured recipe/tip fields and multiline parsing, member entries dashboard (`/contests/my-entries`), entry detail inspection (`/contests/my-entries/{id}`), public privacy isolation (entries strictly hidden from public pages, search, and catalogs), and admin read-only entries inbox (`/admin/contests/{id}/entries`).
+
+| Evidence | Actual result |
+|---|---|
+| Build | Solution build succeeded, 0 warnings / 0 errors (`dotnet build JamesThew.slnx`) |
+| Test suite run | 128 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) across Foundation, PublicContent, Subscription, ContributionAndFeedback, Moderation, EditorialContentCrud, EditorialBrowserE2E, AdminMedia, AdminMediaBrowserE2E, ContestTests, ContestBrowserE2E, BrowserTestSafetyGuard, ContestEntryTests, and ContestEntryBrowserE2ETests |
+| Migration check | `dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj` verified clean: 0 pending model changes. Migration `20260927221035_Phase5BContestEntries` applied to `JamesThew_Development` |
+| Browser E2E QA | 9 Playwright Chromium lifecycle scenarios verified against isolated loopback server: guest redirect to login on entry CTA, member login, entry form submission for active open recipe contest, entry form prepopulation and pre-deadline update, "My Contest Entries" dashboard display, contest detail CTA update to "Edit Your Entry", direct entry URL routing to existing entry for update, strict exclusion from public recipe catalog/search, and admin read-only entries inbox review |
+| Guest entry denial | Unauthenticated visitors attempting to GET or POST `/contests/{slug}/entry` or `/contests/my-entries` are redirected to `/account/login` (302) with ReturnUrl |
+| Member eligibility | All authenticated members (Free or Paid) can enter; paid subscription is not required in this demo |
+| Contest state validation | Submissions are accepted only for `Published` contests that are currently `Open` (`asOfUtc >= OpensAtUtc && asOfUtc <= ClosesAtUtc`). Submissions for `Draft`, `Upcoming`, `Closed`, and `Archived` contests are rejected (400 Bad Request or 404 for draft/archived privacy) |
+| Contest type matching | Recipe contests accept recipe fields (`PrepMinutes`, `CookMinutes`, `Servings`, ingredients, steps). Cooking tip contests accept tip fields (`TechniqueInstructions`). Mismatched type submissions return validation error |
+| Structured validation | Recipe entries require at least 1 ingredient and 1 preparation step (parsed from multiline text). Tip entries require 10-10,000 characters of detailed technique guidance |
+| Single entry enforcement | Relational unique index `IX_ContestEntries_ContestId_AuthorUserId` and service logic prevent multiple entries per member per contest. Second creation attempts throw friendly validation error |
+| Pre-deadline update | Members can update their own entry title, summary, ingredients/steps or tip technique at `/contests/{slug}/entry` before `ClosesAtUtc`. The entry form auto-populates the existing entry |
+| Post-deadline lock | Once `ClosesAtUtc` passes or the contest is closed by an admin, the entry is locked; edit POSTs return 400 Bad Request, and the member view becomes strictly read-only |
+| Public privacy isolation | Contest entries are strictly private: they are not queryable or visible in public recipe catalogs (`/recipes`), tip catalogs (`/tips`), or public search (`/search`), preserving competition integrity |
+| Member dashboard | Authenticated members can review all their submissions at `/contests/my-entries` with contest title, category badge, submission timestamp, and status indicator (`Submitted`) |
+| Admin entry inbox | Administrators can inspect all submitted entries for any contest at `/admin/contests/{id}/entries`, showing submitter name/email, entry title, submission time, and formatted formulations |
+| Ephemeral isolation | All tests run on dedicated ephemeral databases (`JamesThew_BrowserQA_{RunId}`) and test directories; active development DB (`JamesThew_Development`) and 9 QA content items remain untouched |
+
+### Phase 5B changed-file inventory
+
+| Status | File path | Description |
+|---|---|---|
+| New | [JamesThew/Models/ContestEntry.cs](../JamesThew/Models/ContestEntry.cs) | ContestEntry, ContestEntryIngredient, and ContestEntryStep domain models |
+| New | [JamesThew/ViewModels/ContestEntryViewModels.cs](../JamesThew/ViewModels/ContestEntryViewModels.cs) | View models for entry form, member my-entries list/detail, and admin entries inbox |
+| New | [JamesThew/Services/IContestEntryService.cs](../JamesThew/Services/IContestEntryService.cs) | Service interface for entry intake, validation, pre-deadline updates, and admin review |
+| New | [JamesThew/Services/ContestEntryService.cs](../JamesThew/Services/ContestEntryService.cs) | Implementation with single-entry enforcement, deadline checks, and multiline parsing |
+| New | [JamesThew/Views/Contests/EntryForm.cshtml](../JamesThew/Views/Contests/EntryForm.cshtml) | Interactive create/edit entry form with conditional recipe/tip sections and rules reminder |
+| New | [JamesThew/Views/Contests/MyEntries.cshtml](../JamesThew/Views/Contests/MyEntries.cshtml) | Member dashboard of submitted entries with status badges and edit CTAs |
+| New | [JamesThew/Views/Contests/MyEntryDetail.cshtml](../JamesThew/Views/Contests/MyEntryDetail.cshtml) | Member entry inspection view with ordered ingredients and preparation steps |
+| New | [JamesThew/Views/Admin/ContestEntries.cshtml](../JamesThew/Views/Admin/ContestEntries.cshtml) | Admin read-only entry inbox with submission metadata and expandable formulation cards |
+| New | [JamesThew/Data/Migrations/20260927221035_Phase5BContestEntries.cs](../JamesThew/Data/Migrations/20260927221035_Phase5BContestEntries.cs) | EF Core migration creating `ContestEntries`, `ContestEntryIngredients`, and `ContestEntrySteps` tables |
+| New | [JamesThew/Data/Migrations/20260927221035_Phase5BContestEntries.Designer.cs](../JamesThew/Data/Migrations/20260927221035_Phase5BContestEntries.Designer.cs) | EF Core migration designer metadata snapshot |
+| New | [tests/JamesThew.Tests/ContestEntryTests.cs](../tests/JamesThew.Tests/ContestEntryTests.cs) | 12 integration tests covering guest denial, recipe/tip submissions, status rejections, edit lifecycle, single-entry constraint, and admin inbox |
+| New | [tests/JamesThew.Tests/ContestEntryBrowserE2ETests.cs](../tests/JamesThew.Tests/ContestEntryBrowserE2ETests.cs) | Playwright Chromium browser E2E test covering the 9-step member contest entry lifecycle |
+| Updated | [JamesThew/Models/ContestEnums.cs](../JamesThew/Models/ContestEnums.cs) | Added `ContestEntryStatus` enum (`Submitted`, `UnderReview`, `Disqualified`, `Selected`) |
+| Updated | [JamesThew/Models/Contest.cs](../JamesThew/Models/Contest.cs) | Added `Entries` navigation collection property |
+| Updated | [JamesThew/Models/ApplicationUser.cs](../JamesThew/Models/ApplicationUser.cs) | Added `ContestEntries` navigation collection property |
+| Updated | [JamesThew/Data/ApplicationDbContext.cs](../JamesThew/Data/ApplicationDbContext.cs) | Configured DbSets, unique index on `(ContestId, AuthorUserId)`, and indexes on `ContestId`, `AuthorUserId`, `SubmittedAtUtc`, `Status` |
+| Updated | [JamesThew/Data/Migrations/ApplicationDbContextModelSnapshot.cs](../JamesThew/Data/Migrations/ApplicationDbContextModelSnapshot.cs) | Updated EF Core model snapshot for Phase 5B entities |
+| Updated | [JamesThew/Program.cs](../JamesThew/Program.cs) | Registered `IContestEntryService` in DI container |
+| Updated | [JamesThew/Controllers/ContestsController.cs](../JamesThew/Controllers/ContestsController.cs) | Added `Entry` GET/POST, `MyEntries`, and `MyEntryDetail` actions with role authorization |
+| Updated | [JamesThew/Controllers/AdminController.cs](../JamesThew/Controllers/AdminController.cs) | Added `ContestEntries` GET action for read-only entry review |
+| Updated | [JamesThew/ViewModels/ContestViewModels.cs](../JamesThew/ViewModels/ContestViewModels.cs) | Added `HasEntered` and `UserEntryId` to `ContestDetailViewModel`; added `EntriesCount` to `AdminContestRowDto` |
+| Updated | [JamesThew/Services/ContestService.cs](../JamesThew/Services/ContestService.cs) | Updated `GetAdminContestsAsync` to include `Entries` and populate `EntriesCount` |
+| Updated | [JamesThew/Views/Contests/Detail.cshtml](../JamesThew/Views/Contests/Detail.cshtml) | Added interactive member participation callouts: Submit Entry CTA, Submitted notice, and Edit Entry CTA |
+| Updated | [JamesThew/Views/Admin/Contests.cshtml](../JamesThew/Views/Admin/Contests.cshtml) | Added `Entries` count column and direct navigation action link |
+| Updated | [JamesThew/Views/Account/Status.cshtml](../JamesThew/Views/Account/Status.cshtml) | Added `My Contest Entries` navigation card with quick link |
+| Updated | [JamesThew/Views/Shared/_LoginPartial.cshtml](../JamesThew/Views/Shared/_LoginPartial.cshtml) | Added `My Entries` link to member dropdown menu |
+| Updated | [tests/JamesThew.Tests/FoundationTests.cs](../tests/JamesThew.Tests/FoundationTests.cs) | Added `ContestEntries`, `ContestEntryIngredients`, and `ContestEntrySteps` to expected tables check |
+| Updated | [docs/TASKS.md](../docs/TASKS.md) | Documented Phase 5B completion, open decisions, and status matrix updates |
+| Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Documented Phase 5B verification results, scenario coverage, and changed-file inventory |
+| Updated | [README.md](../README.md) | Updated Phase 5B capabilities, contest entry routes, and test status |
+
+
 
 
 

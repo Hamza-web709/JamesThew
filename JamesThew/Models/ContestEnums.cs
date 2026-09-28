@@ -20,3 +20,12 @@ public enum ContestTimelinePhase
     Open = 2,
     Ended = 3
 }
+
+public enum ContestEntryStatus
+{
+    Submitted = 1,
+    UnderReview = 2,
+    Disqualified = 3,
+    Selected = 4
+}
+

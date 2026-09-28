@@ -17,7 +17,7 @@
     </div>
 
     <div class="row g-3 mb-4">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="p-3 bg-light rounded-3 border h-100">
                 <h3 class="h6 mb-1">&#127859; My Contributions</h3>
                 <p class="small text-muted mb-3">Submit your personal recipes and cooking tips for editorial review.</p>
@@ -26,7 +26,16 @@
                 </a>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
+            <div class="p-3 bg-light rounded-3 border h-100">
+                <h3 class="h6 mb-1">&#127942; My Contest Entries</h3>
+                <p class="small text-muted mb-3">Track your culinary competition submissions and jury statuses.</p>
+                <a asp-controller="Contests" asp-action="MyEntries" class="jt-btn jt-btn-outline jt-btn-sm">
+                    View Entries &rarr;
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4">
             <div class="p-3 bg-light rounded-3 border h-100">
                 <h3 class="h6 mb-1">&#128172; Member Feedback</h3>
                 <p class="small text-muted mb-3">Share observations, suggestions, and inquiries with the chef team.</p>
@@ -37,5 +46,5 @@
         </div>
     </div>
 
-    <p class="small text-muted mb-0">Profile editing and contest participation are planned for subsequent phases.</p>
+    <p class="small text-muted mb-0">Profile editing is planned for subsequent phases.</p>
 </div>

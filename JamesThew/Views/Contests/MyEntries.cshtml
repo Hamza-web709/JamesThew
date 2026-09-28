@@ -1,0 +1,166 @@
+@model JamesThew.ViewModels.MyContestEntriesViewModel
+@using JamesThew.Models
+@{
+    ViewData["Title"] = "My Contest Entries - James Thew";
+}
+
+<div class="mb-5 max-w-900 mx-auto">
+    <!-- Breadcrumbs -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a asp-action="Index" class="text-decoration-none text-muted small">
+            &larr; Back to all competitions
+        </a>
+        <a asp-controller="Account" asp-action="Status" class="text-decoration-none text-muted small">
+            My Account &rarr;
+        </a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-2">
+            <div>
+                <span class="badge bg-primary-subtle text-primary border rounded-pill px-3 py-1 mb-2">
+                    &#127942; Member Competitions
+                </span>
+                <h1 class="h2 jt-serif mb-1">My Contest Entries</h1>
+                <p class="text-muted mb-0">
+                    Track your competition submissions, review jury status, and refine your dishes before submission deadlines.
+                </p>
+            </div>
+            <div>
+                <a asp-action="Index" class="btn btn-primary btn-sm">
+                    Browse Competitions &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            &#10004; @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (Model.TotalCount == 0)
+    {
+        <div class="text-center py-5 bg-white rounded-4 border shadow-sm p-4">
+            <div class="fs-1 mb-3">&#127859;</div>
+            <h2 class="h4 jt-serif mb-2">No competition entries yet</h2>
+            <p class="text-muted max-w-500 mx-auto mb-4">
+                You haven't submitted any recipes or cooking tips to Chef James Thew's competitions yet. Discover open competitions and showcase your culinary talent!
+            </p>
+            <a asp-action="Index" class="btn btn-primary px-4 py-2">
+                Discover Open Competitions &rarr;
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted small">
+                Showing <strong>@Model.TotalCount</strong> @(Model.TotalCount == 1 ? "entry" : "entries")
+            </span>
+            <span class="small text-muted font-monospace">
+                &#128274; Entries are private to you and the jury
+            </span>
+        </div>
+
+        <div class="row g-3">
+            @foreach (var entry in Model.Entries)
+            {
+                <div class="col-12">
+                    <div class="card border rounded-4 shadow-sm p-3 p-md-4 h-100 bg-white">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                @if (entry.ContestType == ContestType.Recipe)
+                                {
+                                    <span class="badge bg-primary-subtle text-primary border rounded-pill px-2 py-1 small">
+                                        &#127859; Recipe
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border rounded-pill px-2 py-1 small">
+                                        &#128161; Cooking Tip
+                                    </span>
+                                }
+
+                                @if (entry.TimelinePhase == ContestTimelinePhase.Open)
+                                {
+                                    <span class="badge bg-success rounded-pill px-2 py-1 small">
+                                        &#9889; Contest Open
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary rounded-pill px-2 py-1 small">
+                                        &#128274; Contest Concluded
+                                    </span>
+                                }
+
+                                <span class="badge bg-light text-dark border rounded-pill px-2 py-1 small">
+                                    Status: @entry.Status
+                                </span>
+                            </div>
+
+                            <span class="text-muted small font-monospace">
+                                Submitted @entry.SubmittedAtUtc.ToString("MMM d, yyyy HH:mm") UTC
+                            </span>
+                        </div>
+
+                        <div class="mb-2">
+                            <span class="small text-muted d-block">
+                                Competition: <a asp-action="Detail" asp-route-slug="@entry.ContestSlug" class="fw-semibold text-decoration-none">@entry.ContestTitle</a>
+                            </span>
+                            <h3 class="h5 jt-serif mt-1 mb-1">@entry.EntryTitle</h3>
+                            <p class="text-muted small mb-0">@entry.Summary</p>
+                        </div>
+
+                        @if (entry.UpdatedAtUtc.HasValue)
+                        {
+                            <div class="small text-muted font-monospace mb-2">
+                                &#9998; Last updated @entry.UpdatedAtUtc.Value.ToString("MMM d, yyyy HH:mm") UTC
+                            </div>
+                        }
+
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-3 mt-auto border-top">
+                            <div class="small text-muted">
+                                @if (entry.CanEdit)
+                                {
+                                    <span class="text-success">&#9889; Closes @entry.ClosesAtUtc.ToString("MMM d, yyyy HH:mm") UTC</span>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">&#128274; Deadline passed - read only</span>
+                                }
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a asp-action="MyEntryDetail" asp-route-slug="@entry.ContestSlug" class="btn btn-sm btn-outline-secondary">
+                                    View Full Entry &rarr;
+                                </a>
+
+                                @if (entry.CanEdit)
+                                {
+                                    <a asp-action="Entry" asp-route-slug="@entry.ContestSlug" class="btn btn-sm btn-primary">
+                                        &#9998; Edit Entry
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

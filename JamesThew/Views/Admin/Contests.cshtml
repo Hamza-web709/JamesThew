@@ -126,8 +126,9 @@
                         <th>Contest Details</th>
                         <th>Category</th>
                         <th>Status</th>
+                        <th>Entries</th>
                         <th>Timeline Window</th>
-                        <th class="text-end" style="width: 220px;">Actions</th>
+                        <th class="text-end" style="width: 260px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -193,6 +194,11 @@
                                 }
                             </td>
                             <td>
+                                <a asp-action="ContestEntries" asp-route-id="@contest.Id" class="badge @(contest.EntriesCount > 0 ? "bg-primary text-white" : "bg-light text-muted border") text-decoration-none rounded-pill px-3 py-1" title="View Submitted Entries">
+                                    &#128221; @contest.EntriesCount
+                                </a>
+                            </td>
+                            <td>
                                 <div class="small">
                                     @if (contest.TimelinePhase == ContestTimelinePhase.Open && contest.Status == ContestStatus.Published)
                                     {
@@ -217,6 +223,9 @@
                                 <div class="d-flex justify-content-end gap-1 flex-wrap">
                                     @if (!contest.IsDeleted)
                                     {
+                                        <a asp-action="ContestEntries" asp-route-id="@contest.Id" class="btn btn-outline-info btn-sm" title="View Entries">
+                                            Entries (@contest.EntriesCount)
+                                        </a>
                                         <a asp-action="EditContest" asp-route-id="@contest.Id" class="btn btn-outline-secondary btn-sm" title="Edit Contest">
                                             Edit
                                         </a>

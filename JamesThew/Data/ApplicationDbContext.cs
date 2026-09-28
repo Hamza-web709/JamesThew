@@ -16,6 +16,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<SubscriptionRequest> SubscriptionRequests => Set<SubscriptionRequest>();
     public DbSet<Feedback> Feedbacks => Set<Feedback>();
     public DbSet<Contest> Contests => Set<Contest>();
+    public DbSet<ContestEntry> ContestEntries => Set<ContestEntry>();
+    public DbSet<ContestEntryIngredient> ContestEntryIngredients => Set<ContestEntryIngredient>();
+    public DbSet<ContestEntryStep> ContestEntrySteps => Set<ContestEntryStep>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -145,6 +148,58 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasForeignKey(x => x.CreatedByUserId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<ContestEntry>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Title).HasMaxLength(150).IsRequired();
+            entity.Property(x => x.Summary).HasMaxLength(500).IsRequired();
+            entity.Property(x => x.TipBody).HasMaxLength(10000);
+            entity.Property(x => x.ContributorNotes).HasMaxLength(1000);
+            entity.Property(x => x.ImageUrl).HasMaxLength(300);
+
+            // One entry per member per contest
+            entity.HasIndex(x => new { x.ContestId, x.AuthorUserId }).IsUnique();
+
+            entity.HasIndex(x => x.ContestId);
+            entity.HasIndex(x => x.AuthorUserId);
+            entity.HasIndex(x => x.SubmittedAtUtc);
+            entity.HasIndex(x => x.Status);
+
+            entity.HasOne(x => x.Contest)
+                .WithMany(c => c.Entries)
+                .HasForeignKey(x => x.ContestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.AuthorUser)
+                .WithMany(u => u.ContestEntries)
+                .HasForeignKey(x => x.AuthorUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(x => x.Ingredients)
+                .WithOne(x => x.ContestEntry)
+                .HasForeignKey(x => x.ContestEntryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(x => x.Steps)
+                .WithOne(x => x.ContestEntry)
+                .HasForeignKey(x => x.ContestEntryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ContestEntryIngredient>(entity =>
+        {
+            entity.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.QuantityText).HasMaxLength(50);
+            entity.Property(x => x.Unit).HasMaxLength(30);
+            entity.HasIndex(x => new { x.ContestEntryId, x.Position });
+        });
+
+        builder.Entity<ContestEntryStep>(entity =>
+        {
+            entity.Property(x => x.Instruction).HasMaxLength(2000).IsRequired();
+            entity.HasIndex(x => new { x.ContestEntryId, x.Position });
         });
     }
 }

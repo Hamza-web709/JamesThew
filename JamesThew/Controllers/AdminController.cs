@@ -17,7 +17,8 @@ public class AdminController(
     IContributionService contributionService,
     IAdminContentService adminContentService,
     IMediaService mediaService,
-    IContestService contestService) : Controller
+    IContestService contestService,
+    IContestEntryService contestEntryService) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index()
@@ -603,5 +604,15 @@ public class AdminController(
             TempData["ErrorMessage"] = message;
 
         return RedirectToAction(nameof(Contests));
+    }
+
+    [HttpGet("contests/{id:int}/entries")]
+    public async Task<IActionResult> ContestEntries(int id)
+    {
+        var model = await contestEntryService.GetAdminContestEntriesAsync(id);
+        if (model == null)
+            return NotFound();
+
+        return View(model);
     }
 }
