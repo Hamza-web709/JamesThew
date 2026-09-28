@@ -417,7 +417,7 @@ public static class ContentSeeder
                 Type = ContestType.Recipe,
                 Status = ContestStatus.Published,
                 PrizeDescription = "Gold Culinary Distinction & Published Recipe Spotlight",
-                ImageUrl = "/images/recipes/seafood-risotto.jpg",
+                ImageUrl = "/images/recipes/seafood-saffron-risotto.jpg",
                 OpensAtUtc = DateTime.UtcNow.AddDays(-45),
                 ClosesAtUtc = DateTime.UtcNow.AddDays(-15)
             },

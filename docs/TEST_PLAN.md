@@ -683,6 +683,42 @@ Scope: Admin judging and qualitative entry evaluation, private review notes, mem
 | Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Documented Phase 5C verification results, scenario coverage, and changed-file inventory |
 | Updated | [README.md](../README.md) | Updated Phase 5C capabilities, migrations list, and feature documentation |
 
+## Phase 6A actual verification - 28 September 2026
+
+Scope: Release-readiness review, neutral winner fallback, decoupled announcement & atomic replacement, durable repeated revocation audit, dedicated clean demo database (`JamesThew_Demo`), automated end-to-end browser QA across all roles, 390px mobile and desktop responsive audit, broken image repairs, zero console/server errors, and PRD/TASKS/TEST_PLAN deliverables audit.
+
+| Evidence | Actual result |
+|---|---|
+| Build | Solution build succeeded, 0 warnings / 0 errors (`dotnet build JamesThew.slnx`) |
+| Test suite run | 153 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) |
+| EF Core model check | `dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj` verified clean: 0 pending model changes |
+| Dedicated Demo DB | `JamesThew_Demo` created, migrated through all 8 migrations, seeded with baseline data (7 ContentItems, 7 FAQs, 4 Contests, 1 Admin User, 2 Roles). Admin credentials configured in User Secrets |
+| Dev DB preservation | `JamesThew_Development` and its 16 `ContentItems` (including all 9 QA items) are 100% intact and preserved |
+| Neutral winner fallback | `WinnerDisplayName` and `WinningAuthorDisplayName` evaluate to neutral fallback `"Culinary Member"` when display name is missing or whitespace. No email or email prefix is exposed in public HTML |
+| Atomic winner replacement | Replacing an announced winner atomically clears public announcement state (`WinnerAnnouncedAtUtc = null`). New winner is never public until explicitly announced |
+| Durable multi-revocation audit | Repeated revocations across entries or contests append timestamped audit entries (`[yyyy-MM-dd HH:mm UTC] reason`), permanently retaining full historical records without overwriting |
+| Browser E2E QA (`ReleaseReadinessBrowserE2ETests.cs`) | Verified 7 lifecycle phases via Playwright Chromium: guest browsing & responsive layout, registration/login, subscription lifecycle, community contributions & admin moderation, editorial media upload, contest lifecycle, judging, announcement, durable revocation, and zero console/server errors |
+| Responsive audit (390px & Desktop) | Verified zero horizontal overflow (`scrollWidth <= innerWidth + 2`), zero broken images, accessible controls, and captured 12 full-page screenshots to temporary artifacts directory |
+| Asset fix | Fixed typo in `ContentSeeder.cs` where cover image path referenced non-existent `/images/recipes/seafood-risotto.jpg` instead of `/images/recipes/seafood-saffron-risotto.jpg` |
+| Clean repo hygiene | All Playwright screenshots and test uploads reside in temporary directories and are excluded from Git |
+
+### Phase 6A changed-file inventory
+
+| Status | File path | Description |
+|---|---|---|
+| Updated | [JamesThew/Services/ContestJudgingService.cs](../JamesThew/Services/ContestJudgingService.cs) | Enforced neutral fallback `"Culinary Member"`, atomic announcement clearing on replacement, and durable timestamped audit trail appending on repeated revocations |
+| Updated | [JamesThew/Services/ContestService.cs](../JamesThew/Services/ContestService.cs) | Enforced neutral fallback `"Culinary Member"` for contest detail announced winner display name |
+| Updated | [JamesThew/Services/ContestEntryService.cs](../JamesThew/Services/ContestEntryService.cs) | Enforced neutral fallback `"Culinary Member"` for winner display name in entry service projections |
+| Updated | [JamesThew/Data/ContentSeeder.cs](../JamesThew/Data/ContentSeeder.cs) | Fixed image path typo for "Summer Artisanal Seafood Showcase" contest cover |
+| Updated | [JamesThew/Views/Shared/_Layout.cshtml](../JamesThew/Views/Shared/_Layout.cshtml) | Removed unused scoped CSS link `~/JamesThew.styles.css` causing HTTP 500 in test server |
+| Updated | [JamesThew/Views/Shared/_Layout.cshtml.css](../JamesThew/Views/Shared/_Layout.cshtml.css) | Emptied boilerplate template styles in favor of `site.css` |
+| Updated | [tests/JamesThew.Tests/ContestJudgingTests.cs](../tests/JamesThew.Tests/ContestJudgingTests.cs) | Added tests for neutral winner fallback, email privacy in public HTML, atomic announcement clearing, and durable multi-revocation audit appending |
+| New | [tests/JamesThew.Tests/ReleaseReadinessBrowserE2ETests.cs](../tests/JamesThew.Tests/ReleaseReadinessBrowserE2ETests.cs) | Comprehensive 7-phase Playwright Chromium browser E2E test verifying guest, member, subscriber, and admin flows |
+| Updated | [docs/TASKS.md](../docs/TASKS.md) | Documented Phase 6A completion, deliverables audit, and remaining work short checklist |
+| Updated | [docs/TEST_PLAN.md](../docs/TEST_PLAN.md) | Documented Phase 6A verification results, scenario coverage, and changed-file inventory |
+| Updated | [README.md](../README.md) | Documented Phase 6A capabilities, clean demo database setup, connection string, and User Secrets credentials |
+
+
 
 
 

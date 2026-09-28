@@ -448,7 +448,9 @@ public class ContestEntryService(ApplicationDbContext db) : IContestEntryService
             WinnerRevocationReason = contest.WinnerRevocationReason,
             WinnerRevokedAtUtc = contest.WinnerRevokedAtUtc,
             WinningEntryTitle = contest.WinningEntry?.Title,
-            WinningAuthorDisplayName = contest.WinningEntry?.AuthorUser?.DisplayName,
+            WinningAuthorDisplayName = !string.IsNullOrWhiteSpace(contest.WinningEntry?.AuthorUser?.DisplayName)
+                ? contest.WinningEntry.AuthorUser.DisplayName.Trim()
+                : "Culinary Member",
             CanSelectWinner = canSelectWinner,
             Entries = rows
         };

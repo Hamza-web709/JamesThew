@@ -4,40 +4,36 @@ James Thew ki recipes, cooking tips, paid membership, feedback aur contests ke A
 
 ## Current Phase
 
-**Phase 4 Step 2: Admin Media Management complete, build aur 84 integration tests pass.**
-- Phase 4 Step 2 Admin Media Management:
-  - Admin Media Library under `/admin/media` with visual gallery grid, live total files/storage metrics, copy URL, and safe delete workflow.
-  - Secure File Upload Engine:
-    - Supported formats: JPEG (`.jpg`, `.jpeg`), PNG (`.png`), WebP (`.webp`).
-    - MIME and magic bytes header inspection (JPEG `FF D8 FF`, PNG `89 50 4E 47`, WebP `RIFF....WEBP`). Rejects SVGs, executables, scripts, and spoofed files.
-    - File size cap: 5 MB (5,242,880 bytes).
-    - Path traversal defense: validates raw and canonical paths, strips directory jumping tokens (`..`, `/`, `\`).
-    - Cryptographically unique filenames: `{sanitizedBase}_{guid:N[..8]}{ext}`.
-    - Stored under `wwwroot/uploads/editorial/`, served via `/uploads/editorial/{filename}`.
-  - Recipe & Tip Authoring Integration:
-    - Forms support direct file uploads alongside the interactive "Select from Media Library" modal (`_MediaPickerModal.cshtml`) and manual URL input.
-    - Image replacement and removal: "Remove Image" unlinks image reference cleanly without breaking public views.
-  - Safe Deletion Policy:
-    - Restricted strictly to `wwwroot/uploads/editorial`. Seed assets (`/images/`) cannot be deleted.
-    - Automatic database unlinking: When an uploaded image is deleted, all referencing `ContentItem.ImageUrl` values are atomically set to `null` in the database, preventing broken image tags on public recipe and tip pages.
-- Phase 4 Step 1 Editorial Content CRUD:
-  - Admin catalog dashboard at `/admin/content` for official Chef James Thew recipes (`ContentKind.Recipe`) and cooking tips (`ContentKind.Tip`).
-  - Strict Origin Isolation: Editorial items marked `ContentOrigin.Editorial`, isolated from community-contributed items (`ContentOrigin.Community`).
-  - Creation & Editing: `/admin/content/recipes/new`, `/admin/content/recipes/{id}/edit`, `/admin/content/tips/new`, `/admin/content/tips/{id}/edit`. Multiline ingredients, ordered steps, technique body, access tiers (`Free` vs `MembersOnly`), and publication status (`Published` vs `Draft`).
-  - Automatic Slug Generation & Collision Resolution: Clean kebab-case URL slugs generated from title, with automatic numeric suffixing (`-2`, `-3`) on collision.
-  - Soft Deletion & Restore Policy: Unpublishing moves content to soft-deleted state (`DeletedAtUtc = now`) with confirmation modal. Direct slug lookups return 404. Items restorable from `/admin/content?showDeleted=true`.
-- Phase 3 Membership, Moderation & Intake:
-  - Phase 3A: Manual demo subscription approval ($10/mo, $100/yr), approval queue at `/admin/subscriptions`.
-  - Phase 3B: Member feedback intake (`/feedback`) and community recipe/tip submission intake (`/contributions`).
-  - Phase 3C: Admin moderation of member feedback (`/admin/feedback`) and community contributions (`/admin/contributions`).
-- Database: EF Core migrations applied to `JamesThew_Development`, 0 pending model changes.
-- Test Suite: 84 passed, 0 failed, 0 skipped (Foundation, PublicContent, Subscription, Contribution & Feedback, Moderation, EditorialContentCrud, EditorialBrowserE2E, AdminMedia tests).
+**Phase 6A: Release-Readiness Review & Automated Demo QA complete. Build 0 warnings/0 errors, 153/153 tests pass.**
 
-## Next Phase
-
-Next step **Phase 5: Contests & Announcements**:
-- Recipe and tip cooking competitions, submission intake, rules/criteria display.
-- Winner selection, atomic announcements, and competition archive display.
+### Phase 6A Deliverables & Verification
+1. **Neutral Winner Display Name Fallback & Zero Data Leakage**:
+   - When a contest entrant's `DisplayName` is missing or whitespace, the system falls back to a neutral, professional moniker: `"Culinary Member"`.
+   - Never falls back to email or email prefixes (e.g. `user@example.com` will never be shown as `user`).
+   - Public HTML strictly excludes email addresses, private ingredients, preparation steps, and admin qualitative review notes.
+2. **Atomic Winner Replacement & Durable Multi-Revocation Audit**:
+   - Replacing an announced winner atomically clears public announcement state (`WinnerAnnouncedAtUtc = null`). The replacement winner is NEVER publicly visible until an explicit "Announce Winner Publicly" action is taken.
+   - Repeated revocations preserve a durable, timestamped audit log (`[yyyy-MM-dd HH:mm UTC] reason`) in both `Contest.WinnerRevocationReason` and `ContestEntry.RevocationReason` without overwriting prior audit entries.
+3. **Dedicated Clean Demo Database (`JamesThew_Demo`)**:
+   - Connection String: `Server=(localdb)\MSSQLLocalDB;Database=JamesThew_Demo;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True`
+   - Migrated through all 8 EF Core migrations up to `20260928074105_Phase5CDurableRevocationAudit`.
+   - Seeded with clean baseline data: 7 ContentItems (recipes/tips), 7 Faqs, 4 Contests, 1 Admin User, 2 Roles.
+   - Admin credentials configured securely in User Secrets (`LocalAdmin:Email = "admin@jamesthew.com"`, `LocalAdmin:Password = "Admin@Pass1234!"`).
+   - Development database `JamesThew_Development` and its 16 ContentItems (including all 9 QA items) are 100% preserved and untouched.
+4. **Automated End-to-End Browser QA (`ReleaseReadinessBrowserE2ETests.cs`)**:
+   - Chromium Playwright E2E testing across 7 comprehensive lifecycle phases:
+     - Part 1: Guest browsing & responsive layout on Desktop (1280x800) and Mobile (390x844). Verified 0 horizontal overflow, 0 broken images, free content access vs members-only locked state.
+     - Part 2: Member registration and login with Alex Rivers.
+     - Part 3: Subscription request submission, admin approval from `/admin/subscriptions`, and subsequent unlock of members-only masterclass recipe.
+     - Part 4: Community contribution submission, admin moderation approval from `/admin/contributions`, and public publication.
+     - Part 5: Editorial media library upload from admin dashboard.
+     - Part 6: Contest entry submission, admin contest closure, winner selection, unannounced winner privacy verification (0 leak in public HTML), winner announcement verification, and durable revocation with audit record.
+     - Part 7: Zero unhandled console or server errors across all browser contexts.
+   - All QA screenshots are captured into system temporary directories and excluded from Git tracking.
+5. **Full Verification**:
+   - Solution Build: 0 Warnings, 0 Errors (`dotnet build JamesThew.slnx`).
+   - Test Suite: 153/153 Tests Passed (100% Pass Rate).
+   - EF Core Model: 0 Pending Model Changes (`dotnet ef migrations has-pending-model-changes`).
 
 ## Documents aur sources
 

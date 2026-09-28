@@ -91,16 +91,19 @@ public class ContestJudgingTests(FoundationFixture fixture)
         ContestStatus contestStatus = ContestStatus.Published,
         DateTime? opensAtUtc = null,
         DateTime? closesAtUtc = null,
-        ContestType type = ContestType.Recipe)
+        ContestType type = ContestType.Recipe,
+        string? authorDisplayName = null,
+        string? authorEmail = null)
     {
         using var scope = fixture.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        var email = authorEmail ?? NewEmail();
         var author = new ApplicationUser
         {
-            UserName = NewEmail(),
-            Email = NewEmail(),
-            DisplayName = "Chef " + Guid.NewGuid().ToString("N")[..8],
+            UserName = email,
+            Email = email,
+            DisplayName = authorDisplayName ?? ("Chef " + Guid.NewGuid().ToString("N")[..8]),
             EmailConfirmed = true
         };
         db.Users.Add(author);
@@ -601,9 +604,9 @@ public class ContestJudgingTests(FoundationFixture fixture)
         // Verify durable storage on both Contest and ContestEntry
         var entryAfterRevoke = await db.ContestEntries.AsNoTracking().FirstAsync(e => e.Id == entry.Id);
         var contestAfterRevoke = await db.Contests.AsNoTracking().FirstAsync(c => c.Id == contest.Id);
-        Assert.Equal(expectedReason, entryAfterRevoke.RevocationReason);
+        Assert.Contains(expectedReason, entryAfterRevoke.RevocationReason);
         Assert.NotNull(entryAfterRevoke.RevokedAtUtc);
-        Assert.Equal(expectedReason, contestAfterRevoke.WinnerRevocationReason);
+        Assert.Contains(expectedReason, contestAfterRevoke.WinnerRevocationReason);
         Assert.NotNull(contestAfterRevoke.WinnerRevokedAtUtc);
         Assert.Equal(adminUserId, contestAfterRevoke.WinnerRevokedByUserId);
 
@@ -619,7 +622,7 @@ public class ContestJudgingTests(FoundationFixture fixture)
 
         // Verify RevocationReason is permanently preserved in database
         var entryAfterSubsequentReview = await db.ContestEntries.AsNoTracking().FirstAsync(e => e.Id == entry.Id);
-        Assert.Equal(expectedReason, entryAfterSubsequentReview.RevocationReason);
+        Assert.Contains(expectedReason, entryAfterSubsequentReview.RevocationReason);
         Assert.NotNull(entryAfterSubsequentReview.RevokedAtUtc);
         Assert.Equal("Re-evaluating formulation for secondary honorable mention.", entryAfterSubsequentReview.AdminReviewNotes);
     }
@@ -696,5 +699,168 @@ public class ContestJudgingTests(FoundationFixture fixture)
         var (archRes, archMsg) = await judgingService.RevokeWinnerAsync(archivedContest.Id, "admin-1", "Reason");
         Assert.False(archRes);
         Assert.Contains("cannot be modified", archMsg);
+    }
+
+    [Fact]
+    public async Task WinnerDisplayName_WhenMissingOrWhitespace_UsesNeutralFallback_AndDoesNotLeakEmailOrPrivateData()
+    {
+        var memberEmail = NewEmail();
+        var (contest, entry, _) = await CreateContestWithEntryAsync(
+            closesAtUtc: DateTime.UtcNow.AddDays(-1),
+            authorDisplayName: "",
+            authorEmail: memberEmail);
+        var (_, adminUserId) = await CreateAdminClientAsync();
+
+        using var scope = fixture.Services.CreateScope();
+        var judgingService = scope.ServiceProvider.GetRequiredService<IContestJudgingService>();
+
+        // Admin adds private review notes with private keywords
+        var (reviewRes, _) = await judgingService.ReviewEntryAsync(
+            contest.Id, entry.Id, adminUserId, ContestEntryStatus.UnderReview,
+            reviewNotes: "Private internal judge deliberation notes 987654",
+            disqualificationReason: null);
+        Assert.True(reviewRes);
+
+        // Select and announce winner
+        var (selRes, _) = await judgingService.SelectWinnerAsync(contest.Id, entry.Id, adminUserId);
+        Assert.True(selRes);
+
+        var (annRes, _) = await judgingService.AnnounceWinnerAsync(contest.Id, adminUserId);
+        Assert.True(annRes);
+
+        // Public guest client inspects /announcements and /contests/{slug}
+        var guestClient = fixture.NewClient();
+
+        var announcementsRes = await guestClient.GetAsync("/announcements");
+        var announcementsHtml = await announcementsRes.Content.ReadAsStringAsync();
+        Assert.Equal(HttpStatusCode.OK, announcementsRes.StatusCode);
+        Assert.Contains("Culinary Member", announcementsHtml);
+        Assert.DoesNotContain(memberEmail, announcementsHtml);
+        var emailPrefix = memberEmail.Split('@')[0];
+        Assert.DoesNotContain(emailPrefix, announcementsHtml);
+        Assert.DoesNotContain("Private internal judge deliberation notes", announcementsHtml);
+        Assert.DoesNotContain("Secret Seasoning", announcementsHtml);
+
+        var detailRes = await guestClient.GetAsync($"/contests/{contest.Slug}");
+        var detailHtml = await detailRes.Content.ReadAsStringAsync();
+        Assert.Equal(HttpStatusCode.OK, detailRes.StatusCode);
+        Assert.Contains("Culinary Member", detailHtml);
+        Assert.DoesNotContain(memberEmail, detailHtml);
+        Assert.DoesNotContain(emailPrefix, detailHtml);
+        Assert.DoesNotContain("Private internal judge deliberation notes", detailHtml);
+        Assert.DoesNotContain("Secret Seasoning", detailHtml);
+    }
+
+    [Fact]
+    public async Task WinnerReplacement_And_RepeatedRevocations_AtomicallyClearsAnnouncement_AndPreservesDurableAudit()
+    {
+        var (contest, entryA, _) = await CreateContestWithEntryAsync(closesAtUtc: DateTime.UtcNow.AddDays(-1));
+        var (_, adminUserId) = await CreateAdminClientAsync();
+
+        // Create a second entry for the same contest
+        using (var setupScope = fixture.Services.CreateScope())
+        {
+            var db = setupScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var author2 = new ApplicationUser
+            {
+                UserName = NewEmail(),
+                Email = NewEmail(),
+                DisplayName = "Chef Brenda",
+                EmailConfirmed = true
+            };
+            db.Users.Add(author2);
+            await db.SaveChangesAsync();
+
+            var entryB = new ContestEntry
+            {
+                ContestId = contest.Id,
+                AuthorUserId = author2.Id,
+                Title = "Second Contender Dish",
+                Summary = "Alternative exquisite formulation.",
+                Status = ContestEntryStatus.Submitted,
+                SubmittedAtUtc = DateTime.UtcNow.AddDays(-2)
+            };
+            db.ContestEntries.Add(entryB);
+            await db.SaveChangesAsync();
+        }
+
+        int entryBId;
+        using (var readScope = fixture.Services.CreateScope())
+        {
+            var db = readScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            entryBId = await db.ContestEntries.Where(e => e.ContestId == contest.Id && e.Id != entryA.Id).Select(e => e.Id).FirstAsync();
+        }
+
+        using var scope = fixture.Services.CreateScope();
+        var judgingService = scope.ServiceProvider.GetRequiredService<IContestJudgingService>();
+        var dbCtx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var guestClient = fixture.NewClient();
+
+        // 1. Select and Announce Winner A
+        var (selA, _) = await judgingService.SelectWinnerAsync(contest.Id, entryA.Id, adminUserId);
+        Assert.True(selA);
+        var (annA, _) = await judgingService.AnnounceWinnerAsync(contest.Id, adminUserId);
+        Assert.True(annA);
+
+        // Verify Public View shows Winner A
+        var publicAnnouncements1 = await guestClient.GetStringAsync("/announcements");
+        Assert.Contains(contest.Title, publicAnnouncements1);
+        Assert.Contains("Winning Candidate Dish", publicAnnouncements1);
+
+        var publicDetail1 = await guestClient.GetStringAsync($"/contests/{contest.Slug}");
+        Assert.Contains("Winning Candidate Dish", publicDetail1);
+
+        // 2. Winner Replacement: Admin selects Entry B as new winner without announcing yet
+        var (selB, _) = await judgingService.SelectWinnerAsync(contest.Id, entryBId, adminUserId);
+        Assert.True(selB);
+
+        // Database check: Contest announcement state is atomically cleared
+        var contestAfterReplacement = await dbCtx.Contests.AsNoTracking().FirstAsync(c => c.Id == contest.Id);
+        Assert.Equal(entryBId, contestAfterReplacement.WinningEntryId);
+        Assert.Null(contestAfterReplacement.WinnerAnnouncedAtUtc);
+        Assert.Null(contestAfterReplacement.WinnerAnnouncedByUserId);
+
+        // Public check: Unannounced Winner B is NOT public, and Old Winner A is removed
+        var publicAnnouncements2 = await guestClient.GetStringAsync("/announcements");
+        Assert.DoesNotContain("Second Contender Dish", publicAnnouncements2);
+        Assert.DoesNotContain(contest.Title, publicAnnouncements2);
+
+        var publicDetail2 = await guestClient.GetStringAsync($"/contests/{contest.Slug}");
+        Assert.DoesNotContain("Second Contender Dish", publicDetail2);
+        Assert.DoesNotContain("Official Competition Winner", publicDetail2);
+
+        // 3. Admin explicitly announces Winner B
+        var (annB, _) = await judgingService.AnnounceWinnerAsync(contest.Id, adminUserId);
+        Assert.True(annB);
+
+        var publicAnnouncements3 = await guestClient.GetStringAsync("/announcements");
+        Assert.Contains("Second Contender Dish", publicAnnouncements3);
+        Assert.Contains(contest.Title, publicAnnouncements3);
+
+        // 4. Repeated Revocations Flow: Admin revokes Winner B with Reason 1
+        var reason1 = "Entry B used unauthorized commercial pre-mix.";
+        var (revB, _) = await judgingService.RevokeWinnerAsync(contest.Id, adminUserId, reason1);
+        Assert.True(revB);
+
+        // Public check: Immediately removed from announcements
+        var publicAnnouncements4 = await guestClient.GetStringAsync("/announcements");
+        Assert.DoesNotContain("Second Contender Dish", publicAnnouncements4);
+
+        // 5. Admin re-selects Entry A, then revokes Entry A with Reason 2
+        var (selA2, _) = await judgingService.SelectWinnerAsync(contest.Id, entryA.Id, adminUserId);
+        Assert.True(selA2);
+        var reason2 = "Entry A disqualified upon copyright claim verification.";
+        var (revA2, _) = await judgingService.RevokeWinnerAsync(contest.Id, adminUserId, reason2);
+        Assert.True(revA2);
+
+        // 6. Verify Repeated Revocations audit history preserved on Contest and Entries without overwrite
+        var finalContest = await dbCtx.Contests.AsNoTracking().FirstAsync(c => c.Id == contest.Id);
+        var finalEntryA = await dbCtx.ContestEntries.AsNoTracking().FirstAsync(e => e.Id == entryA.Id);
+        var finalEntryB = await dbCtx.ContestEntries.AsNoTracking().FirstAsync(e => e.Id == entryBId);
+
+        Assert.Contains(reason1, finalContest.WinnerRevocationReason);
+        Assert.Contains(reason2, finalContest.WinnerRevocationReason);
+        Assert.Contains(reason1, finalEntryB.RevocationReason);
+        Assert.Contains(reason2, finalEntryA.RevocationReason);
     }
 }

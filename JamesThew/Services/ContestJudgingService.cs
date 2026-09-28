@@ -167,20 +167,31 @@ public class ContestJudgingService(ApplicationDbContext db) : IContestJudgingSer
         }
 
         var now = DateTime.UtcNow;
+        var trimmedReason = reason?.Trim();
         var winningEntry = contest.Entries.FirstOrDefault(e => e.Id == contest.WinningEntryId.Value);
         if (winningEntry is not null)
         {
             winningEntry.Status = ContestEntryStatus.UnderReview;
-            winningEntry.RevocationReason = reason?.Trim();
-            winningEntry.RevokedAtUtc = now;
 
-            if (!string.IsNullOrWhiteSpace(reason))
+            if (!string.IsNullOrWhiteSpace(trimmedReason))
             {
-                var auditNote = $"[Winner Revoked by Admin on {now:yyyy-MM-dd HH:mm} UTC]: {reason.Trim()}";
+                var entryRevocationEntry = $"[{now:yyyy-MM-dd HH:mm} UTC]: {trimmedReason}";
+                winningEntry.RevocationReason = string.IsNullOrWhiteSpace(winningEntry.RevocationReason)
+                    ? entryRevocationEntry
+                    : $"{winningEntry.RevocationReason}\n{entryRevocationEntry}";
+
+                if (winningEntry.RevocationReason.Length > 1000)
+                {
+                    winningEntry.RevocationReason = winningEntry.RevocationReason.Substring(winningEntry.RevocationReason.Length - 1000);
+                }
+
+                var auditNote = $"[Winner Revoked by Admin on {now:yyyy-MM-dd HH:mm} UTC]: {trimmedReason}";
                 winningEntry.AdminReviewNotes = string.IsNullOrWhiteSpace(winningEntry.AdminReviewNotes)
                     ? auditNote
                     : $"{winningEntry.AdminReviewNotes}\n{auditNote}";
             }
+
+            winningEntry.RevokedAtUtc = now;
         }
 
         // Also reset any other entry with Status == Selected for consistency
@@ -194,7 +205,20 @@ public class ContestJudgingService(ApplicationDbContext db) : IContestJudgingSer
         contest.WinnerSelectedByUserId = null;
         contest.WinnerAnnouncedAtUtc = null;
         contest.WinnerAnnouncedByUserId = null;
-        contest.WinnerRevocationReason = reason?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(trimmedReason))
+        {
+            var contestRevocationEntry = $"[{now:yyyy-MM-dd HH:mm} UTC, Entry #{winningEntry?.Id}]: {trimmedReason}";
+            contest.WinnerRevocationReason = string.IsNullOrWhiteSpace(contest.WinnerRevocationReason)
+                ? contestRevocationEntry
+                : $"{contest.WinnerRevocationReason}\n{contestRevocationEntry}";
+
+            if (contest.WinnerRevocationReason.Length > 1000)
+            {
+                contest.WinnerRevocationReason = contest.WinnerRevocationReason.Substring(contest.WinnerRevocationReason.Length - 1000);
+            }
+        }
+
         contest.WinnerRevokedAtUtc = now;
         contest.WinnerRevokedByUserId = adminUserId;
 
@@ -223,7 +247,9 @@ public class ContestJudgingService(ApplicationDbContext db) : IContestJudgingSer
                 EntryTitle = c.WinningEntry!.Title,
                 EntrySummary = c.WinningEntry.Summary,
                 EntryImageUrl = c.WinningEntry.ImageUrl ?? c.ImageUrl,
-                WinnerDisplayName = c.WinningEntry.AuthorUser.DisplayName ?? "Culinary Member",
+                WinnerDisplayName = (c.WinningEntry.AuthorUser.DisplayName != null && c.WinningEntry.AuthorUser.DisplayName != "")
+                    ? c.WinningEntry.AuthorUser.DisplayName
+                    : "Culinary Member",
                 AnnouncedAtUtc = c.WinnerAnnouncedAtUtc!.Value
             })
             .ToListAsync();
@@ -253,7 +279,9 @@ public class ContestJudgingService(ApplicationDbContext db) : IContestJudgingSer
                 EntryTitle = c.WinningEntry!.Title,
                 EntrySummary = c.WinningEntry.Summary,
                 EntryImageUrl = c.WinningEntry.ImageUrl ?? c.ImageUrl,
-                WinnerDisplayName = c.WinningEntry.AuthorUser.DisplayName ?? "Culinary Member",
+                WinnerDisplayName = (c.WinningEntry.AuthorUser.DisplayName != null && c.WinningEntry.AuthorUser.DisplayName != "")
+                    ? c.WinningEntry.AuthorUser.DisplayName
+                    : "Culinary Member",
                 AnnouncedAtUtc = c.WinnerAnnouncedAtUtc!.Value
             })
             .FirstOrDefaultAsync();

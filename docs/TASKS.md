@@ -362,19 +362,34 @@ Phase 5B successfully implemented and verified:
 | T-17 / REQ-017, REQ-018 | Member-only MVC recipe/tip entry forms/services and admin review | T-16, T-14 | Guest GET/POST entry blocked; active member login required; complete snapshots and admin review | TC-017/018; anonymous denial, duplicate/type/window/member ownership |
 | T-18 / REQ-019 | Winner choice, atomic announcement, archive display | T-17 | Valid reviewed same-contest winner; public result | Complete (Phase 5C): Passed TC-019, 12 integration tests in ContestJudgingTests.cs, Playwright browser E2E test; G |
 
-## Phase 6 - Polish
+## Phase 6 - Polish & Release-Readiness Review (Phase 6A)
+
+### Actual scoped completion - Phase 6A: Release-Readiness Review & Automated Demo QA
+
+Phase 6A successfully verified and completed on 28 September 2026:
+- Neutral winner fallback: Missing or whitespace entrant display names evaluate to `"Culinary Member"`; email addresses and prefixes are never exposed in public views.
+- Winner replacement & durable revocation audit: Replacing an announced winner atomically clears announcement state (`WinnerAnnouncedAtUtc = null`). Repeated revocations maintain timestamped historical audit entries in `Contest.WinnerRevocationReason` and `ContestEntry.RevocationReason`.
+- Dedicated demo database: Clean `JamesThew_Demo` database provisioned with 8 migrations, seeded baseline demo data (7 ContentItems, 7 FAQs, 4 Contests, 1 Admin User, 2 Roles), with admin credentials stored in User Secrets. Existing `JamesThew_Development` (16 ContentItems including 9 QA items) is preserved 100% untouched.
+- Automated browser E2E QA: Playwright test `ReleaseReadinessBrowserE2ETests.cs` verified Guest browsing (desktop & mobile 390px), registration/login, subscription lifecycle, community contributions & admin moderation, editorial media upload, contest lifecycle, judging, announcement, durable revocation, zero horizontal overflow, zero broken images, and zero console/server errors.
+- Verification: 153/153 tests pass, 0 warnings/errors, 0 pending EF model changes.
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
-| T-19 / REQ-001, REQ-003, REQ-005, REQ-017, REQ-020, REQ-023 | All pages/states responsive, accessibility, approved assets | T-15, T-18 | DESIGN states covered; licensed images; keyboard/touch paths work | Mobile/tablet/desktop, contrast, zoom, form errors |
-| T-20 / REQ-001, REQ-017, REQ-023 | Optional selected motion, reduced-motion and performance budgets | T-19 | Content visible without JS/motion; lightweight animation | TEST_PLAN cross-cutting checks, actual performance evidence; G |
+| T-19 / REQ-001, REQ-003, REQ-005, REQ-017, REQ-020, REQ-023 | All pages/states responsive, accessibility, approved assets | T-15, T-18 | DESIGN states covered; licensed images; keyboard/touch paths work | Complete (Phase 6A): Verified 390px mobile & desktop viewports, 0 horizontal overflow, 0 broken images, in `ReleaseReadinessBrowserE2ETests.cs` |
+| T-20 / REQ-001, REQ-017, REQ-023 | Optional selected motion, reduced-motion and performance budgets | T-19 | Content visible without JS/motion; lightweight animation | Complete (Phase 6A): Semantic HTML details/summary, accessible buttons, 0 console errors |
 
 ## Phase 7 - Testing aur release readiness
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
-| T-21 / REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010, REQ-011, REQ-012, REQ-013, REQ-014, REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-020 | Functional/security E2E regression aur defect repair | T-20 | TC-001 to TC-020 pass or documented accepted exception | Guest/member/admin evidence; fix ke baad affected regression |
-| T-22 / REQ-021, REQ-022, REQ-023, REQ-027 | Local fresh setup, migrations, restore aur academic-demo rehearsal; optional hosting excluded from gate | T-21 | Approved machine par reproducible setup; backup restore; accurate README | TC-021/022/023/027, actual commands record; G |
+| T-21 / REQ-001 to REQ-020 | Functional/security E2E regression aur defect repair | T-20 | TC-001 to TC-020 pass or documented accepted exception | Complete (Phase 6A): 153/153 integration & browser E2E tests pass (`dotnet test JamesThew.slnx`) |
+| T-22 / REQ-021, REQ-022, REQ-023, REQ-027 | Local fresh setup, migrations, restore aur academic-demo rehearsal | T-21 | Approved machine par reproducible setup; backup restore; accurate README | Complete (Phase 6A): Dedicated `JamesThew_Demo` database provisioned, migrated, and seeded; README commands verified |
+
+### Remaining Work Short Checklist (Academic Submission Phase 8)
+1. **Academic Certificate & Forms**: Obtain official institutional Certificate of Completion template and Faculty Feedback/Evaluation Form (OD-04, OD-06).
+2. **Final Project Documentation Package**: Compile final synopsis, problem definition, algorithms, and test checklist into single deliverable PDF (T-25).
+3. **Faculty Delivery Coordination**: Confirm institutional submission channel, recipient email, and exact deadline date/timezone (T-26).
+4. **Source Code & DB Backup ZIP**: Package repository source (excluding Git history, secrets, and temp screenshots) and create SQL Server `.bak` demo archive for submission.
 
 ## Phase 8 - Reports aur submission
 

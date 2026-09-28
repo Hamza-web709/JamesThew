@@ -99,7 +99,9 @@ public class ContestService(ApplicationDbContext db) : IContestService
                 EntryTitle = contest.WinningEntry.Title,
                 EntrySummary = contest.WinningEntry.Summary,
                 EntryImageUrl = contest.WinningEntry.ImageUrl ?? contest.ImageUrl,
-                WinnerDisplayName = contest.WinningEntry.AuthorUser?.DisplayName ?? "Culinary Member",
+                WinnerDisplayName = !string.IsNullOrWhiteSpace(contest.WinningEntry.AuthorUser?.DisplayName)
+                    ? contest.WinningEntry.AuthorUser.DisplayName.Trim()
+                    : "Culinary Member",
                 AnnouncedAtUtc = contest.WinnerAnnouncedAtUtc.Value
             };
         }
