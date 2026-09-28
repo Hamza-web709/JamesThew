@@ -464,4 +464,100 @@ public class ProfileAndContributionEditTests(FoundationFixture fixture)
         var indexHtml = await client.GetStringAsync("/contributions");
         Assert.DoesNotContain("Temporary Recipe To Delete", indexHtml);
     }
+
+    [Fact]
+    public async Task Guest_Access_ProfileAndContributionEdit_Denied()
+    {
+        using var guestClient = fixture.NewClient();
+
+        // Guest attempting to access profile
+        var profileGet = await guestClient.GetAsync("/account/status");
+        Assert.Equal(HttpStatusCode.Redirect, profileGet.StatusCode);
+        Assert.Contains("/account/login", profileGet.Headers.Location!.OriginalString);
+
+        // Guest attempting to edit recipe contribution
+        var recipeEditGet = await guestClient.GetAsync("/contributions/recipe/999/edit");
+        Assert.Equal(HttpStatusCode.Redirect, recipeEditGet.StatusCode);
+        Assert.Contains("/account/login", recipeEditGet.Headers.Location!.OriginalString);
+
+        // Guest attempting to edit tip contribution
+        var tipEditGet = await guestClient.GetAsync("/contributions/tip/999/edit");
+        Assert.Equal(HttpStatusCode.Redirect, tipEditGet.StatusCode);
+        Assert.Contains("/account/login", tipEditGet.Headers.Location!.OriginalString);
+
+        // Guest attempting to delete contribution
+        var deletePost = await guestClient.PostAsync("/contributions/999/delete", new FormUrlEncodedContent([]));
+        Assert.Equal(HttpStatusCode.Redirect, deletePost.StatusCode);
+        Assert.Contains("/account/login", deletePost.Headers.Location!.OriginalString);
+    }
+
+    [Fact]
+    public async Task Contribution_Rejected_Edit_DisplaysFeedback_ResetsToPending()
+    {
+        var authorEmail = NewEmail();
+        var authorPassword = NewPassword();
+        using var authorClient = fixture.NewClient();
+        await RegisterAndLogin(authorClient, authorEmail, authorPassword, "Rejected Author");
+
+        // Submit recipe
+        var token = await Token(authorClient, "/contributions/recipe/new");
+        var values = new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = token,
+            ["Title"] = "Draft For Initial Critique",
+            ["Summary"] = "Draft summary for review.",
+            ["Servings"] = "4",
+            ["PrepMinutes"] = "15",
+            ["CookMinutes"] = "20",
+            ["IngredientsText"] = "Flour\nWater\nSalt",
+            ["StepsText"] = "Mix ingredients thoroughly.\nBake at 200C."
+        };
+        await authorClient.PostAsync("/contributions/recipe/new", new FormUrlEncodedContent(values));
+
+        await using var db = fixture.CreateDb();
+        var item = await db.ContentItems.FirstAsync(c => c.Title == "Draft For Initial Critique");
+        var itemId = item.Id;
+
+        // Admin rejects contribution with explicit feedback
+        var adminEmail = NewEmail();
+        var adminPassword = NewPassword();
+        await EnsureAdminSeeded(adminEmail, adminPassword);
+        using var adminClient = fixture.NewClient();
+        await Login(adminClient, adminEmail, adminPassword);
+
+        var rejectToken = await Token(adminClient, "/admin/contributions");
+        var rejectValues = new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = rejectToken,
+            ["rejectionReason"] = "Please provide exact flour hydration percentages."
+        };
+        var rejectResponse = await adminClient.PostAsync($"/admin/contributions/{itemId}/reject", new FormUrlEncodedContent(rejectValues));
+        Assert.Equal(HttpStatusCode.Redirect, rejectResponse.StatusCode);
+
+        // Author views edit form: contains previous rejection reason
+        var editFormHtml = await authorClient.GetStringAsync($"/contributions/recipe/{itemId}/edit");
+        Assert.Contains("Please provide exact flour hydration percentages", editFormHtml);
+
+        // Author edits and resubmits
+        var editToken = await Token(authorClient, $"/contributions/recipe/{itemId}/edit");
+        var updateValues = new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = editToken,
+            ["Title"] = "Perfect Hydration Sourdough",
+            ["Summary"] = "Updated with 75% baker hydration percentage.",
+            ["Servings"] = "4",
+            ["PrepMinutes"] = "25",
+            ["CookMinutes"] = "35",
+            ["IngredientsText"] = "500g bread flour\n375g water (75%)\n10g sea salt",
+            ["StepsText"] = "Autolyse flour and water for 45 mins.\nFold in salt and bake."
+        };
+        var updateResponse = await authorClient.PostAsync($"/contributions/recipe/{itemId}/edit", new FormUrlEncodedContent(updateValues));
+        Assert.Equal(HttpStatusCode.Redirect, updateResponse.StatusCode);
+
+        // Verify status reset to Pending and rejection reason cleared
+        await using var verifyDb = fixture.CreateDb();
+        var resubmittedItem = await verifyDb.ContentItems.FirstAsync(c => c.Id == itemId);
+        Assert.Equal(PublicationStatus.Pending, resubmittedItem.PublicationStatus);
+        Assert.Null(resubmittedItem.RejectionReason);
+    }
 }

@@ -334,7 +334,7 @@ Phase 5B successfully implemented and verified:
 | T-10 | Complete (Academic Reconciliation): Same-page profile viewing/editing implemented on `/account/status` and verified via Playwright Chromium E2E QA |
 | T-14 edit/delete | Complete (Academic Reconciliation): Member recipe/tip editing and deletion implemented with strict moderation lifecycle (Pending reset and public withdrawal) |
 | T-22 daily backup | Partial (Academic Reconciliation): Automated backup script `DailyBackup.ps1` with retention & dry-run restore verified; OS daemon scheduling not installed |
-| Phase 6A & Reconciliation verification | Build 0 warnings/0 errors; 163/163 tests pass; Playwright Chromium browser tests pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
+| Phase 6A & Reconciliation verification | Build 0 warnings/0 errors; 165/165 tests pass; Playwright Chromium browser tests pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
@@ -383,7 +383,7 @@ Phase 6A successfully verified and completed on 28 September 2026:
 ## Phase 7 - Testing aur release readiness
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
-| T-21 / REQ-001 to REQ-020 | Functional/security E2E regression, profile edit & member contribution lifecycle | T-20 | TC-001 to TC-020 pass or documented accepted exception | Complete: 163/163 unit, integration & browser E2E tests pass (`dotnet test JamesThew.slnx`) |
+| T-21 / REQ-001 to REQ-020 | Functional/security E2E regression, profile edit & member contribution lifecycle | T-20 | TC-001 to TC-020 pass or documented accepted exception | Complete: 165/165 unit, integration & browser E2E tests pass (`dotnet test JamesThew.slnx`) |
 | T-22 / REQ-021, REQ-022, REQ-023, REQ-027 | Local fresh setup, migrations, restore rehearsal & repeatable daily backup automation | T-21 | Approved machine par reproducible setup; backup restore; accurate README | Partial (REQ-022): Backup & restore verified; `DailyBackup.ps1` with retention verified; daily OS daemon scheduling not installed |
 
 ### Academic Submission Deliverables Status (Phase 8 Reconciliation)

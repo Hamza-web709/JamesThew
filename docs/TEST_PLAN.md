@@ -725,7 +725,7 @@ Scope: Final reconciliation of requirement matrix with actual code, verified tes
 | Evidence | Actual result |
 |---|---|
 | Build | Solution build succeeded, 0 warnings / 0 errors (`dotnet build JamesThew.slnx`) |
-| Test suite run | 163 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) |
+| Test suite run | 165 passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`) |
 | EF Core model check | `dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj` clean: 0 pending model changes |
 | REQ-005 (Same-Page Profile View/Edit) | **PASSED**. Authenticated profile viewing and editing implemented on `/account/status` and `/account/profile` with server-side validation (2-100 characters), antiforgery protection, and real browser verification in Playwright Chromium test `ProfileBrowserE2ETests.cs`. |
 | REQ-012 (Member Contribution Edit/Delete) | **PASSED**. Routes `/contributions/recipe/{id}/edit`, `/contributions/tip/{id}/edit`, and `/contributions/{id}/delete` implemented. Cross-member edits return 404. Strict moderation lifecycle enforced: editing an item immediately resets `PublicationStatus` to `Pending` and withdraws published items from public catalogs until re-approved. Verified by 5 passing tests in `ProfileAndContributionEditTests.cs`. |
