@@ -366,6 +366,17 @@
                                         </div>
                                     }
 
+                                    @if (!string.IsNullOrWhiteSpace(entry.RevocationReason))
+                                    {
+                                        <div class="alert alert-warning small mb-3">
+                                            <strong>Winner Revocation Audit:</strong> @entry.RevocationReason
+                                            @if (entry.RevokedAtUtc.HasValue)
+                                            {
+                                                <span class="text-muted ms-2">(@entry.RevokedAtUtc.Value.ToString("yyyy-MM-dd HH:mm") UTC)</span>
+                                            }
+                                        </div>
+                                    }
+
                                     <form asp-action="ReviewContestEntry" asp-route-id="@Model.ContestId" asp-route-entryId="@entry.EntryId" method="post" class="row g-2 align-items-end">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="ContestId" value="@Model.ContestId" />

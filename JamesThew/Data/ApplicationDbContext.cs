@@ -164,6 +164,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasForeignKey(x => x.WinnerAnnouncedByUserId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
+            entity.Property(x => x.WinnerRevocationReason).HasMaxLength(1000);
+            entity.HasOne(x => x.WinnerRevokedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.WinnerRevokedByUserId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<ContestEntry>(entity =>
@@ -176,6 +182,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(x => x.ImageUrl).HasMaxLength(300);
             entity.Property(x => x.AdminReviewNotes).HasMaxLength(2000);
             entity.Property(x => x.DisqualificationReason).HasMaxLength(1000);
+            entity.Property(x => x.RevocationReason).HasMaxLength(1000);
 
             // One entry per member per contest
             entity.HasIndex(x => new { x.ContestId, x.AuthorUserId }).IsUnique();

@@ -128,6 +128,8 @@ public class AdminContestEntryRowDto
     public ContestEntryStatus Status { get; set; }
     public string? AdminReviewNotes { get; set; }
     public string? DisqualificationReason { get; set; }
+    public string? RevocationReason { get; set; }
+    public DateTime? RevokedAtUtc { get; set; }
     public DateTime? ReviewedAtUtc { get; set; }
     public string? ReviewedByDisplayName { get; set; }
     public bool IsSelectedWinner { get; set; }
@@ -163,6 +165,8 @@ public class AdminContestEntriesViewModel
     public string? WinnerSelectedByDisplayName { get; set; }
     public DateTime? WinnerAnnouncedAtUtc { get; set; }
     public string? WinnerAnnouncedByDisplayName { get; set; }
+    public string? WinnerRevocationReason { get; set; }
+    public DateTime? WinnerRevokedAtUtc { get; set; }
     public string? WinningEntryTitle { get; set; }
     public string? WinningAuthorDisplayName { get; set; }
     public bool CanSelectWinner { get; set; }

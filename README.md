@@ -74,7 +74,7 @@ dotnet ef database update --project JamesThew/JamesThew.csproj
 dotnet ef migrations has-pending-model-changes --project JamesThew/JamesThew.csproj
 ```
 
-Migrations `20260926181611_InitialIdentity`, `20260927100700_Phase2PublicContent`, `20260927143304_Phase3AMembershipSubscriptions`, `20260927150554_Phase3BMemberFeedbackAndContributions`, `20260927212751_Phase5AContests`, `20260927221035_Phase5BContestEntries`, aur `20260928015849_Phase5CJudgingAndWinners` Development database par apply ho chuki hain. `database update` repeat karna safe hai. Startup schema migrate nahi karta; migration pehle run karein. Startup Member/Admin role names idempotently ensure karta hai aur demo content (`ContentSeeder.cs`) seed karta hai.
+Migrations `20260926181611_InitialIdentity`, `20260927100700_Phase2PublicContent`, `20260927143304_Phase3AMembershipSubscriptions`, `20260927150554_Phase3BMemberFeedbackAndContributions`, `20260927212751_Phase5AContests`, `20260927221035_Phase5BContestEntries`, `20260928015849_Phase5CJudgingAndWinners`, aur `20260928074105_Phase5CDurableRevocationAudit` Development database par apply ho chuki hain. `database update` repeat karna safe hai. Startup schema migrate nahi karta; migration pehle run karein. Startup Member/Admin role names idempotently ensure karta hai aur demo content (`ContentSeeder.cs`) seed karta hai.
 
 ## Run aur test
 

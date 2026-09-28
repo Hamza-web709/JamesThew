@@ -21,8 +21,8 @@ public class ContestJudgingService(ApplicationDbContext db) : IContestJudgingSer
         var contest = await db.Contests
             .FirstOrDefaultAsync(c => c.Id == contestId && c.DeletedAtUtc == null);
 
-        if (contest is null)
-            return (false, "Competition not found.");
+        if (contest is null || contest.Status == ContestStatus.Draft || contest.Status == ContestStatus.Archived)
+            return (false, "Competition not found or is in an invalid state for judging.");
 
         var entry = await db.ContestEntries
             .FirstOrDefaultAsync(e => e.Id == entryId && e.ContestId == contestId);
@@ -156,18 +156,27 @@ public class ContestJudgingService(ApplicationDbContext db) : IContestJudgingSer
             .Include(c => c.Entries)
             .FirstOrDefaultAsync(c => c.Id == contestId && c.DeletedAtUtc == null);
 
-        if (contest is null || !contest.WinningEntryId.HasValue)
+        if (contest is null || contest.Status == ContestStatus.Draft || contest.Status == ContestStatus.Archived)
+        {
+            return (false, "Competition not found or cannot be modified.");
+        }
+
+        if (!contest.WinningEntryId.HasValue)
         {
             return (false, "This competition does not currently have a selected winner to revoke.");
         }
 
+        var now = DateTime.UtcNow;
         var winningEntry = contest.Entries.FirstOrDefault(e => e.Id == contest.WinningEntryId.Value);
         if (winningEntry is not null)
         {
             winningEntry.Status = ContestEntryStatus.UnderReview;
+            winningEntry.RevocationReason = reason?.Trim();
+            winningEntry.RevokedAtUtc = now;
+
             if (!string.IsNullOrWhiteSpace(reason))
             {
-                var auditNote = $"[Winner Revoked by Admin on {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC]: {reason.Trim()}";
+                var auditNote = $"[Winner Revoked by Admin on {now:yyyy-MM-dd HH:mm} UTC]: {reason.Trim()}";
                 winningEntry.AdminReviewNotes = string.IsNullOrWhiteSpace(winningEntry.AdminReviewNotes)
                     ? auditNote
                     : $"{winningEntry.AdminReviewNotes}\n{auditNote}";
@@ -185,6 +194,9 @@ public class ContestJudgingService(ApplicationDbContext db) : IContestJudgingSer
         contest.WinnerSelectedByUserId = null;
         contest.WinnerAnnouncedAtUtc = null;
         contest.WinnerAnnouncedByUserId = null;
+        contest.WinnerRevocationReason = reason?.Trim();
+        contest.WinnerRevokedAtUtc = now;
+        contest.WinnerRevokedByUserId = adminUserId;
 
         await db.SaveChangesAsync();
         return (true, "Winner selection has been revoked successfully. Submissions returned to review.");

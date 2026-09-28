@@ -53,6 +53,11 @@ public class ContestEntry
     [StringLength(1000)]
     public string? DisqualificationReason { get; set; }
 
+    [StringLength(1000)]
+    public string? RevocationReason { get; set; }
+
+    public DateTime? RevokedAtUtc { get; set; }
+
     public DateTime? ReviewedAtUtc { get; set; }
 
     public string? ReviewedByUserId { get; set; }

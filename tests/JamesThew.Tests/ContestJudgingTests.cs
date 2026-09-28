@@ -577,4 +577,124 @@ public class ContestJudgingTests(FoundationFixture fixture)
         }));
         Assert.Equal(HttpStatusCode.BadRequest, selectNoToken.StatusCode);
     }
+
+    [Fact]
+    public async Task RevocationReason_Is_Durably_Stored_And_Not_Overwritten_By_Subsequent_Review()
+    {
+        var (contest, entry, _) = await CreateContestWithEntryAsync(closesAtUtc: DateTime.UtcNow.AddDays(-1));
+        var (_, adminUserId) = await CreateAdminClientAsync();
+        var (_, admin2UserId) = await CreateAdminClientAsync();
+
+        using var scope = fixture.Services.CreateScope();
+        var judgingService = scope.ServiceProvider.GetRequiredService<IContestJudgingService>();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        // 1. Select winner
+        var (selSuccess, _) = await judgingService.SelectWinnerAsync(contest.Id, entry.Id, adminUserId);
+        Assert.True(selSuccess);
+
+        // 2. Revoke winner with distinct durable reason
+        var expectedReason = "Entrant submitted duplicate entry under alias; disqualified after audit.";
+        var (revSuccess, _) = await judgingService.RevokeWinnerAsync(contest.Id, adminUserId, expectedReason);
+        Assert.True(revSuccess);
+
+        // Verify durable storage on both Contest and ContestEntry
+        var entryAfterRevoke = await db.ContestEntries.AsNoTracking().FirstAsync(e => e.Id == entry.Id);
+        var contestAfterRevoke = await db.Contests.AsNoTracking().FirstAsync(c => c.Id == contest.Id);
+        Assert.Equal(expectedReason, entryAfterRevoke.RevocationReason);
+        Assert.NotNull(entryAfterRevoke.RevokedAtUtc);
+        Assert.Equal(expectedReason, contestAfterRevoke.WinnerRevocationReason);
+        Assert.NotNull(contestAfterRevoke.WinnerRevokedAtUtc);
+        Assert.Equal(adminUserId, contestAfterRevoke.WinnerRevokedByUserId);
+
+        // 3. Subsequent review with new review notes MUST NOT overwrite or erase RevocationReason
+        var (reviewSuccess, _) = await judgingService.ReviewEntryAsync(
+            contest.Id,
+            entry.Id,
+            admin2UserId,
+            ContestEntryStatus.UnderReview,
+            reviewNotes: "Re-evaluating formulation for secondary honorable mention.",
+            disqualificationReason: null);
+        Assert.True(reviewSuccess);
+
+        // Verify RevocationReason is permanently preserved in database
+        var entryAfterSubsequentReview = await db.ContestEntries.AsNoTracking().FirstAsync(e => e.Id == entry.Id);
+        Assert.Equal(expectedReason, entryAfterSubsequentReview.RevocationReason);
+        Assert.NotNull(entryAfterSubsequentReview.RevokedAtUtc);
+        Assert.Equal("Re-evaluating formulation for secondary honorable mention.", entryAfterSubsequentReview.AdminReviewNotes);
+    }
+
+    [Fact]
+    public async Task ReviewEntry_On_Draft_Or_Archived_Contest_Returns_Failure()
+    {
+        var (draftContest, draftEntry, _) = await CreateContestWithEntryAsync(contestStatus: ContestStatus.Draft);
+        var (archivedContest, archivedEntry, _) = await CreateContestWithEntryAsync(contestStatus: ContestStatus.Archived);
+        using var scope = fixture.Services.CreateScope();
+        var judgingService = scope.ServiceProvider.GetRequiredService<IContestJudgingService>();
+
+        // Review on Draft contest
+        var (draftRes, draftMsg) = await judgingService.ReviewEntryAsync(
+            draftContest.Id, draftEntry.Id, "admin-1", ContestEntryStatus.UnderReview, "Note", null);
+        Assert.False(draftRes);
+        Assert.Contains("invalid state for judging", draftMsg);
+
+        // Review on Archived contest
+        var (archRes, archMsg) = await judgingService.ReviewEntryAsync(
+            archivedContest.Id, archivedEntry.Id, "admin-1", ContestEntryStatus.UnderReview, "Note", null);
+        Assert.False(archRes);
+        Assert.Contains("invalid state for judging", archMsg);
+    }
+
+    [Fact]
+    public async Task SelectWinner_On_Draft_Or_Archived_Contest_Returns_Failure()
+    {
+        var (draftContest, draftEntry, _) = await CreateContestWithEntryAsync(contestStatus: ContestStatus.Draft, closesAtUtc: DateTime.UtcNow.AddDays(-1));
+        var (archivedContest, archivedEntry, _) = await CreateContestWithEntryAsync(contestStatus: ContestStatus.Archived, closesAtUtc: DateTime.UtcNow.AddDays(-1));
+        using var scope = fixture.Services.CreateScope();
+        var judgingService = scope.ServiceProvider.GetRequiredService<IContestJudgingService>();
+
+        // Select on Draft contest
+        var (draftRes, draftMsg) = await judgingService.SelectWinnerAsync(draftContest.Id, draftEntry.Id, "admin-1");
+        Assert.False(draftRes);
+        Assert.Contains("invalid state for judging", draftMsg);
+
+        // Select on Archived contest
+        var (archRes, archMsg) = await judgingService.SelectWinnerAsync(archivedContest.Id, archivedEntry.Id, "admin-1");
+        Assert.False(archRes);
+        Assert.Contains("invalid state for judging", archMsg);
+    }
+
+    [Fact]
+    public async Task AnnounceWinner_On_Draft_Or_Archived_Contest_Returns_Failure()
+    {
+        var (draftContest, _, _) = await CreateContestWithEntryAsync(contestStatus: ContestStatus.Draft, closesAtUtc: DateTime.UtcNow.AddDays(-1));
+        var (archivedContest, _, _) = await CreateContestWithEntryAsync(contestStatus: ContestStatus.Archived, closesAtUtc: DateTime.UtcNow.AddDays(-1));
+        using var scope = fixture.Services.CreateScope();
+        var judgingService = scope.ServiceProvider.GetRequiredService<IContestJudgingService>();
+
+        var (draftRes, draftMsg) = await judgingService.AnnounceWinnerAsync(draftContest.Id, "admin-1");
+        Assert.False(draftRes);
+        Assert.Contains("cannot be announced", draftMsg);
+
+        var (archRes, archMsg) = await judgingService.AnnounceWinnerAsync(archivedContest.Id, "admin-1");
+        Assert.False(archRes);
+        Assert.Contains("cannot be announced", archMsg);
+    }
+
+    [Fact]
+    public async Task RevokeWinner_On_Draft_Or_Archived_Contest_Returns_Failure()
+    {
+        var (draftContest, _, _) = await CreateContestWithEntryAsync(contestStatus: ContestStatus.Draft);
+        var (archivedContest, _, _) = await CreateContestWithEntryAsync(contestStatus: ContestStatus.Archived);
+        using var scope = fixture.Services.CreateScope();
+        var judgingService = scope.ServiceProvider.GetRequiredService<IContestJudgingService>();
+
+        var (draftRes, draftMsg) = await judgingService.RevokeWinnerAsync(draftContest.Id, "admin-1", "Reason");
+        Assert.False(draftRes);
+        Assert.Contains("cannot be modified", draftMsg);
+
+        var (archRes, archMsg) = await judgingService.RevokeWinnerAsync(archivedContest.Id, "admin-1", "Reason");
+        Assert.False(archRes);
+        Assert.Contains("cannot be modified", archMsg);
+    }
 }

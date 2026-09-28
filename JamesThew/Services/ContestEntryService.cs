@@ -409,6 +409,8 @@ public class ContestEntryService(ApplicationDbContext db) : IContestEntryService
                 Status = e.Status,
                 AdminReviewNotes = e.AdminReviewNotes,
                 DisqualificationReason = e.DisqualificationReason,
+                RevocationReason = e.RevocationReason,
+                RevokedAtUtc = e.RevokedAtUtc,
                 ReviewedAtUtc = e.ReviewedAtUtc,
                 ReviewedByDisplayName = e.ReviewedByUser?.DisplayName,
                 IsSelectedWinner = contest.WinningEntryId == e.Id || e.Status == ContestEntryStatus.Selected,
@@ -426,7 +428,7 @@ public class ContestEntryService(ApplicationDbContext db) : IContestEntryService
             .ToList();
 
         var now = DateTime.UtcNow;
-        var canSelectWinner = now > contest.ClosesAtUtc || contest.Status == ContestStatus.Closed;
+        var canSelectWinner = contest.Status != ContestStatus.Draft && contest.Status != ContestStatus.Archived && (now > contest.ClosesAtUtc || contest.Status == ContestStatus.Closed);
         return new AdminContestEntriesViewModel
         {
             ContestId = contest.Id,
@@ -443,9 +445,11 @@ public class ContestEntryService(ApplicationDbContext db) : IContestEntryService
             WinnerSelectedByDisplayName = contest.WinnerSelectedByUser?.DisplayName,
             WinnerAnnouncedAtUtc = contest.WinnerAnnouncedAtUtc,
             WinnerAnnouncedByDisplayName = contest.WinnerAnnouncedByUser?.DisplayName,
+            WinnerRevocationReason = contest.WinnerRevocationReason,
+            WinnerRevokedAtUtc = contest.WinnerRevokedAtUtc,
             WinningEntryTitle = contest.WinningEntry?.Title,
             WinningAuthorDisplayName = contest.WinningEntry?.AuthorUser?.DisplayName,
-            CanSelectWinner = canSelectWinner && contest.Status != ContestStatus.Draft && contest.Status != ContestStatus.Archived,
+            CanSelectWinner = canSelectWinner,
             Entries = rows
         };
     }

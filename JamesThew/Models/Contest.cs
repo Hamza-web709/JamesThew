@@ -65,6 +65,16 @@ public class Contest
     [ForeignKey(nameof(WinnerAnnouncedByUserId))]
     public ApplicationUser? WinnerAnnouncedByUser { get; set; }
 
+    [StringLength(1000)]
+    public string? WinnerRevocationReason { get; set; }
+
+    public DateTime? WinnerRevokedAtUtc { get; set; }
+
+    public string? WinnerRevokedByUserId { get; set; }
+
+    [ForeignKey(nameof(WinnerRevokedByUserId))]
+    public ApplicationUser? WinnerRevokedByUser { get; set; }
+
     public ContestTimelinePhase GetTimelinePhase(DateTime asOfUtc)
     {
         if (Status == ContestStatus.Closed) return ContestTimelinePhase.Ended;

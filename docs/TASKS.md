@@ -300,17 +300,21 @@ Phase 5B successfully implemented and verified:
 - **Member Entry Edit Locking**:
   - Once an entry is placed `UnderReview`, `Disqualified`, or `Selected`, member editing is immediately locked (`CanEdit = false`), even if the contest window is still open.
   - Disqualified members see clear disqualification reasons in their dashboard; private admin review notes remain strictly confidential.
-- **Winner Revocation & Atomic Transitions**:
+- **Winner Revocation & Durable Audit Trail**:
   - Admin can revoke winner selection with an explicit audit reason (`RevokeContestWinner`).
+  - Revocation reason and timestamps are durably stored in dedicated database columns: `Contest.WinnerRevocationReason`, `Contest.WinnerRevokedAtUtc`, `Contest.WinnerRevokedByUserId`, `ContestEntry.RevocationReason`, and `ContestEntry.RevokedAtUtc`.
+  - Durable revocation fields are permanently preserved in the database and CANNOT be overwritten by subsequent member review notes edits.
   - Winning entry atomically reverts to `UnderReview` and public announcements are immediately withdrawn.
   - Winner selection replacement resets any prior winner to `UnderReview` and resets announcement state, requiring explicit re-announcement.
+- **Draft & Archived Lifecycle Guards**:
+  - All judging and winner actions (`ReviewEntryAsync`, `SelectWinnerAsync`, `AnnounceWinnerAsync`, `RevokeWinnerAsync`) strictly reject Draft or Archived competitions, preserving competition lifecycle integrity.
 - **Relational Integrity & Database Guard**:
   - Enforced at database level via SQL Server filtered unique index:
     `IX_ContestEntries_ContestId_SingleWinner` on `ContestEntries([ContestId]) WHERE [Status] = 4`.
   - Foreign key navigation relationships configured with `DeleteBehavior.Restrict` to prevent SQL Server cascade cycle errors.
 - **Testing & Verification**:
-  - 145/145 tests passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`).
-  - 12 new unit/integration tests in `ContestJudgingTests.cs` (premature selection rejection, wrong-contest rejection, disqualified entry rejection, private review notes privacy, member edit lock during review/disqualification/selection, unannounced winner privacy, public announcement verification, zero data leakage, winner revocation, atomic winner replacement, DB filtered unique index constraint, non-admin denial, and antiforgery enforcement).
+  - 150/150 tests passed, 0 failed, 0 skipped (`dotnet test JamesThew.slnx`).
+  - 17 comprehensive unit/integration tests in `ContestJudgingTests.cs` (premature selection rejection, wrong-contest rejection, disqualified entry rejection, private review notes privacy, member edit lock during review/disqualification/selection, unannounced winner privacy, public announcement verification, zero data leakage, winner revocation, atomic winner replacement, durable revocation reason audit preservation across subsequent reviews, Draft and Archived judging/selection/announcement/revocation guards, DB filtered unique index constraint, non-admin denial, and antiforgery enforcement).
   - Playwright Chromium browser E2E test in `ContestJudgingBrowserE2ETests.cs` (13-step full lifecycle: member submit -> admin review under review -> member edit lock verification -> admin close contest -> admin select winner -> guest unannounced privacy check -> admin announce winner -> guest public accolade verification -> contest detail golden banner -> member my-entries accolade -> admin revoke winner -> guest public withdrawal verification).
   - `dotnet ef migrations has-pending-model-changes` verified clean: 0 pending model changes.
 
@@ -326,9 +330,9 @@ Phase 5B successfully implemented and verified:
 | T-13 media management | Complete (Phase 4 Step 2): Admin media library (`/admin/media`), upload validation, magic bytes check, safe storage (`/uploads/editorial/`), recipe/tip form integration, safe deletion unlinking, orphan prevention, and Playwright Chromium E2E QA |
 | T-16 | Complete (Phase 5A): Admin contest management (create/edit/publish/close/archive), auto-slug resolution, date validation, and public read-only discovery at /contests |
 | T-17 | Complete (Phase 5B): Member contest entry intake, pre-deadline editing, one entry per member DB constraint, My Entries dashboard, private isolation, and admin read-only review |
-| T-18 | Complete (Phase 5C): Admin judging, qualitative review, private notes, winner selection, decoupled public announcement, member edit lock, winner revocation, and public accolades |
+| T-18 | Complete (Phase 5C): Admin judging, qualitative review, private notes, winner selection, decoupled public announcement, member edit lock, winner revocation, durable audit storage, and public accolades |
 | T-10 | Auth complete in Phase 1; Profile edit deferred |
-| Phase 5C verification | Build 0 warnings/0 errors; 145/145 tests pass; Playwright Chromium 10/10 Phase 5A + full Phase 5B + full Phase 5C lifecycle pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
+| Phase 5C verification | Build 0 warnings/0 errors; 150/150 tests pass; Playwright Chromium 10/10 Phase 5A + full Phase 5B + full Phase 5C lifecycle pass; migration check clean (0 pending model changes); evidence in TEST_PLAN |
 
 | Task ID / REQ | Scope | Dependencies | Acceptance criteria | Verification steps |
 |---|---|---|---|---|
