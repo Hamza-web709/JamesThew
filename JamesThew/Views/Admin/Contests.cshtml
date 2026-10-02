@@ -106,7 +106,7 @@
 </div>
 
 <!-- Contests Table -->
-<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5 jt-admin-record-table-card">
     @if (Model.Contests.Count == 0)
     {
         <div class="p-5 text-center text-muted">
@@ -119,7 +119,7 @@
     else
     {
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 jt-admin-record-table">
                 <thead class="table-light text-muted small text-uppercase">
                     <tr>
                         <th style="width: 60px;">Cover</th>
@@ -128,7 +128,7 @@
                         <th>Status</th>
                         <th>Entries</th>
                         <th>Timeline Window</th>
-                        <th class="text-end" style="width: 260px;">Actions</th>
+                        <th class="text-end" style="min-width: 340px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -219,67 +219,67 @@
                                     @contest.ClosesAtUtc.ToString("yyyy-MM-dd HH:mm") UTC
                                 </div>
                             </td>
-                            <td class="text-end">
-                                <div class="d-flex justify-content-end gap-1 flex-wrap">
+                            <td class="text-end jt-admin-actions-cell">
+                                <div class="jt-admin-action-cluster">
                                     @if (!contest.IsDeleted)
                                     {
-                                        <a asp-action="ContestEntries" asp-route-id="@contest.Id" class="btn btn-outline-info btn-sm" title="View Entries">
+                                        <a asp-action="ContestEntries" asp-route-id="@contest.Id" class="jt-admin-table-action jt-admin-table-action-primary" title="View Entries">
                                             Entries (@contest.EntriesCount)
                                         </a>
-                                        <a asp-action="EditContest" asp-route-id="@contest.Id" class="btn btn-outline-secondary btn-sm" title="Edit Contest">
+                                        <a asp-action="EditContest" asp-route-id="@contest.Id" class="jt-admin-table-action jt-admin-table-action-secondary" title="Edit Contest">
                                             Edit
                                         </a>
 
                                         @if (contest.Status == ContestStatus.Draft)
                                         {
-                                            <form method="post" asp-action="PublishContest" asp-route-id="@contest.Id" class="d-inline">
+                                            <form method="post" asp-action="PublishContest" asp-route-id="@contest.Id" class="jt-admin-inline-form">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-outline-success btn-sm" title="Publish to public catalog">
+                                                <button type="submit" class="jt-admin-table-action jt-admin-table-action-success" title="Publish to public catalog">
                                                     Publish
                                                 </button>
                                             </form>
                                         }
                                         else if (contest.Status == ContestStatus.Published)
                                         {
-                                            <a href="/contests/@contest.Slug" target="_blank" class="btn btn-outline-primary btn-sm" title="View Public Page">
+                                            <a href="/contests/@contest.Slug" target="_blank" class="jt-admin-table-action jt-admin-table-action-primary" title="View Public Page">
                                                 View
                                             </a>
-                                            <form method="post" asp-action="UnpublishContest" asp-route-id="@contest.Id" class="d-inline">
+                                            <form method="post" asp-action="UnpublishContest" asp-route-id="@contest.Id" class="jt-admin-inline-form">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-outline-warning btn-sm" title="Revert to Draft (hide from public)">
+                                                <button type="submit" class="jt-admin-table-action jt-admin-table-action-warning" title="Revert to Draft (hide from public)">
                                                     Draft
                                                 </button>
                                             </form>
-                                            <form method="post" asp-action="CloseContest" asp-route-id="@contest.Id" class="d-inline">
+                                            <form method="post" asp-action="CloseContest" asp-route-id="@contest.Id" class="jt-admin-inline-form">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-outline-dark btn-sm" title="Close contest early">
+                                                <button type="submit" class="jt-admin-table-action jt-admin-table-action-secondary" title="Close contest early">
                                                     Close
                                                 </button>
                                             </form>
                                         }
                                         else if (contest.Status == ContestStatus.Closed)
                                         {
-                                            <form method="post" asp-action="PublishContest" asp-route-id="@contest.Id" class="d-inline">
+                                            <form method="post" asp-action="PublishContest" asp-route-id="@contest.Id" class="jt-admin-inline-form">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-outline-success btn-sm" title="Re-open / publish">
+                                                <button type="submit" class="jt-admin-table-action jt-admin-table-action-success" title="Re-open / publish">
                                                     Reopen
                                                 </button>
                                             </form>
                                         }
 
-                                        <form method="post" asp-action="ArchiveContest" asp-route-id="@contest.Id" class="d-inline"
+                                        <form method="post" asp-action="ArchiveContest" asp-route-id="@contest.Id" class="jt-admin-inline-form"
                                               onsubmit="return confirm('Are you sure you want to archive this contest? It will be removed from active public view.');">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Archive / Remove">
+                                            <button type="submit" class="jt-admin-table-action jt-admin-table-action-danger" title="Archive / Remove">
                                                 Archive
                                             </button>
                                         </form>
                                     }
                                     else
                                     {
-                                        <form method="post" asp-action="RestoreContest" asp-route-id="@contest.Id" class="d-inline">
+                                        <form method="post" asp-action="RestoreContest" asp-route-id="@contest.Id" class="jt-admin-inline-form">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-outline-secondary btn-sm" title="Restore from archive">
+                                            <button type="submit" class="jt-admin-table-action jt-admin-table-action-success" title="Restore from archive">
                                                 Restore
                                             </button>
                                         </form>

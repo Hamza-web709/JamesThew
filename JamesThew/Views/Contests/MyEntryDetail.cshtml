@@ -4,19 +4,33 @@
     ViewData["Title"] = $"{Model.Title} - My Entry - James Thew";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-catalog.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
+</div>
+
+<div class="jt-inner-shell jt-member-page">
+    <div class="jt-inner-container">
+
+
 <div class="mb-5 max-w-800 mx-auto">
     <!-- Breadcrumbs -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <a asp-action="MyEntries" class="text-decoration-none text-muted small">
+        <a asp-action="MyEntries" class="jt-member-back-link text-decoration-none small">
             &larr; Back to My Contest Entries
         </a>
-        <a asp-action="Detail" asp-route-slug="@Model.ContestSlug" class="text-decoration-none text-muted small">
+        <a asp-action="Detail" asp-route-slug="@Model.ContestSlug" class="jt-member-back-link text-decoration-none small">
             Contest: @Model.ContestTitle &rarr;
         </a>
     </div>
 
     <!-- Header Card -->
-    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4">
+    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4 jt-glass-panel jt-member-panel jt-card-interactive-utility position-relative"><div class="jt-card-spotlight" aria-hidden="true"></div>
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
             <div class="d-flex flex-wrap align-items-center gap-2">
                 @if (Model.ContestType == ContestType.Recipe)
@@ -66,7 +80,7 @@
 
             @if (Model.CanEdit)
             {
-                <a asp-action="Entry" asp-route-slug="@Model.ContestSlug" class="btn btn-sm btn-primary">
+                <a asp-action="Entry" asp-route-slug="@Model.ContestSlug" class="jt-btn-editorial jt-btn-gold jt-btn-sm">
                     &#9998; Edit Entry
                 </a>
             }
@@ -78,7 +92,7 @@
             }
         </div>
 
-        <h1 class="h3 jt-serif mb-2">@Model.Title</h1>
+        <h1 class="jt-page-title jt-serif mb-2">@Model.Title</h1>
         <p class="lead text-muted mb-2">@Model.Summary</p>
 
         <div class="d-flex flex-wrap gap-3 text-muted small font-monospace pt-2 border-top">
@@ -156,19 +170,19 @@
         <!-- Recipe Metadata Facts -->
         <div class="row g-3 mb-4">
             <div class="col-4">
-                <div class="p-3 bg-white rounded-3 border text-center shadow-sm">
+                <div class="p-3 bg-white rounded-3 border text-center shadow-sm jt-glass-panel jt-member-panel jt-card-interactive-utility position-relative"><div class="jt-card-spotlight" aria-hidden="true"></div>
                     <span class="small text-muted d-block">Servings</span>
                     <strong class="fs-5">@(Model.Servings?.ToString() ?? "—")</strong>
                 </div>
             </div>
             <div class="col-4">
-                <div class="p-3 bg-white rounded-3 border text-center shadow-sm">
+                <div class="p-3 bg-white rounded-3 border text-center shadow-sm jt-glass-panel jt-member-panel jt-card-interactive-utility position-relative"><div class="jt-card-spotlight" aria-hidden="true"></div>
                     <span class="small text-muted d-block">Prep Time</span>
                     <strong class="fs-5">@(Model.PrepMinutes.HasValue ? $"{Model.PrepMinutes} min" : "—")</strong>
                 </div>
             </div>
             <div class="col-4">
-                <div class="p-3 bg-white rounded-3 border text-center shadow-sm">
+                <div class="p-3 bg-white rounded-3 border text-center shadow-sm jt-glass-panel jt-member-panel jt-card-interactive-utility position-relative"><div class="jt-card-spotlight" aria-hidden="true"></div>
                     <span class="small text-muted d-block">Cook Time</span>
                     <strong class="fs-5">@(Model.CookMinutes.HasValue ? $"{Model.CookMinutes} min" : "—")</strong>
                 </div>
@@ -176,7 +190,7 @@
         </div>
 
         <!-- Ingredients Panel -->
-        <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4">
+        <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4 jt-glass-panel jt-member-panel jt-card-interactive-utility position-relative"><div class="jt-card-spotlight" aria-hidden="true"></div>
             <h2 class="h5 jt-serif mb-3 text-primary border-bottom pb-2">&#129367; Formulation Ingredients</h2>
             <ul class="list-group list-group-flush">
                 @foreach (var ing in Model.Ingredients)
@@ -190,7 +204,7 @@
         </div>
 
         <!-- Preparation Steps Panel -->
-        <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4">
+        <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4 jt-glass-panel jt-member-panel jt-card-interactive-utility position-relative"><div class="jt-card-spotlight" aria-hidden="true"></div>
             <h2 class="h5 jt-serif mb-3 text-primary border-bottom pb-2">&#127859; Preparation Instructions</h2>
             <ol class="list-group list-group-numbered list-group-flush">
                 @foreach (var step in Model.Steps)
@@ -205,7 +219,7 @@
     else
     {
         <!-- Tip Technique Panel -->
-        <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4">
+        <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4 jt-glass-panel jt-member-panel jt-card-interactive-utility position-relative"><div class="jt-card-spotlight" aria-hidden="true"></div>
             <h2 class="h5 jt-serif mb-3 text-warning-emphasis border-bottom pb-2">&#128161; Technique &amp; Culinary Wisdom</h2>
             <div class="fs-6 lh-lg text-body" style="white-space: pre-line;">
                 @Model.TipBody
@@ -215,7 +229,7 @@
 
     @if (!string.IsNullOrWhiteSpace(Model.ContributorNotes))
     {
-        <div class="p-4 bg-light rounded-4 border shadow-sm mb-4">
+        <div class="p-4 bg-light rounded-4 border shadow-sm mb-4 jt-member-subpanel">
             <h3 class="h6 jt-serif mb-2 text-muted">&#128221; Author Remarks / Context</h3>
             <p class="small text-muted mb-0">@Model.ContributorNotes</p>
         </div>
@@ -223,13 +237,13 @@
 
     <!-- Bottom Actions -->
     <div class="d-flex justify-content-between align-items-center pt-3">
-        <a asp-action="MyEntries" class="btn btn-outline-secondary btn-sm">
+        <a asp-action="MyEntries" class="jt-btn-editorial jt-btn-outline-light btn-sm">
             &larr; Back to My Entries
         </a>
 
         @if (Model.CanEdit)
         {
-            <a asp-action="Entry" asp-route-slug="@Model.ContestSlug" class="btn btn-primary btn-sm">
+            <a asp-action="Entry" asp-route-slug="@Model.ContestSlug" class="jt-btn-editorial jt-btn-gold btn-sm">
                 &#9998; Edit Entry &rarr;
             </a>
         }
@@ -241,3 +255,9 @@
         }
     </div>
 </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
+}

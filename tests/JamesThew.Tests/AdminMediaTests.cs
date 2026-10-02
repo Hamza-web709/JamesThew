@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using JamesThew.Data;
 using JamesThew.Models;
+using JamesThew.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,32 +20,24 @@ public class AdminMediaTests(FoundationFixture fixture)
     private static string NewEmail() => Guid.NewGuid().ToString("N") + "@example.test";
     private static string NewPassword() => Convert.ToHexString(RandomNumberGenerator.GetBytes(20)) + "a!9";
 
-    private static readonly byte[] ValidJpegBytes =
-    [
-        0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00,
-        0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0xFF, 0xDB, 0x00, 0x43, 0x00, 0x08, 0x06, 0x06,
-        0x07, 0x06, 0x05, 0x08, 0x07, 0x07, 0x07, 0x09, 0x09, 0x08, 0x0A, 0x0C, 0x14, 0x0D,
-        0x0C, 0x0B, 0x0B, 0x0C, 0x19, 0x12, 0x13, 0x0F, 0x14, 0x1D, 0x1A, 0x1F, 0x1E, 0x1D,
-        0x1A, 0x1C, 0x1C, 0x20, 0x24, 0x2E, 0x27, 0x20, 0x22, 0x2C, 0x23, 0x1C, 0x1C, 0x28,
-        0x37, 0x29, 0x2C, 0x30, 0x31, 0x34, 0x34, 0x34, 0x1F, 0x27, 0x39, 0x3D, 0x38, 0x32,
-        0x3C, 0x2E, 0x33, 0x34, 0x32, 0xFF, 0xD9
-    ];
+    private static byte[] ValidJpegBytes => ReadAssetBytes("wwwroot", "images", "recipes", "classic-roast-chicken.jpg");
+    private static byte[] ValidPngBytes => ReadAssetBytes("wwwroot", "assets", "landing", "hero", "generated", "hero-dish-beef-wellington.png");
+    private static byte[] ValidWebpBytes => ReadAssetBytes("wwwroot", "assets", "landing", "editorial", "story-copper-pan-reduction.webp");
 
-    private static readonly byte[] ValidPngBytes =
-    [
-        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48,
-        0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00,
-        0x00, 0x1F, 0x15, 0xC4, 0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41, 0x54, 0x78,
-        0x9C, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00,
-        0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82
-    ];
-
-    private static readonly byte[] ValidWebpBytes =
-    [
-        0x52, 0x49, 0x46, 0x46, 0x1A, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50,
-        0x38, 0x4C, 0x0E, 0x00, 0x00, 0x00, 0x2F, 0x00, 0x00, 0x00, 0x00, 0x07, 0x10, 0x70,
-        0x88, 0x88, 0x08, 0x00, 0x00, 0x00
-    ];
+    private static byte[] ReadAssetBytes(params string[] relativeParts)
+    {
+        var dir = AppContext.BaseDirectory;
+        while (!string.IsNullOrEmpty(dir))
+        {
+            var candidate = Path.Combine(new[] { dir, "JamesThew" }.Concat(relativeParts).ToArray());
+            if (File.Exists(candidate))
+            {
+                return File.ReadAllBytes(candidate);
+            }
+            dir = Path.GetDirectoryName(dir);
+        }
+        throw new FileNotFoundException("Could not locate test image asset.", Path.Combine(relativeParts));
+    }
 
     private static async Task<string> Token(HttpClient client, string path)
     {
@@ -219,6 +212,33 @@ public class AdminMediaTests(FoundationFixture fixture)
         Assert.Equal(HttpStatusCode.OK, pickerRes.StatusCode);
         var pickerJson = await pickerRes.Content.ReadAsStringAsync();
         Assert.Contains("/uploads/editorial/", pickerJson);
+
+        var safeBase = Path.GetFileNameWithoutExtension(originalFileName).ToLowerInvariant();
+        var ext = Path.GetExtension(originalFileName).ToLowerInvariant();
+        var uploadedNameMatch = Regex.Match(galleryHtml, $"{Regex.Escape(safeBase)}_[a-f0-9]+\\{ext}");
+        Assert.True(uploadedNameMatch.Success, "Expected uploaded unique filename in gallery HTML.");
+
+        var imageResponse = await admin.GetAsync($"/uploads/editorial/{uploadedNameMatch.Value}");
+        Assert.Equal(HttpStatusCode.OK, imageResponse.StatusCode);
+        Assert.StartsWith(mimeType, imageResponse.Content.Headers.ContentType?.MediaType);
+        var imageBytes = await imageResponse.Content.ReadAsByteArrayAsync();
+        Assert.True(imageBytes.Length >= MediaService.MinFileSize, $"Expected meaningful image bytes, got {imageBytes.Length}.");
+
+        if (formatIndex == 0)
+        {
+            Assert.Equal(0xFF, imageBytes[0]);
+            Assert.Equal(0xD8, imageBytes[1]);
+            Assert.Equal(0xFF, imageBytes[2]);
+        }
+        else if (formatIndex == 1)
+        {
+            Assert.Equal(new byte[] { 0x89, 0x50, 0x4E, 0x47 }, imageBytes.Take(4).ToArray());
+        }
+        else
+        {
+            Assert.Equal("RIFF", System.Text.Encoding.ASCII.GetString(imageBytes, 0, 4));
+            Assert.Equal("WEBP", System.Text.Encoding.ASCII.GetString(imageBytes, 8, 4));
+        }
     }
 
     // =========================================================================
@@ -258,8 +278,8 @@ public class AdminMediaTests(FoundationFixture fixture)
         var form = new MultipartFormDataContent();
         form.Add(new StringContent(token), "__RequestVerificationToken");
 
-        // An ASCII text file disguised as a JPEG
-        var fakeJpgBytes = System.Text.Encoding.UTF8.GetBytes("This is plain text pretending to be a JPG file.");
+        // An ASCII text file disguised as a JPEG, large enough to reach signature validation.
+        var fakeJpgBytes = System.Text.Encoding.UTF8.GetBytes(new string('x', 256));
         var fileContent = new ByteArrayContent(fakeJpgBytes);
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
         form.Add(fileContent, "File", "pretend.jpg");

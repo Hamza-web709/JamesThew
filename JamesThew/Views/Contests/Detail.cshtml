@@ -4,280 +4,294 @@
     ViewData["Title"] = $"{Model.Title} - Culinary Competition - James Thew";
 }
 
-<article class="mb-5 max-w-900 mx-auto">
-    <!-- Breadcrumb & Back Navigation -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <a asp-action="Index" class="text-decoration-none text-muted small">
-            &larr; Back to all competitions
-        </a>
-        @if (User.IsInRole("Admin"))
-        {
-            <a asp-controller="Admin" asp-action="EditContest" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-secondary">
-                &#9998; Edit Contest (Admin)
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<!-- Fixed Community Background Layer (Family B - Community) -->
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-community.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
+</div>
+
+<div class="jt-inner-shell">
+    <article class="jt-inner-container-md">
+
+        <!-- Breadcrumb & Admin Bar -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a asp-action="Index" class="jt-filter-pill px-3 py-1 text-light-muted">
+                &larr; Back to all competitions
             </a>
-        }
-    </div>
-
-    <!-- Header Section -->
-    <header class="jt-detail-header mb-4">
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-            @if (Model.Type == ContestType.Recipe)
+            @if (User.IsInRole("Admin"))
             {
-                <span class="badge bg-primary-subtle text-primary border rounded-pill px-3 py-1">
-                    &#127859; Recipe Competition
-                </span>
-            }
-            else
-            {
-                <span class="badge bg-warning-subtle text-warning-emphasis border rounded-pill px-3 py-1">
-                    &#128161; Cooking Tip Competition
-                </span>
-            }
-
-            @if (Model.TimelinePhase == ContestTimelinePhase.Open)
-            {
-                <span class="badge bg-success rounded-pill px-3 py-1">
-                    &#9889; Submissions Open Now
-                </span>
-            }
-            else if (Model.TimelinePhase == ContestTimelinePhase.Upcoming)
-            {
-                <span class="badge bg-primary rounded-pill px-3 py-1">
-                    &#128337; Upcoming Competition
-                </span>
-            }
-            else
-            {
-                <span class="badge bg-secondary rounded-pill px-3 py-1">
-                    &#128274; Submissions Concluded
-                </span>
-            }
-
-            <span class="text-muted small font-monospace">
-                &#128197; Published @Model.CreatedAtUtc.ToString("MMM d, yyyy")
-            </span>
-        </div>
-
-        <h1 class="jt-detail-title mb-2">@Model.Title</h1>
-
-        <p class="lead text-muted mb-0">
-            @Model.Summary
-        </p>
-    </header>
-
-    @if (Model.HasAnnouncedWinner && Model.AnnouncedWinner != null)
-    {
-        <!-- Official Announced Winner Showcase Card -->
-        <div class="card border-warning bg-warning-subtle shadow-sm rounded-4 p-4 mb-4" id="announcedWinnerBanner">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-warning text-dark border border-warning-subtle rounded-pill px-3 py-1 fw-bold fs-6">
-                        &#127942; Official Competition Winner
-                    </span>
-                    <span class="text-muted small font-monospace">
-                        Announced @Model.AnnouncedWinner.AnnouncedAtUtc.ToString("MMMM d, yyyy")
-                    </span>
-                </div>
-                <a asp-controller="Announcements" asp-action="Index" class="btn btn-sm btn-outline-warning text-dark bg-white">
-                    Hall of Fame &rarr;
+                <a asp-controller="Admin" asp-action="EditContest" asp-route-id="@Model.Id" class="badge bg-secondary bg-opacity-50 text-light border border-secondary border-opacity-50 px-3 py-2 text-decoration-none">
+                    &#9998; Edit Contest (Admin)
                 </a>
-            </div>
+            }
+        </div>
 
-            <h2 class="h3 jt-serif text-dark mb-2">@Model.AnnouncedWinner.EntryTitle</h2>
-
-            <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
-                <div class="text-dark">
-                    <strong>Winner:</strong> <span class="badge bg-white text-dark border px-2 py-1 fs-6">@Model.AnnouncedWinner.WinnerDisplayName</span>
-                </div>
-                @if (!string.IsNullOrWhiteSpace(Model.AnnouncedWinner.PrizeDescription))
+        <!-- Header Section -->
+        <header class="jt-page-hero-left mb-4">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                @if (Model.Type == ContestType.Recipe)
                 {
-                    <div class="text-dark small">
-                        &#127873; <strong>Prize Distinction:</strong> @Model.AnnouncedWinner.PrizeDescription
-                    </div>
+                    <span class="badge bg-dark bg-opacity-75 text-light border border-secondary border-opacity-50 rounded-pill px-3 py-1">
+                        &#127859; Recipe Competition
+                    </span>
                 }
-            </div>
+                else
+                {
+                    <span class="badge bg-dark bg-opacity-75 text-warning border border-warning border-opacity-50 rounded-pill px-3 py-1">
+                        &#128161; Cooking Tip Competition
+                    </span>
+                }
 
-            <p class="text-secondary mb-0">
-                @Model.AnnouncedWinner.EntrySummary
-            </p>
-        </div>
-    }
-
-    <!-- Cover Image -->
-    @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
-    {
-        <div class="rounded-4 overflow-hidden mb-4 border shadow-sm" style="max-height: 420px;">
-            <img src="@Model.ImageUrl" alt="@Model.Title" class="w-100 h-100 object-fit-cover" />
-        </div>
-    }
-
-    <!-- Timeline & Contest Key Facts Panel -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="p-3 bg-white rounded-3 border h-100 shadow-sm">
-                <span class="small text-muted d-block font-monospace">Submission Window</span>
                 @if (Model.TimelinePhase == ContestTimelinePhase.Open)
                 {
-                    <strong class="text-success d-block mt-1">&#9889; Open for Entries</strong>
-                    <span class="small text-muted">Closes @Model.ClosesAtUtc.ToString("MMM d, yyyy HH:mm") UTC</span>
+                    <span class="badge bg-success text-white rounded-pill px-3 py-1">
+                        &#9889; Submissions Open Now
+                    </span>
                 }
                 else if (Model.TimelinePhase == ContestTimelinePhase.Upcoming)
                 {
-                    <strong class="text-primary d-block mt-1">&#128337; Starts Soon</strong>
-                    <span class="small text-muted">Opens @Model.OpensAtUtc.ToString("MMM d, yyyy HH:mm") UTC</span>
+                    <span class="badge bg-primary text-white rounded-pill px-3 py-1">
+                        &#128337; Upcoming Competition
+                    </span>
                 }
                 else
                 {
-                    <strong class="text-secondary d-block mt-1">&#128274; Concluded</strong>
-                    <span class="small text-muted">Ended @Model.ClosesAtUtc.ToString("MMM d, yyyy") UTC</span>
+                    <span class="badge bg-secondary text-white rounded-pill px-3 py-1">
+                        &#128274; Submissions Concluded
+                    </span>
                 }
+
+                <span class="text-light-muted small font-monospace">
+                    &#128197; Published @Model.CreatedAtUtc.ToString("MMM d, yyyy")
+                </span>
             </div>
-        </div>
 
-        <div class="col-md-4">
-            <div class="p-3 bg-white rounded-3 border h-100 shadow-sm">
-                <span class="small text-muted d-block font-monospace">Contest Category</span>
-                <strong class="d-block mt-1">
-                    @(Model.Type == ContestType.Recipe ? "Culinary Recipe Contest" : "Kitchen Technique & Tip")
-                </strong>
-                <span class="small text-muted">Curated by Chef James Thew</span>
-            </div>
-        </div>
+            <h1 class="jt-page-title mb-2">@Model.Title</h1>
 
-        <div class="col-md-4">
-            <div class="p-3 bg-white rounded-3 border h-100 shadow-sm">
-                <span class="small text-muted d-block font-monospace">Award &amp; Recognition</span>
-                <strong class="d-block mt-1 text-truncate">
-                    @(string.IsNullOrWhiteSpace(Model.PrizeDescription) ? "Culinary Distinction & Showcase" : Model.PrizeDescription)
-                </strong>
-                <span class="small text-muted">Published in Seasonal Hall of Fame</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Description & Rules Content -->
-    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4">
-        <h2 class="h4 jt-serif mb-3 border-bottom pb-2">&#128220; Contest Guidelines &amp; Submission Rules</h2>
-        <div class="jt-rules-content fs-6 text-body lh-lg" style="white-space: pre-line;">
-            @Model.DescriptionAndRules
-        </div>
-    </div>
-
-    <!-- Participation & Member Entry Status Callout -->
-    <div class="p-4 bg-white rounded-4 border shadow-sm mb-4" role="region" aria-label="Contest Participation Info">
-        <div class="d-flex align-items-center gap-2 mb-2">
-            <span class="jt-badge jt-badge-paid">&#128203; Entry Eligibility &amp; Submission Status</span>
-        </div>
-
-        @if (Model.TimelinePhase == ContestTimelinePhase.Open)
-        {
-            <h3 class="h5 jt-serif mb-2">Submissions are currently open for registered members</h3>
-            <p class="small text-muted mb-3">
-                In accordance with competition rules, contest entry submissions are open exclusively to members. Public guests can browse all guidelines, timeline dates, and subsequent winner announcements freely.
+            <p class="jt-page-lead mb-0">
+                @Model.Summary
             </p>
+        </header>
 
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                @if (Model.HasEntered)
-                {
-                    <div class="p-3 rounded-3 bg-light border mb-0">
-                        <div class="d-flex align-items-center gap-2 text-success fw-semibold mb-1">
-                            <span>&#10004;</span> You have submitted an entry for this competition!
-                            @if (Model.UserEntryStatus.HasValue)
-                            {
-                                <span class="badge bg-secondary-subtle text-dark border rounded-pill px-2 py-1 ms-2 small">
-                                    Status: @Model.UserEntryStatus
-                                </span>
-                            }
-                        </div>
-                        <p class="small text-muted mb-3">
-                            @if (Model.CanEditEntry)
-                            {
-                                <span>Your submission is officially registered with the jury. You may review your entry details or refine your instructions before the submission deadline.</span>
-                            }
-                            else
-                            {
-                                <span>Your submission is currently locked from editing because it is under jury review, selected, disqualified, or the contest deadline has passed.</span>
-                            }
-                        </p>
-                        <div class="d-flex flex-wrap gap-2">
-                            <a asp-action="MyEntryDetail" asp-route-slug="@Model.Slug" class="btn btn-outline-secondary btn-sm">
-                                View Your Entry &rarr;
-                            </a>
-                            @if (Model.CanEditEntry)
-                            {
-                                <a asp-action="Entry" asp-route-slug="@Model.Slug" class="btn btn-primary btn-sm">
-                                    &#9998; Edit Your Entry
-                                </a>
-                            }
-                        </div>
+        @if (Model.HasAnnouncedWinner && Model.AnnouncedWinner != null)
+        {
+            <!-- Official Announced Winner Showcase Card -->
+            <div class="jt-glass-panel jt-glass-panel-pinnacle p-4 mb-4" id="announcedWinnerBanner">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-bold fs-6">
+                            &#127942; Official Competition Winner
+                        </span>
+                        <span class="text-light-muted small font-monospace">
+                            Announced @Model.AnnouncedWinner.AnnouncedAtUtc.ToString("MMMM d, yyyy")
+                        </span>
                     </div>
+                    <a asp-controller="Announcements" asp-action="Index" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm">
+                        Hall of Fame &rarr;
+                    </a>
+                </div>
+
+                <h2 class="h3 jt-serif text-light mb-2">@Model.AnnouncedWinner.EntryTitle</h2>
+
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                    <div class="text-light">
+                        <strong>Winner:</strong> <span class="badge bg-secondary bg-opacity-50 text-light border border-secondary border-opacity-50 px-2 py-1 fs-6">@Model.AnnouncedWinner.WinnerDisplayName</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.AnnouncedWinner.PrizeDescription))
+                    {
+                        <div class="text-warning small font-monospace">
+                            &#127873; <strong>Prize Distinction:</strong> @Model.AnnouncedWinner.PrizeDescription
+                        </div>
+                    }
+                </div>
+
+                <p class="text-light-secondary mb-0">
+                    @Model.AnnouncedWinner.EntrySummary
+                </p>
+            </div>
+        }
+
+        <!-- Cover Image -->
+        @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+        {
+            <div class="rounded-4 overflow-hidden mb-4 border border-secondary border-opacity-25 shadow-lg" style="max-height: 440px;">
+                <img src="@Model.ImageUrl" alt="@Model.Title" class="w-100 h-100 object-fit-cover" />
+            </div>
+        }
+
+        <!-- Timeline & Contest Key Facts Panel -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="jt-glass-panel p-3 h-100">
+                    <span class="small text-light-muted d-block font-monospace">Submission Window</span>
+                    @if (Model.TimelinePhase == ContestTimelinePhase.Open)
+                    {
+                        <strong class="text-success d-block mt-1">&#9889; Open for Entries</strong>
+                        <span class="small text-light-secondary">Closes @Model.ClosesAtUtc.ToString("MMM d, yyyy HH:mm") UTC</span>
+                    }
+                    else if (Model.TimelinePhase == ContestTimelinePhase.Upcoming)
+                    {
+                        <strong class="text-warning d-block mt-1">&#128337; Starts Soon</strong>
+                        <span class="small text-light-secondary">Opens @Model.OpensAtUtc.ToString("MMM d, yyyy HH:mm") UTC</span>
+                    }
+                    else
+                    {
+                        <strong class="text-light-muted d-block mt-1">&#128274; Concluded</strong>
+                        <span class="small text-light-secondary">Ended @Model.ClosesAtUtc.ToString("MMM d, yyyy") UTC</span>
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="jt-glass-panel p-3 h-100">
+                    <span class="small text-light-muted d-block font-monospace">Contest Category</span>
+                    <strong class="d-block mt-1 text-light">
+                        @(Model.Type == ContestType.Recipe ? "Culinary Recipe Contest" : "Kitchen Technique & Tip")
+                    </strong>
+                    <span class="small text-light-secondary">Curated by Chef James Thew</span>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="jt-glass-panel p-3 h-100">
+                    <span class="small text-light-muted d-block font-monospace">Award &amp; Recognition</span>
+                    <strong class="d-block mt-1 text-light text-truncate">
+                        @(string.IsNullOrWhiteSpace(Model.PrizeDescription) ? "Culinary Distinction & Showcase" : Model.PrizeDescription)
+                    </strong>
+                    <span class="small text-light-secondary">Published in Seasonal Hall of Fame</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Description & Rules Content -->
+        <div class="jt-glass-panel p-4 p-md-5 mb-4">
+            <h2 class="h4 jt-serif mb-3 text-light border-bottom border-secondary border-opacity-25 pb-2">&#128220; Contest Guidelines &amp; Submission Rules</h2>
+            <div class="jt-rules-content fs-6 text-light-secondary lh-lg" style="white-space: pre-line;">
+                @Model.DescriptionAndRules
+            </div>
+        </div>
+
+        <!-- Participation & Member Entry Status Callout -->
+        <div class="jt-glass-panel p-4 mb-4" role="region" aria-label="Contest Participation Info">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="jt-badge-gold-pill">&#128203; Entry Eligibility &amp; Submission Status</span>
+            </div>
+
+            @if (Model.TimelinePhase == ContestTimelinePhase.Open)
+            {
+                <h3 class="h5 jt-serif mb-2 text-light">Submissions are currently open for registered members</h3>
+                <p class="small text-light-secondary mb-3">
+                    In accordance with competition rules, contest entry submissions are open exclusively to members. Public guests can browse all guidelines, timeline dates, and subsequent winner announcements freely.
+                </p>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    @if (Model.HasEntered)
+                    {
+                        <div class="p-3 rounded-3 border border-success border-opacity-25 mb-0" style="background: rgba(34, 197, 94, 0.08);">
+                            <div class="d-flex align-items-center gap-2 text-success fw-semibold mb-1">
+                                <span>&#10004;</span> You have submitted an entry for this competition!
+                                @if (Model.UserEntryStatus.HasValue)
+                                {
+                                    <span class="badge bg-secondary bg-opacity-50 text-light border border-secondary border-opacity-50 rounded-pill px-2 py-1 ms-2 small">
+                                        Status: @Model.UserEntryStatus
+                                    </span>
+                                }
+                            </div>
+                            <p class="small text-light-secondary mb-3">
+                                @if (Model.CanEditEntry)
+                                {
+                                    <span>Your submission is officially registered with the jury. You may review your entry details or refine your instructions before the submission deadline.</span>
+                                }
+                                else
+                                {
+                                    <span>Your submission is currently locked from editing because it is under jury review, selected, disqualified, or the contest deadline has passed.</span>
+                                }
+                            </p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-action="MyEntryDetail" asp-route-slug="@Model.Slug" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm">
+                                    View Your Entry &rarr;
+                                </a>
+                                @if (Model.CanEditEntry)
+                                {
+                                    <a asp-action="Entry" asp-route-slug="@Model.Slug" class="jt-btn-editorial jt-btn-gold jt-btn-sm">
+                                        &#9998; Edit Your Entry
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-3 rounded-3 border border-success border-opacity-25 mb-0" style="background: rgba(34, 197, 94, 0.08);">
+                            <div class="d-flex align-items-center gap-2 text-success fw-semibold mb-1">
+                                <span>&#10004;</span> Authenticated Member Account Active
+                            </div>
+                            <p class="small text-light-secondary mb-3">
+                                You are eligible to participate in this competition. Submit your structured formulation or culinary wisdom to enter the contest!
+                            </p>
+                            <a asp-action="Entry" asp-route-slug="@Model.Slug" id="btnEnterContest" class="jt-btn-editorial jt-btn-gold jt-btn-sm">
+                                Submit Your Official Entry &rarr;
+                            </a>
+                        </div>
+                    }
                 }
                 else
                 {
-                    <div class="p-3 rounded-3 bg-light border mb-0">
-                        <div class="d-flex align-items-center gap-2 text-success fw-semibold mb-1">
-                            <span>&#10004;</span> Authenticated Member Account Active
-                        </div>
-                        <p class="small text-muted mb-3">
-                            You are eligible to participate in this competition. Submit your structured formulation or culinary wisdom to enter the contest!
-                        </p>
-                        <a asp-action="Entry" asp-route-slug="@Model.Slug" id="btnEnterContest" class="btn btn-primary btn-sm px-3 py-2">
-                            Submit Your Official Entry &rarr;
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="jt-btn-editorial jt-btn-gold jt-btn-sm">
+                            Log In to Prepare Entry &rarr;
+                        </a>
+                        <a asp-controller="Account" asp-action="Register" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm">
+                            Create Free Member Account
                         </a>
                     </div>
                 }
             }
+            else if (Model.TimelinePhase == ContestTimelinePhase.Upcoming)
+            {
+                <h3 class="h5 jt-serif mb-2 text-light">This contest will open on @Model.OpensAtUtc.ToString("MMMM dd, yyyy HH:mm") UTC</h3>
+                <p class="small text-light-secondary mb-3">
+                    Submissions are not yet open. Review the prompt and rules above to begin testing and refining your recipe or kitchen tip before the entry window opens.
+                </p>
+
+                @if (User.Identity?.IsAuthenticated != true)
+                {
+                    <a asp-controller="Account" asp-action="Register" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm">
+                        Register Member Account in Advance
+                    </a>
+                }
+            }
             else
             {
-                <div class="d-flex flex-wrap align-items-center gap-2">
-                    <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Context.Request.Path" class="jt-btn jt-btn-primary jt-btn-sm">
-                        Log In to Prepare Entry &rarr;
-                    </a>
-                    <a asp-area="Identity" asp-page="/Account/Register" class="jt-btn jt-btn-outline jt-btn-sm">
-                        Create Free Member Account
+                <h3 class="h5 jt-serif mb-2 text-light">This contest is now closed to new submissions</h3>
+                <p class="small text-light-secondary mb-3">
+                    The submission window for this competition has concluded. Chef James Thew and the culinary moderation panel evaluate submissions based on creativity, authenticity, and presentation.
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    @if (User.Identity?.IsAuthenticated == true && Model.HasEntered)
+                    {
+                        <a asp-action="MyEntryDetail" asp-route-slug="@Model.Slug" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm">
+                            View Your Submitted Entry (Read-Only) &rarr;
+                        </a>
+                    }
+                    <a asp-controller="Announcements" asp-action="Index" class="jt-btn-editorial jt-btn-gold jt-btn-sm">
+                        Check Seasonal Announcements &rarr;
                     </a>
                 </div>
             }
-        }
-        else if (Model.TimelinePhase == ContestTimelinePhase.Upcoming)
-        {
-            <h3 class="h5 jt-serif mb-2">This contest will open on @Model.OpensAtUtc.ToString("MMMM dd, yyyy HH:mm") UTC</h3>
-            <p class="small text-muted mb-3">
-                Submissions are not yet open. Review the prompt and rules above to begin testing and refining your recipe or kitchen tip before the entry window opens.
-            </p>
+        </div>
 
-            @if (User.Identity?.IsAuthenticated != true)
-            {
-                <a asp-area="Identity" asp-page="/Account/Register" class="jt-btn jt-btn-outline jt-btn-sm">
-                    Register Member Account in Advance
-                </a>
-            }
-        }
-        else
-        {
-            <h3 class="h5 jt-serif mb-2">This contest is now closed to new submissions</h3>
-            <p class="small text-muted mb-3">
-                The submission window for this competition has concluded. Chef James Thew and the culinary moderation panel evaluate submissions based on creativity, authenticity, and presentation.
-            </p>
-            <div class="d-flex flex-wrap gap-2">
-                @if (User.Identity?.IsAuthenticated == true && Model.HasEntered)
-                {
-                    <a asp-action="MyEntryDetail" asp-route-slug="@Model.Slug" class="btn btn-outline-secondary btn-sm">
-                        View Your Submitted Entry (Read-Only) &rarr;
-                    </a>
-                }
-                <a asp-controller="Announcements" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm">
-                    Check Seasonal Announcements &rarr;
-                </a>
-            </div>
-        }
-    </div>
-
-    <!-- Back link footer -->
-    <div class="text-center pt-2">
-        <a asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm">
-            &larr; Return to Competitions Overview
-        </a>
-    </div>
-</article>
+        <!-- Back link footer -->
+        <div class="text-center pt-3 pb-5">
+            <a asp-action="Index" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm">
+                &larr; Return to Competitions Overview
+            </a>
+        </div>
+    </article>
+</div>

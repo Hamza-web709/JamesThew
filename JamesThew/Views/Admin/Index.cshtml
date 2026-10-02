@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Admin Portal - Culinary Management";
+    ViewData["Title"] = "Admin Dashboard";
     var pendingSubscriptions = (int)(ViewBag.PendingSubscriptionsCount ?? 0);
     var pendingFeedback = (int)(ViewBag.PendingFeedbackCount ?? 0);
     var pendingContributions = (int)(ViewBag.PendingContributionsCount ?? 0);
@@ -11,172 +11,136 @@
     var activeOpenContests = (int)(ViewBag.ActiveOpenContestsCount ?? 0);
 }
 
-<div class="mb-4">
-    <span class="jt-brand-tag">Administration</span>
-    <h1 class="mb-2">Culinary Portal Administration</h1>
-    <p class="text-muted">
-        Manage editorial recipes and cooking tips, membership subscriptions, customer feedback, and community contributions.
-    </p>
-</div>
+<div class="jt-admin-dashboard">
+    <section class="jt-admin-hero" aria-labelledby="admin-dashboard-title">
+        <div>
+            <span class="jt-admin-eyebrow">Culinary Operations</span>
+            <h1 id="admin-dashboard-title">JamesThew Admin Console</h1>
+            <p>
+                Manage editorial publishing, media assets, subscription review, feedback moderation,
+                community content intake, and seasonal contest operations from one focused workspace.
+            </p>
+        </div>
+        <div class="jt-admin-health-strip" aria-label="Current operational counts">
+            <div class="jt-admin-health-pill">
+                <strong>@(pendingSubscriptions + pendingFeedback + pendingContributions)</strong>
+                <span>Pending actions</span>
+            </div>
+            <div class="jt-admin-health-pill">
+                <strong>@(editorialRecipes + editorialTips)</strong>
+                <span>Editorial items</span>
+            </div>
+            <div class="jt-admin-health-pill">
+                <strong>@activeOpenContests</strong>
+                <span>Active contests</span>
+            </div>
+        </div>
+    </section>
 
-<div class="row g-4 mb-5">
-    <!-- Editorial Content Card (Phase 4) -->
-    <div class="col-md-6 col-lg-4">
-        <div class="p-4 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
+    <section class="jt-admin-card-grid" aria-label="Admin modules">
+        <article class="jt-admin-module-card">
             <div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fs-2">&#127859;</span>
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2">
-                        @editorialRecipes Recipes &bull; @editorialTips Tips
+                <div class="jt-admin-module-top">
+                    <span class="jt-admin-module-icon" aria-hidden="true">ED</span>
+                    <span class="jt-admin-module-stat">
+                        <strong>@editorialRecipes recipes</strong>
+                        @editorialTips tips
                     </span>
                 </div>
-                <h2 class="h5 jt-serif mb-2">Editorial Content</h2>
-                <p class="small text-muted mb-3">
-                    Author, edit, publish, or unpublish official Chef James Thew masterclass recipes and cooking tips.
-                </p>
+                <h2>Editorial Content</h2>
+                <p>Author, edit, publish, or unpublish official James Thew recipes and cooking tips.</p>
             </div>
-            <div>
-                <div class="d-flex gap-2 mb-2">
-                    <a asp-action="NewRecipe" class="jt-btn jt-btn-outline jt-btn-sm flex-fill text-center">+ Recipe</a>
-                    <a asp-action="NewTip" class="jt-btn jt-btn-outline jt-btn-sm flex-fill text-center">+ Tip</a>
-                </div>
-                <a asp-action="Content" class="jt-btn jt-btn-primary jt-btn-sm w-100 text-center">
-                    Manage Catalog &rarr;
-                </a>
+            <div class="jt-admin-module-actions">
+                <a asp-action="NewRecipe" class="jt-btn jt-btn-outline jt-btn-sm">New Recipe</a>
+                <a asp-action="NewTip" class="jt-btn jt-btn-outline jt-btn-sm">New Tip</a>
+                <a asp-action="Content" class="jt-btn jt-btn-primary jt-btn-sm">Manage Catalog</a>
             </div>
-        </div>
-    </div>
+        </article>
 
-    <!-- Media Library Card (Phase 4 Step 2) -->
-    <div class="col-md-6 col-lg-4">
-        <div class="p-4 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
+        <article class="jt-admin-module-card">
             <div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fs-2">&#128444;</span>
-                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-3 py-2">
-                        @mediaItems Files &bull; @mediaSize
+                <div class="jt-admin-module-top">
+                    <span class="jt-admin-module-icon" aria-hidden="true">MD</span>
+                    <span class="jt-admin-module-stat">
+                        <strong>@mediaItems files</strong>
+                        @mediaSize
                     </span>
                 </div>
-                <h2 class="h5 jt-serif mb-2">Media Library</h2>
-                <p class="small text-muted mb-3">
-                    Upload and manage high-resolution photography and culinary visuals for editorial recipes and tips.
-                </p>
+                <h2>Media Library</h2>
+                <p>Upload and manage photography and culinary visuals used across editorial content.</p>
             </div>
-            <div>
-                <a asp-action="Media" class="jt-btn jt-btn-outline jt-btn-sm w-100 text-center">
-                    Media Gallery &rarr;
-                </a>
+            <div class="jt-admin-module-actions">
+                <a asp-action="Media" class="jt-btn jt-btn-outline jt-btn-sm">Open Media Library</a>
             </div>
-        </div>
-    </div>
+        </article>
 
-    <!-- Subscriptions Card -->
-    <div class="col-md-6 col-lg-4">
-        <div class="p-4 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
+        <article class="jt-admin-module-card">
             <div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fs-2">&#128179;</span>
-                    @if (pendingSubscriptions > 0)
-                    {
-                        <span class="badge bg-danger rounded-pill px-3 py-2">@pendingSubscriptions Pending</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-success rounded-pill px-3 py-2">All Clear</span>
-                    }
-                </div>
-                <h2 class="h5 jt-serif mb-2">Subscriptions</h2>
-                <p class="small text-muted mb-3">
-                    Review demo membership plan requests ($10/mo, $100/yr). Approve to unlock masterclasses.
-                </p>
-            </div>
-            <div>
-                <a asp-action="Subscriptions" class="jt-btn jt-btn-outline jt-btn-sm w-100 text-center">
-                    Manage &rarr;
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Member Feedback Card -->
-    <div class="col-md-6 col-lg-4">
-        <div class="p-4 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
-            <div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fs-2">&#128172;</span>
-                    @if (pendingFeedback > 0)
-                    {
-                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-2">@pendingFeedback New</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-light text-muted border rounded-pill px-3 py-2">0 New</span>
-                    }
-                </div>
-                <h2 class="h5 jt-serif mb-2">Member Feedback</h2>
-                <p class="small text-muted mb-3">
-                    Read gastronomic suggestions, recipe inquiries, and reviews submitted by members.
-                </p>
-            </div>
-            <div>
-                <a asp-action="Feedback" class="jt-btn jt-btn-outline jt-btn-sm w-100 text-center">
-                    View Feedback &rarr;
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Content Intake Card -->
-    <div class="col-md-6 col-lg-4">
-        <div class="p-4 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
-            <div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fs-2">&#127859;</span>
-                    @if (pendingContributions > 0)
-                    {
-                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-2">@pendingContributions Intake</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-light text-muted border rounded-pill px-3 py-2">0 Intake</span>
-                    }
-                </div>
-                <h2 class="h5 jt-serif mb-2">Content Intake</h2>
-                <p class="small text-muted mb-3">
-                    Read-only moderation view for community recipe and cooking tip submissions.
-                </p>
-            </div>
-            <div>
-                <a asp-action="Contributions" class="jt-btn jt-btn-outline jt-btn-sm w-100 text-center">
-                    View Intake &rarr;
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Contests Card (Phase 5A) -->
-    <div class="col-md-6 col-lg-4">
-        <div class="p-4 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
-            <div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fs-2">&#127942;</span>
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2">
-                        @activeOpenContests Active &bull; @totalContests Total
+                <div class="jt-admin-module-top">
+                    <span class="jt-admin-module-icon" aria-hidden="true">MS</span>
+                    <span class="jt-admin-module-stat">
+                        <strong>@pendingSubscriptions pending</strong>
+                        subscriptions
                     </span>
                 </div>
-                <h2 class="h5 jt-serif mb-2">Contests Management</h2>
-                <p class="small text-muted mb-3">
-                    Create, publish, edit, and close recipe and cooking tip competitions with structured submission windows and rules.
-                </p>
+                <h2>Membership / Subscriptions</h2>
+                <p>Review demo membership plan requests and approve masterclass access when appropriate.</p>
             </div>
+            <div class="jt-admin-module-actions">
+                <a asp-action="Subscriptions" class="jt-btn jt-btn-outline jt-btn-sm">Review Requests</a>
+            </div>
+        </article>
+
+        <article class="jt-admin-module-card">
             <div>
-                <div class="d-flex gap-2 mb-2">
-                    <a asp-action="NewContest" class="jt-btn jt-btn-outline jt-btn-sm flex-fill text-center">+ New Contest</a>
+                <div class="jt-admin-module-top">
+                    <span class="jt-admin-module-icon" aria-hidden="true">FB</span>
+                    <span class="jt-admin-module-stat">
+                        <strong>@pendingFeedback new</strong>
+                        feedback items
+                    </span>
                 </div>
-                <a asp-action="Contests" class="jt-btn jt-btn-primary jt-btn-sm w-100 text-center">
-                    Manage Contests &rarr;
-                </a>
+                <h2>Feedback</h2>
+                <p>Read, moderate, and annotate member feedback, culinary questions, and platform suggestions.</p>
             </div>
-        </div>
-    </div>
+            <div class="jt-admin-module-actions">
+                <a asp-action="Feedback" class="jt-btn jt-btn-outline jt-btn-sm">View Feedback</a>
+            </div>
+        </article>
+
+        <article class="jt-admin-module-card">
+            <div>
+                <div class="jt-admin-module-top">
+                    <span class="jt-admin-module-icon" aria-hidden="true">IN</span>
+                    <span class="jt-admin-module-stat">
+                        <strong>@pendingContributions intake</strong>
+                        contributions
+                    </span>
+                </div>
+                <h2>Content Intake / Contributions</h2>
+                <p>Moderate community recipe and cooking-tip submissions without changing member workflow behavior.</p>
+            </div>
+            <div class="jt-admin-module-actions">
+                <a asp-action="Contributions" class="jt-btn jt-btn-outline jt-btn-sm">View Intake</a>
+            </div>
+        </article>
+
+        <article class="jt-admin-module-card">
+            <div>
+                <div class="jt-admin-module-top">
+                    <span class="jt-admin-module-icon" aria-hidden="true">CT</span>
+                    <span class="jt-admin-module-stat">
+                        <strong>@activeOpenContests active</strong>
+                        @totalContests total
+                    </span>
+                </div>
+                <h2>Contest Management</h2>
+                <p>Create, publish, edit, close, judge, and archive seasonal recipe and cooking-tip competitions.</p>
+            </div>
+            <div class="jt-admin-module-actions">
+                <a asp-action="NewContest" class="jt-btn jt-btn-outline jt-btn-sm">New Contest</a>
+                <a asp-action="Contests" class="jt-btn jt-btn-primary jt-btn-sm">Manage Contests</a>
+            </div>
+        </article>
+    </section>
 </div>

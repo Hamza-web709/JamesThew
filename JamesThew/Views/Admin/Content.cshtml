@@ -174,9 +174,9 @@
 </div>
 
 <!-- Table Card -->
-<div class="card border-0 shadow-sm rounded-4">
+<div class="card border-0 shadow-sm rounded-4 jt-admin-record-table-card">
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0 jt-admin-record-table">
             <thead class="table-light">
                 <tr>
                     <th style="width: 60px;">ID</th>
@@ -185,7 +185,7 @@
                     <th style="width: 130px;">Access Tier</th>
                     <th style="width: 120px;">Status</th>
                     <th style="width: 130px;">Updated</th>
-                    <th style="min-width: 170px;" class="text-end">Actions</th>
+                    <th style="min-width: 260px;" class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -287,43 +287,43 @@
                             <td class="small text-muted">
                                 @(item.UpdatedAtUtc?.ToString("MMM dd, yyyy") ?? item.CreatedAtUtc.ToString("MMM dd, yyyy"))
                             </td>
-                            <td class="text-end">
+                            <td class="text-end jt-admin-actions-cell">
                                 @if (isDeleted)
                                 {
-                                    <form asp-action="RestoreContent" asp-route-id="@item.Id" method="post" class="d-inline">
+                                    <form asp-action="RestoreContent" asp-route-id="@item.Id" method="post" class="jt-admin-inline-form">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-outline-success">
-                                            &#8635; Restore
+                                        <button type="submit" class="jt-admin-table-action jt-admin-table-action-success">
+                                            Restore
                                         </button>
                                     </form>
                                 }
                                 else
                                 {
-                                    <div class="btn-group btn-group-sm">
+                                    <div class="jt-admin-action-cluster">
                                         @if (item.PublicationStatus == JamesThew.Models.PublicationStatus.Published)
                                         {
                                             <a href="/@(item.Kind == JamesThew.Models.ContentKind.Recipe ? "recipes" : "tips")/@item.Slug" 
                                                target="_blank" 
-                                               class="btn btn-outline-secondary" 
+                                               class="jt-admin-table-action jt-admin-table-action-primary"
                                                title="View live publication">
-                                                &#128065; View
+                                                View
                                             </a>
                                         }
                                         else
                                         {
-                                            <button type="button" class="btn btn-outline-secondary disabled" title="Draft is not public">
-                                                &#128065; Draft
+                                            <button type="button" class="jt-admin-table-action jt-admin-table-action-disabled" disabled title="Draft is not public">
+                                                Draft
                                             </button>
                                         }
 
                                         <a asp-action="@(item.Kind == JamesThew.Models.ContentKind.Recipe ? "EditRecipe" : "EditTip")" 
                                            asp-route-id="@item.Id" 
-                                           class="btn btn-outline-dark">
+                                           class="jt-admin-table-action jt-admin-table-action-secondary">
                                             Edit
                                         </a>
 
                                         <button type="button" 
-                                                class="btn btn-outline-danger" 
+                                                class="jt-admin-table-action jt-admin-table-action-danger"
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#removeModal-@item.Id" 
                                                 title="Unpublish and remove">

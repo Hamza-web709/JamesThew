@@ -5,13 +5,27 @@
     ViewData["Title"] = (isEdit ? "Edit Contest Entry" : "Submit Contest Entry") + $" - {Model.ContestTitle}";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-catalog.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
+</div>
+
+<div class="jt-inner-shell jt-member-page">
+    <div class="jt-inner-container">
+
+
 <div class="max-w-800 mx-auto my-4">
     <!-- Breadcrumb & Back Navigation -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <a asp-action="Detail" asp-route-slug="@Model.ContestSlug" class="text-decoration-none text-muted small">
+        <a asp-action="Detail" asp-route-slug="@Model.ContestSlug" class="jt-member-back-link text-decoration-none small">
             &larr; Back to Contest: @Model.ContestTitle
         </a>
-        <a asp-action="MyEntries" class="text-decoration-none text-muted small">
+        <a asp-action="MyEntries" class="jt-member-back-link text-decoration-none small">
             My Contest Entries &rarr;
         </a>
     </div>
@@ -25,7 +39,7 @@
     }
 
     <!-- Header Card -->
-    <div class="p-4 bg-white rounded-4 border shadow-sm mb-4">
+    <div class="p-4 bg-white rounded-4 border shadow-sm mb-4 jt-glass-panel jt-member-panel jt-card-interactive-utility position-relative"><div class="jt-card-spotlight" aria-hidden="true"></div>
         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
             @if (Model.ContestType == ContestType.Recipe)
             {
@@ -54,7 +68,7 @@
             }
         </div>
 
-        <h1 class="h3 jt-serif mb-1">@(isEdit ? "Edit Your Competition Entry" : "Official Competition Entry")</h1>
+        <h1 class="jt-page-title jt-serif mb-1">@(isEdit ? "Edit Your Competition Entry" : "Official Competition Entry")</h1>
         <p class="text-muted mb-0">
             Competition: <strong>@Model.ContestTitle</strong>
         </p>
@@ -71,7 +85,7 @@
     }
 
     <!-- Entry Form -->
-    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4">
+    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4 jt-glass-panel jt-member-panel jt-card-interactive-utility position-relative"><div class="jt-card-spotlight" aria-hidden="true"></div>
         <form asp-action="Entry" asp-route-slug="@Model.ContestSlug" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="ContestId" />
@@ -83,61 +97,62 @@
 
             <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4" role="alert"></div>
 
+            <h2 class="jt-member-section-title">Entry Identity</h2>
             <!-- Title & Summary -->
             <div class="mb-4">
-                <label asp-for="Title" class="form-label fw-semibold">
+                <label asp-for="Title" class="jt-member-label form-label fw-semibold">
                     Entry Title <span class="text-danger">*</span>
                 </label>
-                <input asp-for="Title" class="form-control" placeholder="@(Model.ContestType == ContestType.Recipe ? "e.g., Braised Short Ribs with Autumn Root Puree" : "e.g., Japanese Honing Steel Mastery")" disabled="@(Model.IsReadonly ? "disabled" : null)" />
+                <input asp-for="Title" class="jt-member-input form-control" placeholder="@(Model.ContestType == ContestType.Recipe ? "e.g., Braised Short Ribs with Autumn Root Puree" : "e.g., Japanese Honing Steel Mastery")" disabled="@(Model.IsReadonly ? "disabled" : null)" />
                 <span asp-validation-for="Title" class="text-danger small"></span>
                 <div class="form-text">Choose a descriptive and culinary-focused title (3 to 150 characters).</div>
             </div>
 
             <div class="mb-4">
-                <label asp-for="Summary" class="form-label fw-semibold">
+                <label asp-for="Summary" class="jt-member-label form-label fw-semibold">
                     Summary Teaser <span class="text-danger">*</span>
                 </label>
-                <textarea asp-for="Summary" class="form-control" rows="3" placeholder="A concise 1-2 sentence overview of your dish or technique (10 to 500 characters)." disabled="@(Model.IsReadonly ? "disabled" : null)"></textarea>
+                <textarea asp-for="Summary" class="jt-member-input form-control" rows="3" placeholder="A concise 1-2 sentence overview of your dish or technique (10 to 500 characters)." disabled="@(Model.IsReadonly ? "disabled" : null)"></textarea>
                 <span asp-validation-for="Summary" class="text-danger small"></span>
             </div>
 
             @if (Model.ContestType == ContestType.Recipe)
             {
-                <div class="p-3 bg-light rounded-3 border mb-4">
+                <div class="p-3 bg-light rounded-3 border mb-4 jt-member-subpanel">
                     <h2 class="h6 jt-serif mb-3 text-primary">&#127859; Recipe Details &amp; Formulation</h2>
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label asp-for="Servings" class="form-label small fw-semibold">Servings</label>
-                            <input asp-for="Servings" type="number" class="form-control" placeholder="4" min="1" max="100" disabled="@(Model.IsReadonly ? "disabled" : null)" />
+                            <label asp-for="Servings" class="jt-member-label form-label small fw-semibold">Servings</label>
+                            <input asp-for="Servings" type="number" class="jt-member-input form-control" placeholder="4" min="1" max="100" disabled="@(Model.IsReadonly ? "disabled" : null)" />
                             <span asp-validation-for="Servings" class="text-danger small"></span>
                         </div>
                         <div class="col-md-4">
-                            <label asp-for="PrepMinutes" class="form-label small fw-semibold">Prep Time (min)</label>
-                            <input asp-for="PrepMinutes" type="number" class="form-control" placeholder="30" min="0" max="1440" disabled="@(Model.IsReadonly ? "disabled" : null)" />
+                            <label asp-for="PrepMinutes" class="jt-member-label form-label small fw-semibold">Prep Time (min)</label>
+                            <input asp-for="PrepMinutes" type="number" class="jt-member-input form-control" placeholder="30" min="0" max="1440" disabled="@(Model.IsReadonly ? "disabled" : null)" />
                             <span asp-validation-for="PrepMinutes" class="text-danger small"></span>
                         </div>
                         <div class="col-md-4">
-                            <label asp-for="CookMinutes" class="form-label small fw-semibold">Cook Time (min)</label>
-                            <input asp-for="CookMinutes" type="number" class="form-control" placeholder="90" min="0" max="1440" disabled="@(Model.IsReadonly ? "disabled" : null)" />
+                            <label asp-for="CookMinutes" class="jt-member-label form-label small fw-semibold">Cook Time (min)</label>
+                            <input asp-for="CookMinutes" type="number" class="jt-member-input form-control" placeholder="90" min="0" max="1440" disabled="@(Model.IsReadonly ? "disabled" : null)" />
                             <span asp-validation-for="CookMinutes" class="text-danger small"></span>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="IngredientsText" class="form-label fw-semibold">
+                        <label asp-for="IngredientsText" class="jt-member-label form-label fw-semibold">
                             Ingredients (one per line) <span class="text-danger">*</span>
                         </label>
-                        <textarea asp-for="IngredientsText" class="form-control font-monospace" rows="6" placeholder="800g Prime Beef Chuck, cut into 2-inch cubes&#10;2 tbsp Extra Virgin Olive Oil&#10;3 large Carrots, peeled and sliced&#10;1 tsp Coarse Sea Salt" disabled="@(Model.IsReadonly ? "disabled" : null)"></textarea>
+                        <textarea asp-for="IngredientsText" class="jt-member-input form-control font-monospace" rows="6" placeholder="800g Prime Beef Chuck, cut into 2-inch cubes&#10;2 tbsp Extra Virgin Olive Oil&#10;3 large Carrots, peeled and sliced&#10;1 tsp Coarse Sea Salt" disabled="@(Model.IsReadonly ? "disabled" : null)"></textarea>
                         <span asp-validation-for="IngredientsText" class="text-danger small"></span>
                         <div class="form-text">Include quantities, units, and ingredient names separated by line breaks.</div>
                     </div>
 
                     <div class="mb-0">
-                        <label asp-for="StepsText" class="form-label fw-semibold">
+                        <label asp-for="StepsText" class="jt-member-label form-label fw-semibold">
                             Preparation Steps (one per line) <span class="text-danger">*</span>
                         </label>
-                        <textarea asp-for="StepsText" class="form-control font-monospace" rows="6" placeholder="Sear the beef in hot olive oil until deeply browned on all sides.&#10;Add chopped mirepoix vegetables and sweat for 8 minutes until fragrant.&#10;Pour in red wine and beef stock; cover and braise on low heat for 2.5 hours.&#10;Rest for 10 minutes before garnishing with fresh chopped parsley." disabled="@(Model.IsReadonly ? "disabled" : null)"></textarea>
+                        <textarea asp-for="StepsText" class="jt-member-input form-control font-monospace" rows="6" placeholder="Sear the beef in hot olive oil until deeply browned on all sides.&#10;Add chopped mirepoix vegetables and sweat for 8 minutes until fragrant.&#10;Pour in red wine and beef stock; cover and braise on low heat for 2.5 hours.&#10;Rest for 10 minutes before garnishing with fresh chopped parsley." disabled="@(Model.IsReadonly ? "disabled" : null)"></textarea>
                         <span asp-validation-for="StepsText" class="text-danger small"></span>
                         <div class="form-text">Write clear, sequential instructions. Each line becomes an ordered step.</div>
                     </div>
@@ -145,46 +160,47 @@
             }
             else
             {
-                <div class="p-3 bg-light rounded-3 border mb-4">
+                <div class="p-3 bg-light rounded-3 border mb-4 jt-member-subpanel">
                     <h2 class="h6 jt-serif mb-3 text-warning-emphasis">&#128161; Technique &amp; Culinary Wisdom</h2>
 
                     <div class="mb-0">
-                        <label asp-for="TipBody" class="form-label fw-semibold">
+                        <label asp-for="TipBody" class="jt-member-label form-label fw-semibold">
                             Technique Description &amp; Instructions <span class="text-danger">*</span>
                         </label>
-                        <textarea asp-for="TipBody" class="form-control" rows="8" placeholder="Describe the culinary method, why it works scientifically, and the exact steps for safe home kitchen execution (10 to 10,000 characters)." disabled="@(Model.IsReadonly ? "disabled" : null)"></textarea>
+                        <textarea asp-for="TipBody" class="jt-member-input form-control" rows="8" placeholder="Describe the culinary method, why it works scientifically, and the exact steps for safe home kitchen execution (10 to 10,000 characters)." disabled="@(Model.IsReadonly ? "disabled" : null)"></textarea>
                         <span asp-validation-for="TipBody" class="text-danger small"></span>
                     </div>
                 </div>
             }
 
+            <h2 class="jt-member-section-title">Context &amp; Image</h2>
             <!-- Author Remarks & Optional Image -->
             <div class="mb-4">
-                <label asp-for="Notes" class="form-label fw-semibold">
+                <label asp-for="Notes" class="jt-member-label form-label fw-semibold">
                     Author Remarks / Culinary Context (optional)
                 </label>
-                <textarea asp-for="Notes" class="form-control" rows="2" placeholder="Any personal story, origin inspiration, or pairing recommendations for the jury." disabled="@(Model.IsReadonly ? "disabled" : null)"></textarea>
+                <textarea asp-for="Notes" class="jt-member-input form-control" rows="2" placeholder="Any personal story, origin inspiration, or pairing recommendations for the jury." disabled="@(Model.IsReadonly ? "disabled" : null)"></textarea>
                 <span asp-validation-for="Notes" class="text-danger small"></span>
             </div>
 
             <div class="mb-4">
-                <label asp-for="ImageUrl" class="form-label fw-semibold">
+                <label asp-for="ImageUrl" class="jt-member-label form-label fw-semibold">
                     Optional Photo URL
                 </label>
-                <input asp-for="ImageUrl" class="form-control" placeholder="https://example.com/my-dish.jpg" disabled="@(Model.IsReadonly ? "disabled" : null)" />
+                <input asp-for="ImageUrl" class="jt-member-input form-control" placeholder="https://example.com/my-dish.jpg" disabled="@(Model.IsReadonly ? "disabled" : null)" />
                 <span asp-validation-for="ImageUrl" class="text-danger small"></span>
                 <div class="form-text">External image URL showcasing your finished recipe or knife setup. Note: Direct file uploads to server storage are restricted to editorial staff.</div>
             </div>
 
             <!-- Submit Buttons -->
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-3 border-top">
-                <a asp-action="Detail" asp-route-slug="@Model.ContestSlug" class="btn btn-outline-secondary">
+                <a asp-action="Detail" asp-route-slug="@Model.ContestSlug" class="jt-btn-editorial jt-btn-outline-light">
                     &larr; Cancel &amp; Back to Contest
                 </a>
 
                 @if (!Model.IsReadonly)
                 {
-                    <button type="submit" id="btnSubmitContestEntry" class="btn btn-primary px-4 py-2">
+                    <button type="submit" id="btnSubmitContestEntry" class="jt-btn-editorial jt-btn-gold px-4 py-2">
                         @(isEdit ? "Update Contest Entry" : "Submit Official Contest Entry") &rarr;
                     </button>
                 }
@@ -199,6 +215,10 @@
     </div>
 </div>
 
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
 }

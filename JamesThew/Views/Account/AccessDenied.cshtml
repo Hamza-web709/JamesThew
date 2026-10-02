@@ -1,4 +1,35 @@
-@{ ViewData["Title"] = "Access denied"; }
-<h1>Access denied</h1>
-<p>Your account does not have permission to access this page.</p>
-<a asp-controller="Home" asp-action="Index">Return home</a>
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<!-- Fixed Account Background Layer (Family D - Account) -->
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-account.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
+</div>
+
+<div class="jt-inner-shell">
+    <div class="jt-inner-container-sm text-center">
+        <div class="jt-glass-panel p-5 my-5">
+            <div class="fs-1 text-warning mb-3">&#128274;</div>
+            <span class="jt-page-eyebrow">
+                <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                Permission Restricted
+            </span>
+            <h1 class="jt-page-title mb-3">Access <span class="jt-serif-italic">Denied</span></h1>
+            <p class="text-light-secondary mb-4">
+                Your account does not currently have permission to access this protected area. If you believe this is in error, please verify your credentials or contact site administration.
+            </p>
+            <div class="d-flex justify-content-center gap-3">
+                <a asp-controller="Home" asp-action="Index" class="jt-btn-editorial jt-btn-gold">
+                    Return to Sanctuary Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

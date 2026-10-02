@@ -1,229 +1,855 @@
 @model JamesThew.ViewModels.HomeViewModel
 @{
-    ViewData["Title"] = "Home - Master Chef Recipes & Culinary Secrets";
+    ViewData["Title"] = "James Thew - Haute Cuisine & Culinary Masterclasses";
+    ViewData["HideDefaultFooter"] = true;
+
+    // Helper lookups for featured recipes from model
+    var wellingtonRecipe = Model.FeaturedRecipes.FirstOrDefault(r => r.Slug.Contains("wellington", StringComparison.OrdinalIgnoreCase));
+    var risottoRecipe = Model.FeaturedRecipes.FirstOrDefault(r => r.Slug.Contains("risotto", StringComparison.OrdinalIgnoreCase));
+    var chickenRecipe = Model.FeaturedRecipes.FirstOrDefault(r => r.Slug.Contains("chicken", StringComparison.OrdinalIgnoreCase));
+    var breadRecipe = Model.FeaturedRecipes.FirstOrDefault(r => r.Slug.Contains("bread", StringComparison.OrdinalIgnoreCase) || r.Slug.Contains("sourdough", StringComparison.OrdinalIgnoreCase));
+
+    // Helper lookups for tips
+    var knifeTip = Model.FeaturedTips.FirstOrDefault(t => t.Slug.Contains("knife", StringComparison.OrdinalIgnoreCase));
+    var searTip = Model.FeaturedTips.FirstOrDefault(t => t.Slug.Contains("sear", StringComparison.OrdinalIgnoreCase));
+    var sauceTip = Model.FeaturedTips.FirstOrDefault(t => t.Slug.Contains("sauce", StringComparison.OrdinalIgnoreCase));
 }
 
-<section class="jt-hero">
-    <div class="jt-hero-content">
-        <span class="jt-hero-pretitle">Welcome to the Kitchen of</span>
-        <h1 class="jt-hero-title">Master Chef James Thew</h1>
-        <p class="jt-hero-desc">
-            Discover a world of classical gastronomy, time-tested culinary techniques, and handcrafted recipes. From essential everyday dishes to fine-dining masterclasses, master the craft of cooking with confidence.
-        </p>
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/landing.css" asp-append-version="true" />
+}
 
-        <div class="jt-hero-actions">
-            <a asp-controller="Recipes" asp-action="Index" class="jt-btn jt-btn-primary">Browse Recipes</a>
-            <a asp-controller="Tips" asp-action="Index" class="jt-btn jt-btn-outline">Cooking Tips</a>
-            <a asp-controller="Faq" asp-action="Index" class="jt-btn jt-btn-secondary">How It Works</a>
-        </div>
+<div class="jt-editorial-experience" id="jtEditorialRoot">
 
-        <form asp-controller="Recipes" asp-action="Index" method="get" class="jt-hero-search">
-            <div class="jt-search-form">
-                <input type="search" name="q" class="jt-search-input" placeholder="Search roast chicken, sourdough, risotto..." aria-label="Search recipes and tips" />
-                <button type="submit" class="jt-btn jt-btn-primary">Search</button>
+    <!-- ====================================================================
+         SECTION 01: CINEMATIC HERO (Dark Sanctuary - Distributed Editorial)
+         ==================================================================== -->
+    <section class="jt-section jt-hero-section" id="hero-story" data-header-theme="dark" aria-label="Master Chef James Thew Culinary Journey">
+        <div class="jt-hero-stage" id="hero-stage">
+
+            <!-- Video Background with Continuous Scrub Sync -->
+            <div class="jt-hero-media" aria-hidden="true">
+                <video id="heroCookingVideo"
+                       class="jt-hero-video"
+                       muted
+                       playsinline
+                       preload="auto"
+                       poster="@Url.Content("~/assets/landing/hero/optimized/posters/hero-poster.webp")">
+                    <source src="@Url.Content("~/assets/landing/hero/optimized/video/hero-cooking-scroll.webm")" type="video/webm" />
+                    <source src="@Url.Content("~/assets/landing/hero/optimized/video/hero-cooking-scroll.mp4")" type="video/mp4" />
+                </video>
+                <div class="jt-hero-overlay"></div>
+                <div class="jt-hero-vignette"></div>
             </div>
-        </form>
-    </div>
 
-    <div class="jt-hero-media">
-        <img src="~/images/hero/james-thew-kitchen.jpg" alt="Chef James Thew preparing culinary dishes in a professional kitchen" class="jt-hero-img" width="800" height="600" />
-    </div>
-</section>
+            <!-- Hanging Raw Aromatics (Parallels grapes hanging from top in reference video) -->
+            <div class="jt-hanging-aromatics" id="hangingAromatics" aria-hidden="true">
+                <div class="jt-hanging-item jt-hang-tomato" id="floatTomato">
+                    <img src="@Url.Content("~/assets/landing/hero/optimized/ingredients/hero-cherry-tomato.webp")"
+                         alt=""
+                         width="110"
+                         height="120"
+                         class="jt-aromatic-img" />
+                </div>
+                <div class="jt-hanging-item jt-hang-basil" id="floatBasil">
+                    <img src="@Url.Content("~/assets/landing/hero/optimized/ingredients/hero-basil-leaf.webp")"
+                         alt=""
+                         width="114"
+                         height="108"
+                         class="jt-aromatic-img" />
+                </div>
+            </div>
 
-<!-- Featured Recipes Section -->
-<section class="mb-5">
-    <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
-        <div>
-            <span class="jt-brand-tag">Gastronomic Selection</span>
-            <h2 class="mb-1">Featured Cookery Recipes</h2>
-            <p class="text-muted mb-0">Carefully curated recipes with exact ingredients and step-by-step techniques.</p>
-        </div>
-        <a asp-controller="Recipes" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm mt-2 mt-md-0">View All Recipes (@Model.TotalRecipesCount) &rarr;</a>
-    </div>
+            <!-- Distributed Asymmetric Editorial Typography Layer -->
+            <div class="jt-hero-distributed-layout">
+                <!-- Top-Left Editorial Quadrant -->
+                <div class="jt-hero-quadrant jt-quadrant-top-left" id="heroTopLeft">
+                    <span class="jt-editorial-eyebrow">
+                        <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                        Haute Gastronomy &middot; Master Kitchen Sanctuary
+                    </span>
+                    <h1 class="jt-hero-headline">
+                        Where Ingredients <br /><span class="jt-hero-headline-em">Become Craft</span>
+                    </h1>
+                </div>
 
-    <div class="jt-card-grid">
-        @foreach (var recipe in Model.FeaturedRecipes)
-        {
-            <article class="jt-card">
-                <div class="jt-card-img-wrapper">
-                    @if (!string.IsNullOrEmpty(recipe.ImageUrl))
-                    {
-                        <img src="@recipe.ImageUrl" alt="@recipe.Title" class="jt-card-img" loading="lazy" />
-                    }
-                    <div class="jt-card-badge-pos">
-                        @if (recipe.IsMembersOnly)
-                        {
-                            <span class="jt-badge jt-badge-paid">&#128274; Members-Only</span>
-                        }
-                        else
-                        {
-                            <span class="jt-badge jt-badge-free">Free Recipe</span>
-                        }
+                <!-- Mid-Right Statement Quadrant -->
+                <div class="jt-hero-quadrant jt-quadrant-mid-right" id="heroMidRight">
+                    <div class="jt-editorial-statement">
+                        <span class="jt-statement-tag">Live in the Sanctuary</span>
+                        <p class="jt-statement-text">
+                            A culinary destination where classical French discipline meets relentless gastronomic passion.
+                        </p>
                     </div>
                 </div>
-                <div class="jt-card-body">
-                    <div class="jt-card-meta">
-                        <span>&#128100; @recipe.AuthorDisplayName</span>
-                        @if (recipe.PrepMinutes.HasValue || recipe.CookMinutes.HasValue)
-                        {
-                            <span>&#9201; @((recipe.PrepMinutes ?? 0) + (recipe.CookMinutes ?? 0)) mins total</span>
-                        }
-                        @if (recipe.Servings.HasValue)
-                        {
-                            <span>&#127860; @recipe.Servings servings</span>
-                        }
+
+                <!-- Bottom-Left Scroll Cue -->
+                <div class="jt-hero-quadrant jt-quadrant-bottom-left" id="heroBottomLeft">
+                    <div class="jt-scroll-cue" id="heroScrollCue" aria-hidden="true">
+                        <span class="jt-scroll-mouse-icon">
+                            <span class="jt-scroll-wheel"></span>
+                        </span>
+                        <span class="jt-scroll-cue-text">Scroll to Unfold Story</span>
                     </div>
-                    <h3 class="jt-card-title">
-                        <a asp-controller="Recipes" asp-action="Detail" asp-route-slug="@recipe.Slug">@recipe.Title</a>
-                    </h3>
-                    <p class="jt-card-text">@recipe.Summary</p>
-                    <div class="jt-card-footer">
-                        <a asp-controller="Recipes" asp-action="Detail" asp-route-slug="@recipe.Slug" class="jt-btn jt-btn-outline jt-btn-sm">
-                            @(recipe.IsMembersOnly ? "View Preview" : "View Recipe") &rarr;
+                </div>
+
+                <!-- Bottom-Right Action Cluster & Trust Badges -->
+                <div class="jt-hero-quadrant jt-quadrant-bottom-right" id="heroBottomRight">
+                    <div class="jt-hero-cta-cluster">
+                        <a asp-controller="Recipes" asp-action="Index" class="jt-btn-editorial jt-btn-gold">
+                            <span>Browse Recipes</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                        <a asp-controller="Tips" asp-action="Index" class="jt-btn-editorial jt-btn-glass">Culinary Secrets</a>
+                    </div>
+                    <div class="jt-hero-stats-row">
+                        <span class="jt-hero-stat-pill">Culinary Sanctuary</span>
+                        <span class="jt-hero-stat-pill">Tested Techniques</span>
+                        <span class="jt-hero-stat-pill">Member Masterclasses</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 02: INGREDIENT-TO-DISH TRANSFORMATION
+         (Mirrors reference: Grapes -> Mid-Air Liquid Splash -> Glass Seating)
+         ==================================================================== -->
+    <section class="jt-section jt-transform-section" id="section-transformation" data-header-theme="dark" aria-label="Ingredient to Culinary Masterpiece">
+        <div class="jt-transform-stage" id="transformStage">
+
+            <!-- Flanking Distributed Copy -->
+            <div class="jt-transform-flanks">
+                <div class="jt-flank-copy jt-flank-left" id="transformLeftText">
+                    <span class="jt-flank-eyebrow">Transformation</span>
+                    <h2 class="jt-flank-heading">&ldquo;And Every Cut Tells...&rdquo;</h2>
+                </div>
+                <div class="jt-flank-copy jt-flank-right" id="transformRightText">
+                    <span class="jt-flank-eyebrow">Excellence</span>
+                    <h2 class="jt-flank-heading">&ldquo;...A Story of Mastery.&rdquo;</h2>
+                </div>
+            </div>
+
+            <!-- Central Culinary Convergence & Plating Assembly -->
+            <div class="jt-transform-assembly" id="transformAssembly">
+                <!-- Thermal Core (Radiant energy focal point for seamless transformation) -->
+                <div class="jt-thermal-core" id="thermalCore" aria-hidden="true"></div>
+
+                <!-- Sizzle Kinetic Burst (Represents high-heat sear in mid-air) -->
+                <div class="jt-kinetic-burst" id="kineticBurst" aria-hidden="true">
+                    <div class="jt-burst-glow"></div>
+                    <div class="jt-burst-plume"></div>
+                    <div class="jt-burst-chips">
+                        <span class="jt-burst-chip">220&deg;C Sear</span>
+                        <span class="jt-burst-chip">Maillard Reaction</span>
+                        <span class="jt-burst-chip">Pan Kinetics</span>
+                    </div>
+                </div>
+
+                <!-- Converging Floating Aromatics -->
+                <div class="jt-converging-aromatics" aria-hidden="true">
+                    <img src="@Url.Content("~/assets/landing/hero/optimized/generated/hero-garlic-clove-cutout.webp")" alt="" id="convergeGarlic" class="jt-converge-item" />
+                    <img src="@Url.Content("~/assets/landing/hero/optimized/generated/hero-chili-cutout.webp")" alt="" id="convergeChili" class="jt-converge-item" />
+                    <img src="@Url.Content("~/assets/landing/hero/optimized/generated/hero-lemon-slice-cutout.webp")" alt="" id="convergeLemon" class="jt-converge-item" />
+                </div>
+
+                <!-- Stoneware Plate & Plated Masterpiece -->
+                <div class="jt-plate-wrapper" id="plateWrapper" aria-hidden="true">
+                    <img src="@Url.Content("~/assets/landing/hero/optimized/generated/hero-plate-ceramic.webp")"
+                         alt=""
+                         width="520"
+                         height="520"
+                         class="jt-ceramic-plate-img" />
+                    <img src="@Url.Content("~/assets/landing/hero/optimized/generated/hero-dish-seared-chicken.webp")"
+                         alt="Pan-Seared Crispy Skin Herb Chicken"
+                         width="480"
+                         height="480"
+                         id="transformPlatedDish"
+                         class="jt-plated-dish-img" />
+                </div>
+
+                <!-- Plated Recipe Tag -->
+                <div class="jt-transform-dish-tag" id="transformDishTag">
+                    <span class="jt-tag-time">25 min</span>
+                    <span class="jt-tag-sep">&bull;</span>
+                    <span class="jt-tag-badge">Pan Kinetics</span>
+                    <span class="jt-tag-name">Crispy Skin Herb Chicken</span>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 03: THE STORY OF FOOD (Light French Linen Editorial Canvas)
+         (Mirrors reference: Smooth transition to cream canvas with photo cards)
+         ==================================================================== -->
+    <section class="jt-section jt-story-canvas" id="section-story" data-header-theme="light" aria-label="The Culinary Sanctuary Story">
+        <div class="jt-story-container">
+
+            <div class="jt-story-header">
+                <span class="jt-light-eyebrow">The Culinary Sanctuary</span>
+                <h2 class="jt-story-headline">
+                    Every Dish Has a <span class="jt-serif-italic">Story</span>
+                </h2>
+                <p class="jt-story-lead">
+                    True gastronomy is never an accident. It is the culmination of disciplined cuts, precise thermal reduction, and respect for the natural harvest.
+                </p>
+            </div>
+
+            <!-- Staggered 4-Card Horizontal Photo Deck with Parallax Drift -->
+            <div class="jt-story-photo-deck" id="storyPhotoDeck">
+                <!-- Card 1: Butcher Knife Prep -->
+                <article class="jt-story-card jt-card-drift-1">
+                    <div class="jt-story-card-media">
+                        <img src="@Url.Content("~/assets/tips/knife-skills-cut.jpg")" alt="Knife skills and preparation" loading="lazy" />
+                    </div>
+                    <div class="jt-story-card-body">
+                        <span class="jt-story-card-num">01</span>
+                        <h3 class="jt-story-card-title">The Butcher's Craft</h3>
+                        <p class="jt-story-card-desc">Disciplined pinch-grip carving on solid walnut, honoring grain and texture.</p>
+                    </div>
+                </article>
+
+                <!-- Card 2: Copper Pan Reduction (Generated Asset) -->
+                <article class="jt-story-card jt-card-drift-2">
+                    <div class="jt-story-card-media">
+                        <img src="@Url.Content("~/assets/landing/editorial/story-copper-pan-reduction.webp")" alt="French copper pan reduction" loading="lazy" />
+                    </div>
+                    <div class="jt-story-card-body">
+                        <span class="jt-story-card-num">02</span>
+                        <h3 class="jt-story-card-title">Copper &amp; Flame</h3>
+                        <p class="jt-story-card-desc">Slow-simmered shallot and red wine reductions yielding deep umami glaze.</p>
+                    </div>
+                </article>
+
+                <!-- Card 3: Herb Harvest (Generated Asset) -->
+                <article class="jt-story-card jt-card-drift-3">
+                    <div class="jt-story-card-media">
+                        <img src="@Url.Content("~/assets/landing/editorial/story-herb-garden-harvest.webp")" alt="Herb garden harvest" loading="lazy" />
+                    </div>
+                    <div class="jt-story-card-body">
+                        <span class="jt-story-card-num">03</span>
+                        <h3 class="jt-story-card-title">The Dawn Harvest</h3>
+                        <p class="jt-story-card-desc">Hand-picked wild thyme, rosemary, and sage kissed with morning dew.</p>
+                    </div>
+                </article>
+
+                <!-- Card 4: Searing Pan Emulsion -->
+                <article class="jt-story-card jt-card-drift-4">
+                    <div class="jt-story-card-media">
+                        <img src="@Url.Content("~/assets/tips/pan-sauce-emulsion.jpg")" alt="Velvety pan sauce emulsion" loading="lazy" />
+                    </div>
+                    <div class="jt-story-card-body">
+                        <span class="jt-story-card-num">04</span>
+                        <h3 class="jt-story-card-title">The Velvety Finish</h3>
+                        <p class="jt-story-card-desc">Cold-butter mounting creating the signature glossy French sheen.</p>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Milestone Stats Columns (Authentic Qualitative Pillars) -->
+            <div class="jt-story-milestones">
+                <div class="jt-milestone-col">
+                    <strong class="jt-milestone-stat">Craft</strong>
+                    <span class="jt-milestone-label">Classical Rigor</span>
+                    <p class="jt-milestone-sub">Refining classical European gastronomy with disciplined knife work and pan mastery.</p>
+                </div>
+                <div class="jt-milestone-col">
+                    <strong class="jt-milestone-stat">Tested</strong>
+                    <span class="jt-milestone-label">Kitchen Precision</span>
+                    <p class="jt-milestone-sub">Every temperature, cut, and reduction rigorously verified in the sanctuary kitchen.</p>
+                </div>
+                <div class="jt-milestone-col">
+                    <strong class="jt-milestone-stat">Curated</strong>
+                    <span class="jt-milestone-label">Masterclass Catalog</span>
+                    <p class="jt-milestone-sub">Specialized masterclasses spanning artisanal pastry, braising, and French sauce emulsions.</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 04: RECIPE EDITORIAL COLLAGE
+         (Mirrors reference: 6-card irregular mosaic with focal card zoom)
+         ==================================================================== -->
+    <section class="jt-section jt-collage-section" id="section-collage" data-header-theme="light" aria-label="Gastronomic Recipe Selection">
+        <!-- Full-Viewport Dark Curtain (Facilitates seamless camera push-in into Section 05) -->
+        <div class="jt-collage-dark-curtain" id="collageDarkCurtain" aria-hidden="true"></div>
+        <div class="jt-collage-stage" id="collageStage">
+
+            <div class="jt-collage-header">
+                <span class="jt-light-eyebrow">Gastronomic Selection &middot; Master Kitchen</span>
+                <h2 class="jt-collage-headline">
+                    Featured Cookery Recipes
+                </h2>
+                <p class="jt-collage-lead">
+                    Handcrafted recipes and culinary secrets for the modern table. Focus settles on the pinnacle masterclass dish.
+                </p>
+            </div>
+
+            <!-- Irregular 6-Card Mosaic Grid -->
+            <div class="jt-mosaic-grid" id="mosaicGrid">
+
+                <!-- Card A: Classic Roast Herb Chicken (Tall Portrait) -->
+                <article class="jt-mosaic-card jt-mosaic-tall" id="mosaicCardA">
+                    <div class="jt-mosaic-media">
+                        <img src="@Url.Content(chickenRecipe?.ImageUrl ?? "~/assets/recipes/classic-roast-chicken.jpg")" alt="Classic Roast Herb Chicken" loading="lazy" />
+                    </div>
+                    <div class="jt-mosaic-content">
+                        <span class="jt-mosaic-badge">Free Recipe</span>
+                        <h3 class="jt-mosaic-title">Classic Roast Herb Chicken</h3>
+                        <p class="jt-mosaic-meta">@((chickenRecipe?.PrepMinutes ?? 20) + (chickenRecipe?.CookMinutes ?? 75)) min &bull; @(chickenRecipe?.Servings ?? 4) servings</p>
+                    </div>
+                </article>
+
+                <!-- Card B: Seafood Saffron Risotto (Wide Landscape) -->
+                <article class="jt-mosaic-card jt-mosaic-wide" id="mosaicCardB">
+                    <div class="jt-mosaic-media">
+                        <img src="@Url.Content(risottoRecipe?.ImageUrl ?? "~/assets/recipes/seafood-saffron-risotto.jpg")" alt="Seafood Saffron Risotto" loading="lazy" />
+                    </div>
+                    <div class="jt-mosaic-content">
+                        <span class="jt-mosaic-badge">Free Recipe</span>
+                        <h3 class="jt-mosaic-title">Seafood Saffron Risotto</h3>
+                        <p class="jt-mosaic-meta">@((risottoRecipe?.PrepMinutes ?? 25) + (risottoRecipe?.CookMinutes ?? 30)) min &bull; Royal Tiger Prawns</p>
+                    </div>
+                </article>
+
+                <!-- Card C: Sourdough Boule (Square) -->
+                <article class="jt-mosaic-card jt-mosaic-square" id="mosaicCardC">
+                    <div class="jt-mosaic-media">
+                        <img src="@Url.Content(breadRecipe?.ImageUrl ?? "~/assets/recipes/sourdough-boule.jpg")" alt="Artisanal Sourdough Boule" loading="lazy" />
+                    </div>
+                    <div class="jt-mosaic-content">
+                        <span class="jt-mosaic-badge">Artisan Bread</span>
+                        <h3 class="jt-mosaic-title">Artisanal Sourdough Boule</h3>
+                        <p class="jt-mosaic-meta">48-Hr Fermentation</p>
+                    </div>
+                </article>
+
+                <!-- Card D: FOCAL MASTERCLASS CARD (Beef Wellington - Zooms on scroll into darkness!) -->
+                <article class="jt-mosaic-card jt-mosaic-focal" id="mosaicCardFocal">
+                    <div class="jt-mosaic-media">
+                        <img src="@Url.Content("~/images/recipes/beef-wellington.jpg")" alt="Masterclass Beef Wellington" loading="lazy" id="focalDishImg" />
+                    </div>
+                    <div class="jt-mosaic-content jt-focal-content">
+                        <span class="jt-mosaic-badge jt-badge-gold">&#128274; Masterclass Pinnacle</span>
+                        <h3 class="jt-mosaic-title jt-focal-title">Signature Beef Wellington</h3>
+                        <p class="jt-mosaic-meta">Center-cut Prime Beef &bull; Truffle Duxelles &bull; All-Butter Pastry</p>
+                    </div>
+                </article>
+
+                <!-- Card E: Lobster Thermidor (Generated Asset) -->
+                <article class="jt-mosaic-card jt-mosaic-landscape" id="mosaicCardE">
+                    <div class="jt-mosaic-media">
+                        <img src="@Url.Content("~/assets/landing/editorial/recipe-lobster-thermidor.webp")" alt="Classic Lobster Thermidor" loading="lazy" />
+                    </div>
+                    <div class="jt-mosaic-content">
+                        <span class="jt-mosaic-badge">Members Exclusive</span>
+                        <h3 class="jt-mosaic-title">Lobster Thermidor</h3>
+                        <p class="jt-mosaic-meta">Gratinated Gruy&egrave;re Crust</p>
+                    </div>
+                </article>
+
+                <!-- Card F: French Sauce Emulsion -->
+                <article class="jt-mosaic-card jt-mosaic-portrait" id="mosaicCardF">
+                    <div class="jt-mosaic-media">
+                        <img src="@Url.Content("~/assets/tips/pan-sauce-emulsion.jpg")" alt="Sauce Emulsion" loading="lazy" />
+                    </div>
+                    <div class="jt-mosaic-content">
+                        <span class="jt-mosaic-badge">Technique Secret</span>
+                        <h3 class="jt-mosaic-title">French Sauce Emulsion</h3>
+                        <p class="jt-mosaic-meta">Classical Reduction</p>
+                    </div>
+                </article>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 05: DARK SIGNATURE DISH FEATURE
+         (Mirrors reference: Dramatic plunge into obsidian darkness, bottle centered)
+         ==================================================================== -->
+    <section class="jt-section jt-signature-dark-section" id="section-signature" data-header-theme="dark" aria-label="Signature Masterclass Feature">
+        <div class="jt-signature-stage" id="signatureStage">
+
+            <!-- Deep 3D Z-Index Typography: "SIGNATURE" floats BEHIND plate -->
+            <div class="jt-signature-bg-text jt-sig-top" id="sigTextTop" aria-hidden="true">
+                SIGNATURE
+            </div>
+
+            <!-- Central Plated Dish with Ambient Amber Halo Glow -->
+            <div class="jt-signature-dish-center" id="sigDishCenter">
+                <div class="jt-sig-halo" id="sigHalo"></div>
+                <div class="jt-sig-plate-layer">
+                    <img src="@Url.Content("~/assets/landing/hero/optimized/generated/hero-plate-ceramic.webp")"
+                         alt=""
+                         width="560"
+                         height="560"
+                         class="jt-sig-plate-img" />
+                    <img src="@Url.Content("~/assets/landing/hero/optimized/generated/hero-dish-beef-wellington.webp")"
+                         alt="Center-cut Prime Beef Wellington"
+                         width="500"
+                         height="500"
+                         id="sigDishImg"
+                         class="jt-sig-dish-img" />
+                </div>
+            </div>
+
+            <!-- Deep 3D Z-Index Typography: "MASTERCLASS" floats BEHIND lower rim -->
+            <div class="jt-signature-bg-text jt-sig-bottom" id="sigTextBottom" aria-hidden="true">
+                MASTERCLASS
+            </div>
+
+            <!-- Foreground Floating Specifications & Direct Action Button -->
+            <div class="jt-signature-specs" id="sigSpecs">
+                <div class="jt-spec-chips">
+                    <span class="jt-spec-chip">60 Mins Prep</span>
+                    <span class="jt-spec-chip-sep">&bull;</span>
+                    <span class="jt-spec-chip">6 Prime Servings</span>
+                    <span class="jt-spec-chip-sep">&bull;</span>
+                    <span class="jt-spec-chip">&#128274; Members Exclusive</span>
+                </div>
+                <div class="jt-spec-actions mt-3">
+                    @if (wellingtonRecipe != null)
+                    {
+                        <a asp-controller="Recipes" asp-action="Detail" asp-route-slug="@wellingtonRecipe.Slug" class="jt-btn-editorial jt-btn-gold">
+                            <span>Unlock Masterclass Recipe</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Recipes" asp-action="Detail" asp-route-slug="jamess-masterclass-beef-wellington" class="jt-btn-editorial jt-btn-gold">
+                            <span>Unlock Masterclass Recipe</span>
+                        </a>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 06: HORIZONTAL SIGNATURE RECIPE COLLECTION
+         (Mirrors reference: Vertical scroll translates horizontal wine rail)
+         ==================================================================== -->
+    <section class="jt-section jt-horizontal-rail-section" id="section-horizontal" data-header-theme="dark" aria-label="Signature Recipe Collection Rail">
+        <div class="jt-horizontal-sticky" id="horizontalSticky">
+
+            <div class="jt-horizontal-rail-header">
+                <span class="jt-editorial-eyebrow">
+                    <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                    01 Signature Collection
+                </span>
+                <h2 class="jt-horizontal-headline">The Four Cornerstone Recipes</h2>
+            </div>
+
+            <!-- Horizontal Track translated via GSAP on vertical scroll -->
+            <div class="jt-horizontal-track" id="horizontalTrack">
+
+                <!-- Card 01: Classic Lobster Thermidor -->
+                <article class="jt-rail-card">
+                    <div class="jt-rail-card-glow"></div>
+                    <span class="jt-rail-num">01</span>
+                    <div class="jt-rail-media">
+                        <img src="@Url.Content("~/assets/landing/editorial/recipe-lobster-thermidor.webp")" alt="Classic Lobster Thermidor" loading="lazy" />
+                    </div>
+                    <div class="jt-rail-card-body">
+                        <span class="jt-rail-badge">&#128274; Members Exclusive</span>
+                        <h3 class="jt-rail-title">Classic Lobster Thermidor</h3>
+                        <p class="jt-rail-desc">Tender Maine lobster tail gently poached and folded in velvety egg yolk and cognac cream, gratinated with aged Gruy&egrave;re.</p>
+                        <div class="jt-rail-meta">
+                            <span>&#9201; 45 mins</span>
+                            <span>&#127860; 2 servings</span>
+                        </div>
+                        <a asp-controller="Recipes" asp-action="Index" class="jt-rail-link">
+                            Explore Recipe &rarr;
                         </a>
                     </div>
-                </div>
-            </article>
-        }
-    </div>
-</section>
+                </article>
 
-<!-- Featured Tips Section -->
-<section class="mb-5">
-    <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
-        <div>
-            <span class="jt-brand-tag">Kitchen Wisdom</span>
-            <h2 class="mb-1">Culinary Secrets &amp; Cooking Tips</h2>
-            <p class="text-muted mb-0">Professional advice on knife mastery, pan kinetics, and classical flavor balance.</p>
-        </div>
-        <a asp-controller="Tips" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm mt-2 mt-md-0">View All Tips (@Model.TotalTipsCount) &rarr;</a>
-    </div>
-
-    <div class="jt-card-grid">
-        @foreach (var tip in Model.FeaturedTips)
-        {
-            <article class="jt-card">
-                <div class="jt-card-img-wrapper">
-                    @if (!string.IsNullOrEmpty(tip.ImageUrl))
-                    {
-                        <img src="@tip.ImageUrl" alt="@tip.Title" class="jt-card-img" loading="lazy" />
-                    }
-                    <div class="jt-card-badge-pos">
-                        @if (tip.IsMembersOnly)
-                        {
-                            <span class="jt-badge jt-badge-paid">&#128274; Masterclass Secret</span>
-                        }
-                        else
-                        {
-                            <span class="jt-badge jt-badge-free">Free Tip</span>
-                        }
+                <!-- Card 02: Seafood Saffron Risotto -->
+                <article class="jt-rail-card">
+                    <div class="jt-rail-card-glow"></div>
+                    <span class="jt-rail-num">02</span>
+                    <div class="jt-rail-media">
+                        <img src="@Url.Content(risottoRecipe?.ImageUrl ?? "~/assets/recipes/seafood-saffron-risotto.jpg")" alt="Seafood Saffron Risotto" loading="lazy" />
                     </div>
-                </div>
-                <div class="jt-card-body">
-                    <div class="jt-card-meta">
-                        <span>&#128100; @tip.AuthorDisplayName</span>
-                        <span>&#128197; @tip.CreatedAtUtc.ToString("MMM dd, yyyy")</span>
-                    </div>
-                    <h3 class="jt-card-title">
-                        <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug">@tip.Title</a>
-                    </h3>
-                    <p class="jt-card-text">@tip.Summary</p>
-                    <div class="jt-card-footer">
-                        <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug" class="jt-btn jt-btn-outline jt-btn-sm">
-                            @(tip.IsMembersOnly ? "View Preview" : "Read Full Tip") &rarr;
+                    <div class="jt-rail-card-body">
+                        <span class="jt-rail-badge jt-rail-free">Free Recipe</span>
+                        <h3 class="jt-rail-title">Seafood Saffron Risotto</h3>
+                        <p class="jt-rail-desc">Creamy aged Carnaroli rice infused with Spanish saffron threads, royal tiger prawns, and cold-pressed emulsion.</p>
+                        <div class="jt-rail-meta">
+                            <span>&#9201; @((risottoRecipe?.PrepMinutes ?? 25) + (risottoRecipe?.CookMinutes ?? 30)) mins</span>
+                            <span>&#127860; 4 servings</span>
+                        </div>
+                        <a asp-controller="Recipes" asp-action="Detail" asp-route-slug="@(risottoRecipe?.Slug ?? "mediterranean-seafood-saffron-risotto")" class="jt-rail-link">
+                            Explore Recipe &rarr;
                         </a>
                     </div>
-                </div>
-            </article>
-        }
-    </div>
-</section>
+                </article>
 
-<!-- Membership & Value Proposition Section -->
-<section class="mb-5 p-4 p-md-5 rounded-4" style="background: linear-gradient(135deg, #FAF4EB 0%, #F5EDE0 100%); border: 1px solid var(--jt-border);">
-    <div class="row align-items-center">
-        <div class="col-lg-7">
-            <span class="jt-brand-tag">Culinary Masterclasses</span>
-            <h2 class="mb-3">Unlock James Thew's Exclusive Culinary Secrets</h2>
-            <p class="lead mb-4" style="color: var(--jt-text-muted);">
-                While our foundational recipes and kitchen tips are open to all visitors, our most intricate fine-dining masterclasses—such as Beef Wellington, Lobster Thermidor, and French pan emulsion sauces—are reserved for registered members.
-            </p>
-            <div class="d-flex flex-wrap gap-3 mb-3">
-                <div class="p-3 bg-white rounded-3 border" style="min-width: 180px;">
-                    <span class="d-block text-muted small text-uppercase fw-bold">Demo Monthly</span>
-                    <strong class="fs-4 text-danger">$10</strong> <span class="text-muted">/ month</span>
-                    <div class="small text-muted mt-1">Full masterclass catalog</div>
-                </div>
-                <div class="p-3 bg-white rounded-3 border" style="min-width: 180px;">
-                    <span class="d-block text-muted small text-uppercase fw-bold">Demo Annual</span>
-                    <strong class="fs-4 text-danger">$100</strong> <span class="text-muted">/ year</span>
-                    <div class="small text-muted mt-1">Save $20 over monthly</div>
-                </div>
+                <!-- Card 03: Classic Roast Herb Chicken -->
+                <article class="jt-rail-card">
+                    <div class="jt-rail-card-glow"></div>
+                    <span class="jt-rail-num">03</span>
+                    <div class="jt-rail-media">
+                        <img src="@Url.Content(chickenRecipe?.ImageUrl ?? "~/assets/recipes/classic-roast-chicken.jpg")" alt="Classic Roast Herb Chicken" loading="lazy" />
+                    </div>
+                    <div class="jt-rail-card-body">
+                        <span class="jt-rail-badge jt-rail-free">Free Recipe</span>
+                        <h3 class="jt-rail-title">Classic Roast Herb Chicken</h3>
+                        <p class="jt-rail-desc">Golden crisp crackling skin seasoned with fresh garden herbs, garlic confit butter, and natural pan roasting jus.</p>
+                        <div class="jt-rail-meta">
+                            <span>&#9201; @((chickenRecipe?.PrepMinutes ?? 20) + (chickenRecipe?.CookMinutes ?? 75)) mins</span>
+                            <span>&#127860; 4 servings</span>
+                        </div>
+                        <a asp-controller="Recipes" asp-action="Detail" asp-route-slug="@(chickenRecipe?.Slug ?? "jamess-classic-roast-herb-chicken")" class="jt-rail-link">
+                            Explore Recipe &rarr;
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Card 04: Artisanal Sourdough Boule -->
+                <article class="jt-rail-card">
+                    <div class="jt-rail-card-glow"></div>
+                    <span class="jt-rail-num">04</span>
+                    <div class="jt-rail-media">
+                        <img src="@Url.Content(breadRecipe?.ImageUrl ?? "~/assets/recipes/sourdough-boule.jpg")" alt="Artisanal Sourdough Boule" loading="lazy" />
+                    </div>
+                    <div class="jt-rail-card-body">
+                        <span class="jt-rail-badge jt-rail-free">Artisan Bread</span>
+                        <h3 class="jt-rail-title">Artisanal Sourdough Boule</h3>
+                        <p class="jt-rail-desc">48-hour cold fermented sourdough with a dark blistered crust and an airy, open honeycomb crumb structure.</p>
+                        <div class="jt-rail-meta">
+                            <span>&#9201; 48 hrs</span>
+                            <span>&#127860; 8 servings</span>
+                        </div>
+                        <a asp-controller="Recipes" asp-action="Detail" asp-route-slug="@(breadRecipe?.Slug ?? "artisanal-crusty-sourdough-boule")" class="jt-rail-link">
+                            Explore Recipe &rarr;
+                        </a>
+                    </div>
+                </article>
+
             </div>
-            <p class="small text-muted mb-4">
-                <em>* Note: Simulated academic demonstration project. Subscriptions are processed via administrative demo approval; no real financial charges or credit card payments occur.</em>
-            </p>
-            <a asp-controller="Account" asp-action="Register" class="jt-btn jt-btn-primary">Register Free Account</a>
-            <a asp-controller="Faq" asp-action="Index" class="jt-btn jt-btn-outline ms-2">Membership Details</a>
-        </div>
-        <div class="col-lg-5 mt-4 mt-lg-0 text-center">
-            <img src="~/images/recipes/beef-wellington.jpg" alt="Masterclass Beef Wellington" class="img-fluid rounded-4 shadow-sm border border-4 border-white" style="max-height: 340px; object-fit: cover;" />
-        </div>
-    </div>
-</section>
 
-<!-- Community Contests & Announcements Teaser -->
-<section class="mb-5">
-    <div class="row g-4">
-        <div class="col-md-6">
-            <div class="p-4 bg-white rounded-4 border h-100 shadow-sm d-flex flex-column">
-                <span class="jt-brand-tag">Culinary Competitions</span>
-                <h3 class="mb-2">Seasonal Recipe &amp; Tip Contests</h3>
-                <p class="text-muted flex-grow-1">
-                    James Thew hosts seasonal themed cooking competitions for home cooks and food enthusiasts. Browse contest criteria, test your culinary creativity, and compete for culinary recognition.
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 07: CULINARY TECHNIQUE / MASTERCLASS (3D Fan-In)
+         ==================================================================== -->
+    <section class="jt-section jt-technique-section" id="section-masterclass" data-header-theme="dark" aria-label="Kitchen Technique Masterclasses">
+        <div class="jt-technique-container">
+
+            <div class="jt-technique-header">
+                <span class="jt-editorial-eyebrow">
+                    <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                    Kitchen Discipline &middot; Culinary Secrets
+                </span>
+                <h2 class="jt-technique-headline">Technique Changes Everything</h2>
+                <p class="jt-technique-lead">
+                    The difference between cooking and gastronomy is rigorous discipline. Master the three foundational pillars of the professional kitchen.
                 </p>
-                <div class="mt-3">
-                    <a asp-controller="Contests" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm">Explore Contests &rarr;</a>
-                </div>
             </div>
-        </div>
 
-        <div class="col-md-6">
-            <div class="p-4 bg-white rounded-4 border h-100 shadow-sm d-flex flex-column">
-                <span class="jt-brand-tag">Hall of Fame</span>
-                <h3 class="mb-2">Winner Announcements</h3>
-                <p class="text-muted flex-grow-1">
-                    Celebrate standout culinary creations. Each contest concludes with a formal announcement of the winning member and an in-depth breakdown of what made their post extraordinary.
+            <!-- 3 Technique Cards fanning in from 3 angles -->
+            <div class="jt-technique-deck" id="techniqueDeck">
+
+                <!-- Technique 01: Knife Mastery -->
+                <article class="jt-technique-card jt-tech-card-left" id="techCard1">
+                    <div class="jt-tech-media">
+                        <img src="@Url.Content("~/assets/tips/knife-skills-cut.jpg")" alt="Knife skills and precision cuts" loading="lazy" />
+                    </div>
+                    <div class="jt-tech-body">
+                        <span class="jt-tech-badge">Technique 01</span>
+                        <h3 class="jt-tech-title">Knife Mastery &amp; Precision</h3>
+                        <p class="jt-tech-desc">The professional pinch grip and guiding claw technique for julienne, brunoise, and chiffonade consistency.</p>
+                        <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@(knifeTip?.Slug ?? "mastering-chefs-knife-grip-and-precision-cuts")" class="jt-tech-link">
+                            Read Technique &rarr;
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Technique 02: Pan Kinetics & Maillard Reaction -->
+                <article class="jt-technique-card jt-tech-card-center" id="techCard2">
+                    <div class="jt-tech-media">
+                        <img src="@Url.Content("~/assets/tips/pan-searing-maillard.jpg")" alt="Pan searing and caramelization" loading="lazy" />
+                    </div>
+                    <div class="jt-tech-body">
+                        <span class="jt-tech-badge">Technique 02</span>
+                        <h3 class="jt-tech-title">Pan Kinetics &amp; Thermal Sear</h3>
+                        <p class="jt-tech-desc">Controlling surface heat, oil smoke points, and moisture release for optimal Maillard caramelization.</p>
+                        <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@(searTip?.Slug ?? "the-science-of-pan-searing-and-the-maillard-reaction")" class="jt-tech-link">
+                            Read Technique &rarr;
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Technique 03: Classical French Sauce Emulsions -->
+                <article class="jt-technique-card jt-tech-card-right" id="techCard3">
+                    <div class="jt-tech-media">
+                        <img src="@Url.Content("~/assets/tips/pan-sauce-emulsion.jpg")" alt="Velvety sauce reduction" loading="lazy" />
+                    </div>
+                    <div class="jt-tech-body">
+                        <span class="jt-tech-badge">Technique 03</span>
+                        <h3 class="jt-tech-title">Classical Sauce Emulsions</h3>
+                        <p class="jt-tech-desc">Deglazing fond with aromatics, gentle simmering reductions, and mounting with cold butter for velvet texture.</p>
+                        <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@(sauceTip?.Slug ?? "masterclass-french-sauce-emulsions-and-pan-deglazing")" class="jt-tech-link">
+                            Read Technique &rarr;
+                        </a>
+                    </div>
+                </article>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 08: CONTESTS & COMMUNITY EXPERIENCES (3D Deck Fan-Out)
+         (Mirrors reference: Degustazione tier cards)
+         ==================================================================== -->
+    <section class="jt-section jt-contests-section" id="section-contests" data-header-theme="dark" aria-label="Culinary Competitions & Experiences">
+        <div class="jt-contests-container">
+
+            <div class="jt-contests-header">
+                <span class="jt-editorial-eyebrow">
+                    <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                    Culinary Competitions
+                </span>
+                <h2 class="jt-contests-headline">Test Your Craft Against The Community</h2>
+                <p class="jt-contests-lead">
+                    Compete in seasonal culinary challenges evaluated by Chef James Thew and gain entry into the official Hall of Fame.
                 </p>
-                <div class="mt-3">
-                    <a asp-controller="Announcements" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm">View Winners &rarr;</a>
+            </div>
+
+            <!-- 3D Fan-out Deck of Experience Cards -->
+            <div class="jt-contests-deck" id="contestsDeck">
+
+                <!-- Contest 01: Active -->
+                <article class="jt-contest-card jt-fan-card-1">
+                    <div class="jt-contest-badge-row">
+                        <span class="jt-status-badge jt-status-active">Active Challenge</span>
+                        <span class="jt-prize-pill">&#127942; Master Chef Trophy</span>
+                    </div>
+                    <h3 class="jt-contest-title">Autumn Heritage Stew Showdown</h3>
+                    <p class="jt-contest-desc">Create a slow-simmered regional stew emphasizing seasonal root vegetables, disciplined braising, and rich fond reduction.</p>
+                    <div class="jt-contest-footer">
+                        <a asp-controller="Contests" asp-action="Detail" asp-route-slug="autumn-heritage-stew-showdown" class="jt-btn-editorial jt-btn-gold jt-btn-sm">
+                            Submit Entry &rarr;
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Contest 02: Upcoming -->
+                <article class="jt-contest-card jt-fan-card-2">
+                    <div class="jt-contest-badge-row">
+                        <span class="jt-status-badge jt-status-upcoming">Opens Soon</span>
+                        <span class="jt-prize-pill">&#127915; Pro Leather Apron</span>
+                    </div>
+                    <h3 class="jt-contest-title">Zero-Waste Knife &amp; Prep Wisdom</h3>
+                    <p class="jt-contest-desc">Demonstrate precision butchery and root-to-leaf kitchen economics by converting trimmings into stocks, oils, and garnishes.</p>
+                    <div class="jt-contest-footer">
+                        <a asp-controller="Contests" asp-action="Detail" asp-route-slug="zero-waste-kitchen-knife-and-prep-wisdom" class="jt-btn-editorial jt-btn-glass jt-btn-sm">
+                            View Criteria &rarr;
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Contest 03: Concluded / Official Showcase -->
+                <article class="jt-contest-card jt-fan-card-3">
+                    <div class="jt-contest-badge-row">
+                        <span class="jt-status-badge jt-status-concluded">Concluded Challenge</span>
+                        <span class="jt-prize-pill">&#127942; Gold Distinction</span>
+                    </div>
+                    <h3 class="jt-contest-title">Summer Artisanal Seafood Showcase</h3>
+                    <p class="jt-contest-desc">Celebrating sustainable coastal cuisine, light citrus marinades, and pan-seared seafood perfection. Submissions closed; review the concluded showcase and criteria.</p>
+                    <div class="jt-contest-footer">
+                        <a asp-controller="Contests" asp-action="Detail" asp-route-slug="summer-artisanal-seafood-showcase" class="jt-btn-editorial jt-btn-glass jt-btn-sm">
+                            View Showcase &rarr;
+                        </a>
+                    </div>
+                </article>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 09: FINAL EDITORIAL CTA (Bright French Linen Canvas)
+         (Mirrors reference: Huge serif typography with overlapping imagery)
+         ==================================================================== -->
+    <section class="jt-section jt-cta-section" id="section-cta" data-header-theme="light" aria-label="The Journey Begins">
+        <div class="jt-cta-container">
+
+            <div class="jt-cta-grid">
+                <!-- Left Typographic Callout -->
+                <div class="jt-cta-text-block">
+                    <span class="jt-light-eyebrow">The Journey Begins</span>
+                    <h2 class="jt-cta-massive-title">
+                        Your Next Dish <br />
+                        <span class="jt-serif-italic">Starts Here</span>
+                    </h2>
+                    <p class="jt-cta-lead">
+                        From foundational weeknight cookery to Michelin-grade masterclasses. Elevate your culinary discipline with James Thew.
+                    </p>
+
+                    <div class="jt-cta-actions">
+                        <a asp-controller="Recipes" asp-action="Index" class="jt-btn-editorial jt-btn-gold">
+                            <span>Browse All Recipes (@Model.TotalRecipesCount)</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                        <a asp-controller="Tips" asp-action="Index" class="jt-btn-editorial jt-btn-outline-dark">
+                            Culinary Secrets (@Model.TotalTipsCount)
+                        </a>
+                        <a asp-controller="Account" asp-action="Register" class="jt-btn-editorial jt-btn-outline-gold">
+                            Join Masterclasses
+                        </a>
+                    </div>
+
+                    <p class="jt-cta-disclaimer">
+                        * Note: Simulated academic demonstration project. Subscriptions and approvals are managed for demonstration purposes.
+                    </p>
+                </div>
+
+                <!-- Right Overlapping Artisanal Bread & Olive Oil Visual (Generated Asset) -->
+                <div class="jt-cta-visual-block" id="ctaVisualBlock" aria-hidden="true">
+                    <div class="jt-cta-img-card">
+                        <img src="@Url.Content("~/assets/landing/editorial/cta-sourdough-olive-oil.webp")"
+                             alt="Artisanal sourdough bread with golden olive oil"
+                             class="jt-cta-feature-img"
+                             loading="lazy" />
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION: FREQUENTLY ASKED QUESTIONS
+         ==================================================================== -->
+    <section class="jt-section jt-faq-editorial-section" id="section-faq" data-header-theme="light" aria-label="Frequently Asked Questions">
+        <div class="jt-faq-editorial-container">
+            <div class="jt-faq-editorial-header">
+                <span class="jt-light-eyebrow">Clear Answers</span>
+                <h2 class="jt-faq-editorial-headline">Frequently Asked Questions</h2>
+                <p class="jt-faq-editorial-lead">Common questions regarding guest access, membership tiers, submissions, and contest rules.</p>
+            </div>
+            <div class="jt-faq-editorial-list">
+                @foreach (var faq in Model.QuickFaqs)
+                {
+                    <details class="jt-faq-editorial-card" id="@faq.QuestionKey">
+                        <summary class="jt-faq-editorial-summary">
+                            <span>@faq.Question</span>
+                            <span class="jt-faq-editorial-icon" aria-hidden="true">+</span>
+                        </summary>
+                        <div class="jt-faq-editorial-answer">
+                            <p class="mb-0">@faq.Answer</p>
+                        </div>
+                    </details>
+                }
+            </div>
+            <div class="text-center mt-4">
+                <a asp-controller="Faq" asp-action="Index" class="jt-btn-editorial jt-btn-outline-dark jt-btn-sm">
+                    View All Official FAQ Answers &rarr;
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 10: PREMIUM FOOTER (Obsidian Base with Giant 4% Watermark)
+         (Mirrors reference: Deep dark grounded footer with subtle ambient lighting)
+         ==================================================================== -->
+    <footer class="jt-section jt-luxury-footer" id="section-footer" data-header-theme="dark" aria-label="Site Navigation and Legal">
+        <div class="jt-footer-watermark" aria-hidden="true">JAMES THEW</div>
+
+        <div class="jt-footer-inner-content">
+            <div class="jt-footer-columns">
+
+                <!-- Col 1: Crest & Mission -->
+                <div class="jt-footer-col jt-col-brand">
+                    <div class="jt-footer-crest">
+                        <span class="jt-crest-initials">JT</span>
+                        <span class="jt-crest-title">James Thew</span>
+                    </div>
+                    <p class="jt-footer-bio">
+                        Master Chef James Thew shares the art and discipline of classical gastronomy, time-honored kitchen techniques, and fine dining masterclasses.
+                    </p>
+                    <div class="jt-footer-badges">
+                        <span class="jt-badge-pill">Academic Demo Project</span>
+                        <span class="jt-badge-pill">ASP.NET Core MVC</span>
+                    </div>
+                </div>
+
+                <!-- Col 2: Gastronomy Catalog -->
+                <div class="jt-footer-col">
+                    <h3 class="jt-footer-heading">Gastronomy</h3>
+                    <ul class="jt-footer-nav-list">
+                        <li><a asp-controller="Recipes" asp-action="Index">All Cookery Recipes</a></li>
+                        <li><a asp-controller="Recipes" asp-action="Index" asp-route-visibility="Free">Free Public Recipes</a></li>
+                        <li><a asp-controller="Recipes" asp-action="Index" asp-route-visibility="MembersOnly">Members-Only Recipes</a></li>
+                        <li><a asp-controller="Tips" asp-action="Index">Chef's Cooking Secrets</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Masterclasses & Techniques -->
+                <div class="jt-footer-col">
+                    <h3 class="jt-footer-heading">Masterclasses</h3>
+                    <ul class="jt-footer-nav-list">
+                        <li><a asp-controller="Recipes" asp-action="Detail" asp-route-slug="@(wellingtonRecipe?.Slug ?? "jamess-masterclass-beef-wellington")">Signature Beef Wellington</a></li>
+                        <li><a asp-controller="Recipes" asp-action="Detail" asp-route-slug="@(risottoRecipe?.Slug ?? "mediterranean-seafood-saffron-risotto")">Seafood Saffron Risotto</a></li>
+                        <li><a asp-controller="Tips" asp-action="Detail" asp-route-slug="@(knifeTip?.Slug ?? "mastering-chefs-knife-grip-and-precision-cuts")">Knife Mastery Techniques</a></li>
+                        <li><a asp-controller="Tips" asp-action="Detail" asp-route-slug="@(sauceTip?.Slug ?? "masterclass-french-sauce-emulsions-and-pan-deglazing")">French Sauce Reductions</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Community & Membership -->
+                <div class="jt-footer-col">
+                    <h3 class="jt-footer-heading">Community</h3>
+                    <ul class="jt-footer-nav-list">
+                        <li><a asp-controller="Contests" asp-action="Index">Seasonal Contests</a></li>
+                        <li><a asp-controller="Announcements" asp-action="Index">Hall of Fame Winners</a></li>
+                        <li><a asp-controller="Faq" asp-action="Index">Frequently Asked Questions</a></li>
+                        <li><a asp-controller="Feedback" asp-action="Index">Community Feedback</a></li>
+                        <li><a asp-controller="Account" asp-action="Register">Join as Member</a></li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Footer Bottom Bar -->
+            <div class="jt-footer-bottom-bar">
+                <div class="jt-bottom-copy">
+                    &copy; 2026 James Thew Culinary Excellence. Academic Submission. All rights reserved.
+                </div>
+                <div class="jt-bottom-links">
+                    <a asp-controller="Home" asp-action="Privacy">Privacy Policy</a>
+                    <span class="jt-sep">&bull;</span>
+                    <a asp-controller="Faq" asp-action="Index">Platform Architecture</a>
+                    <span class="jt-sep">&bull;</span>
+                    <a href="#hero-story">Back to Top &uarr;</a>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </footer>
 
-<!-- Quick FAQ Preview Section -->
-<section class="mb-4">
-    <div class="text-center max-w-700 mx-auto mb-4">
-        <span class="jt-brand-tag">Clear Answers</span>
-        <h2>Frequently Asked Questions</h2>
-        <p class="text-muted">Common questions regarding guest access, membership tiers, submissions, and contest rules.</p>
-    </div>
+</div>
 
-    <div class="jt-faq-list">
-        @foreach (var faq in Model.QuickFaqs)
-        {
-            <details class="jt-faq-item" id="@faq.QuestionKey">
-                <summary class="jt-faq-summary">@faq.Question</summary>
-                <div class="jt-faq-answer">
-                    <p class="mb-0">@faq.Answer</p>
-                </div>
-            </details>
-        }
-    </div>
-
-    <div class="text-center mt-4">
-        <a asp-controller="Faq" asp-action="Index" class="jt-btn jt-btn-secondary">View All 7 Official FAQ Answers &rarr;</a>
-    </div>
-</section>
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="~/js/landing-scroll.js" asp-append-version="true"></script>
+}

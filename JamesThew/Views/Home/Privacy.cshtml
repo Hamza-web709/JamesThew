@@ -1,6 +1,64 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Privacy Policy & Academic Disclosure";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<!-- Fixed Community Background Layer (Family B - Community) -->
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-community.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
+</div>
+
+<div class="jt-inner-shell">
+    <article class="jt-inner-container-md">
+
+        <!-- Page Hero -->
+        <div class="jt-page-hero">
+            <span class="jt-page-eyebrow">
+                <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                Official Disclosures
+            </span>
+            <h1 class="jt-page-title">Privacy Policy &amp; <span class="jt-serif-italic">Data Stewardship</span></h1>
+            <p class="jt-page-lead">
+                Our principles regarding visitor information, member authentication, and simulated academic transactions.
+            </p>
+        </div>
+
+        <div class="jt-glass-panel jt-card-interactive-utility p-4 p-md-5 mb-5 position-relative">
+            <div class="jt-card-spotlight" aria-hidden="true"></div>
+            <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                <span class="jt-badge-demo-pill">&#9888; Academic Demo Disclaimer</span>
+            </div>
+
+            <h2 class="h4 jt-serif text-light mb-3">1. Academic Nature &amp; Scope</h2>
+            <p class="text-light-secondary lh-lg mb-4">
+                JamesThew.com is an educational eProject web application developed for academic evaluation under the Aptech curriculum. All services, including membership tiers ($10/month and $100/year), payment confirmations, and contest submissions, operate in a simulated academic environment. No actual banking data, credit card numbers, or real monetary transactions are ever processed, stored, or solicited.
+            </p>
+
+            <h2 class="h4 jt-serif text-light mb-3">2. Account Credentials &amp; Security</h2>
+            <p class="text-light-secondary lh-lg mb-4">
+                When you create a Member account, your password is encrypted and hashed using ASP.NET Core Identity standards (PBKDF2 with SHA-256 / HMAC-SHA512). We do not store plaintext passwords. Email addresses and display names are utilized solely to identify recipe contributions, forum feedback, and competition entries within this demonstration portal.
+            </p>
+
+            <h2 class="h4 jt-serif text-light mb-3">3. Recipe &amp; Culinary Submissions</h2>
+            <p class="text-light-secondary lh-lg mb-4">
+                Artisanal formulations, culinary tips, and seasonal contest entries submitted by registered members remain the intellectual property of their creators while granting JamesThew.com rights to display and evaluate them within the community contest jury system.
+            </p>
+
+            <div class="pt-3 border-top border-secondary border-opacity-25">
+                <a asp-controller="Home" asp-action="Index" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm">
+                    &larr; Return to Sanctuary Home
+                </a>
+            </div>
+        </div>
+
+    </article>
+</div>
+
+@section Scripts {
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
+}

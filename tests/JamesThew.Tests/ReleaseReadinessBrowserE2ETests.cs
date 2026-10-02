@@ -5,7 +5,22 @@ namespace JamesThew.Tests;
 
 public class ReleaseReadinessBrowserE2ETests
 {
-    private static readonly byte[] ValidPngBytes = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
+    private static byte[] ValidPngBytes => ReadAssetBytes("wwwroot", "assets", "landing", "hero", "generated", "hero-dish-beef-wellington.png");
+
+    private static byte[] ReadAssetBytes(params string[] relativeParts)
+    {
+        var dir = AppContext.BaseDirectory;
+        while (!string.IsNullOrEmpty(dir))
+        {
+            var candidate = Path.Combine(new[] { dir, "JamesThew" }.Concat(relativeParts).ToArray());
+            if (File.Exists(candidate))
+            {
+                return File.ReadAllBytes(candidate);
+            }
+            dir = Path.GetDirectoryName(dir);
+        }
+        throw new FileNotFoundException("Could not locate test image asset.", Path.Combine(relativeParts));
+    }
     [Fact]
     public async Task Phase6A_Automated_EndToEnd_ReleaseReadiness_And_Responsive_Audit()
     {
@@ -249,7 +264,7 @@ public class ReleaseReadinessBrowserE2ETests
             var tempImagePath = Path.Combine(Path.GetTempPath(), $"qa-img-{runId}.png");
             await File.WriteAllBytesAsync(tempImagePath, ValidPngBytes);
 
-            await adminPage.ClickAsync("button:has-text('+ Upload Image')");
+            await adminPage.ClickAsync("button:has-text('Upload Image')");
             await adminPage.WaitForTimeoutAsync(500);
             await adminPage.SetInputFilesAsync("#uploadMediaModal input[type='file']", tempImagePath);
             await adminPage.ClickAsync("#uploadMediaModal button[type='submit']");

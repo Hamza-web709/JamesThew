@@ -1,26 +1,75 @@
-@model JamesThew.ViewModels.LoginViewModel
-@{ ViewData["Title"] = "Login"; }
-<div class="row"><div class="col-md-6 col-lg-5">
-    <h1>Login</h1>
-    <form asp-controller="Account" asp-action="Login" method="post">
-        <div asp-validation-summary="All" class="text-danger" role="alert"></div>
-        <input asp-for="ReturnUrl" type="hidden" />
-        <div class="mb-3">
-            <label asp-for="Email" class="form-label"></label>
-            <input asp-for="Email" class="form-control" autocomplete="username" />
-            <span asp-validation-for="Email" class="text-danger"></span>
+﻿@model JamesThew.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Member Sign In";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<!-- Fixed Account Background Layer (Family D - Account) -->
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-account.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
+</div>
+
+<div class="jt-inner-shell">
+    <div class="jt-inner-container-sm">
+
+        <!-- Page Header -->
+        <div class="jt-page-hero">
+            <span class="jt-page-eyebrow">
+                <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                Culinary Sanctuary Access
+            </span>
+            <h1 class="jt-page-title">Sign In to Your <span class="jt-serif-italic">Account</span></h1>
+            <p class="jt-page-lead">
+                Access your saved recipes, seasonal contest entries, and exclusive fine dining masterclasses.
+            </p>
         </div>
-        <div class="mb-3">
-            <label asp-for="Password" class="form-label"></label>
-            <input asp-for="Password" class="form-control" autocomplete="current-password" />
-            <span asp-validation-for="Password" class="text-danger"></span>
+
+        <!-- Glass Auth Card -->
+        <div class="jt-glass-panel jt-glass-panel-pinnacle jt-form-card jt-card-interactive-utility position-relative">
+            <div class="jt-card-spotlight" aria-hidden="true"></div>
+            <form asp-controller="Account" asp-action="Login" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="jt-validation-summary" role="alert"></div>
+                <input asp-for="ReturnUrl" type="hidden" />
+
+                <div class="jt-form-group">
+                    <label asp-for="Email" class="jt-form-label">Email Address</label>
+                    <input asp-for="Email" class="jt-form-input" autocomplete="username" placeholder="chef@jamesthew.com" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="jt-form-group">
+                    <label asp-for="Password" class="jt-form-label">Password</label>
+                    <input asp-for="Password" class="jt-form-input" autocomplete="current-password" placeholder="••••••••••••" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="jt-form-check">
+                    <input asp-for="RememberMe" id="rememberMeInput" />
+                    <label for="rememberMeInput" class="mb-0">Keep me signed in on this workstation</label>
+                </div>
+
+                <button type="submit" class="jt-btn-editorial jt-btn-gold w-100">
+                    <span>Sign In to Sanctuary</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+
+                <div class="jt-auth-links">
+                    <span>Don't have an account yet?</span>
+                    <a asp-action="Register" asp-route-returnUrl="@Model?.ReturnUrl">Create a Member account &rarr;</a>
+                </div>
+            </form>
         </div>
-        <div class="form-check mb-3">
-            <input asp-for="RememberMe" class="form-check-input" />
-            <label asp-for="RememberMe" class="form-check-label"></label>
-        </div>
-        <button type="submit" class="btn btn-primary">Login</button>
-        <a asp-action="Register" class="ms-2">Create an account</a>
-    </form>
-</div></div>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
+}

@@ -7,22 +7,27 @@
     <meta name="description" content="Explore master chef recipes, culinary secrets, knife skills, and cooking tips by James Thew. Discover both free public recipes and exclusive members-only masterclasses." />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
-    <header class="jt-header">
+    <header class="jt-header jt-header-capsule" id="jtHeader" data-theme="dark">
         <nav class="jt-navbar" aria-label="Main Navigation">
             <a class="jt-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                <span>James Thew</span>
-                <span class="jt-brand-tag">Gastronomy</span>
+                <span class="jt-brand-crest">JT</span>
+                <span class="jt-brand-text">
+                    <span class="jt-brand-name">James Thew</span>
+                    <span class="jt-brand-tag">Sanctuary</span>
+                </span>
             </a>
 
             <button id="navbarToggleBtn" class="jt-nav-toggle" type="button" aria-expanded="false" aria-controls="navbarSupportedContent" aria-label="Toggle navigation">
-                &#9776;
+                <span class="jt-toggle-line"></span>
+                <span class="jt-toggle-line"></span>
             </button>
 
-            <div id="navbarSupportedContent" class="jt-nav-collapse d-sm-flex align-items-center justify-content-between flex-grow-1 ms-lg-4">
+            <div id="navbarSupportedContent" class="jt-nav-collapse">
                 <ul class="jt-nav-links">
                     <li><a class="jt-nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
                     <li><a class="jt-nav-link" asp-area="" asp-controller="Recipes" asp-action="Index">Recipes</a></li>
@@ -42,7 +47,9 @@
         @RenderBody()
     </main>
 
-    <footer class="jt-footer">
+    @if (ViewData["HideDefaultFooter"] as bool? != true)
+    {
+        <footer class="jt-footer">
         <div class="jt-footer-inner">
             <div>
                 <h3 class="jt-footer-title">James Thew Culinary</h3>
@@ -96,6 +103,7 @@
             </div>
         </div>
     </footer>
+    }
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

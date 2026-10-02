@@ -1,179 +1,210 @@
-@model JamesThew.ViewModels.FeedbackIndexViewModel
+﻿@model JamesThew.ViewModels.FeedbackIndexViewModel
 @{
     ViewData["Title"] = "Feedback - Member Inquiries & Culinary Reviews";
 }
 
-<div class="text-center max-w-700 mx-auto mb-5">
-    <span class="jt-brand-tag">Community Feedback</span>
-    <h1 class="mb-2">Culinary Feedback &amp; Suggestions</h1>
-    <p class="lead text-muted">
-        Your questions, gastronomic insights, and suggestions help Chef James Thew refine our recipes, masterclasses, and platform.
-    </p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<!-- Fixed Community Background Layer (Family B - Community) -->
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-community.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
 </div>
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show max-w-860 mx-auto mb-4" role="alert">
-        <strong>&#10004; Submitted!</strong> @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
+<div class="jt-inner-shell">
+    <div class="jt-inner-container-md">
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show max-w-860 mx-auto mb-4" role="alert">
-        <strong>&#9888; Error:</strong> @TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
-<div class="max-w-860 mx-auto">
-    @if (!Model.IsAuthenticated)
-    {
-        <div class="p-4 p-md-5 bg-white rounded-4 border mb-5 shadow-sm text-center">
-            <div class="mb-3">
-                <span class="jt-badge jt-badge-paid">&#128274; Member-Only Feature</span>
-            </div>
-            <h2 class="h4 jt-serif mb-2">Sign-In Required to Submit Feedback</h2>
-            <p class="text-muted max-w-600 mx-auto mb-4">
-                To maintain high-quality culinary discussion and prevent automated spam, submitting feedback requires an active Member account. Unauthenticated visitors are warmly invited to browse our free recipes, tips, and FAQ.
+        <!-- Page Hero -->
+        <div class="jt-page-hero">
+            <span class="jt-page-eyebrow">
+                <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                Community Dialogue
+            </span>
+            <h1 class="jt-page-title">Culinary Feedback &amp; <span class="jt-serif-italic">Inquiries</span></h1>
+            <p class="jt-page-lead">
+                Your questions, gastronomic insights, and suggestions help Chef James Thew refine our recipes, masterclasses, and platform.
             </p>
-            <div class="d-flex justify-content-center gap-3">
-                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="jt-btn jt-btn-primary">
-                    Sign In to Submit Feedback
-                </a>
-                <a asp-controller="Account" asp-action="Register" class="jt-btn jt-btn-outline">
-                    Register New Account
-                </a>
-            </div>
-        </div>
-    }
-    else
-    {
-        <div class="p-4 p-md-5 bg-white rounded-4 border mb-5 shadow-sm">
-            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                <div>
-                    <h2 class="h4 jt-serif mb-1">Submit Your Feedback</h2>
-                    <p class="text-muted small mb-0">Signed in as <strong>@Model.UserDisplayName</strong></p>
-                </div>
-                <span class="badge bg-light text-dark border px-3 py-2">
-                    &#128221; Member Feedback Intake
-                </span>
-            </div>
-
-            <form asp-controller="Feedback" asp-action="Submit" method="post" id="feedbackForm">
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
-
-                <div class="row g-3 mb-3">
-                    <div class="col-md-7">
-                        <label asp-for="Form.Category" class="form-label fw-bold small text-uppercase">Feedback Topic / Category</label>
-                        <select asp-for="Form.Category" class="form-select">
-                            <option value="General Culinary Feedback">General Culinary Feedback</option>
-                            <option value="Recipe Technique Question">Recipe Technique Question</option>
-                            <option value="Masterclass Suggestion">Masterclass Suggestion</option>
-                            <option value="Portal Feature Suggestion">Portal Feature Suggestion</option>
-                            <option value="Ingredients &amp; Sourcing Inquiry">Ingredients &amp; Sourcing Inquiry</option>
-                        </select>
-                        <span asp-validation-for="Form.Category" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-5">
-                        <label asp-for="Form.Rating" class="form-label fw-bold small text-uppercase">Overall Rating (Optional)</label>
-                        <select asp-for="Form.Rating" class="form-select">
-                            <option value="">-- No Rating --</option>
-                            <option value="5">&#9733;&#9733;&#9733;&#9733;&#9733; (5/5) Exceptional</option>
-                            <option value="4">&#9733;&#9733;&#9733;&#9733;&#9734; (4/5) Very Good</option>
-                            <option value="3">&#9733;&#9733;&#9733;&#9734;&#9734; (3/5) Average</option>
-                            <option value="2">&#9733;&#9733;&#9734;&#9734;&#9734; (2/5) Needs Improvement</option>
-                            <option value="1">&#9733;&#9734;&#9734;&#9734;&#9734; (1/5) Poor</option>
-                        </select>
-                        <span asp-validation-for="Form.Rating" class="text-danger small"></span>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label asp-for="Form.Message" class="form-label fw-bold small text-uppercase">Your Message / Feedback</label>
-                    <textarea asp-for="Form.Message" class="form-control" rows="5" placeholder="Share your experience, culinary observations, questions, or ideas with Chef James Thew..."></textarea>
-                    <div class="form-text small">Please provide between 10 and 2000 characters. All feedback is reviewed by the editorial team.</div>
-                    <span asp-validation-for="Form.Message" class="text-danger small"></span>
-                </div>
-
-                <div class="d-flex justify-content-end">
-                    <button type="submit" class="jt-btn jt-btn-primary" id="btnSubmitFeedback">
-                        Submit Feedback &#8594;
-                    </button>
-                </div>
-            </form>
         </div>
 
-        @if (Model.UserFeedbacks.Count > 0)
+        <!-- TempData Messages -->
+        @if (TempData["SuccessMessage"] != null)
         {
-            <div class="p-4 bg-white rounded-4 border shadow-sm mb-5">
-                <h3 class="h5 jt-serif mb-3">Your Submitted Feedback History (@Model.UserFeedbacks.Count)</h3>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Date</th>
-                                <th>Topic</th>
-                                <th>Rating</th>
-                                <th>Message</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model.UserFeedbacks)
-                            {
-                                <tr>
-                                    <td class="text-nowrap small text-muted">@item.CreatedAtUtc.ToString("MMM dd, yyyy")</td>
-                                    <td>
-                                        <span class="badge bg-light text-dark border">@(item.Category ?? "General")</span>
-                                    </td>
-                                    <td>
-                                        @if (item.Rating.HasValue)
-                                        {
-                                            <span class="text-warning">&#9733; @item.Rating/5</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted small">—</span>
-                                        }
-                                    </td>
-                                    <td class="small" style="max-width: 320px;">
-                                        <div class="text-break">@item.Message</div>
-                                        @if (!string.IsNullOrWhiteSpace(item.AdminNotes))
-                                        {
-                                            <div class="small text-muted mt-1 p-1 bg-light rounded border">
-                                                <strong>Admin Note:</strong> @item.AdminNotes
-                                            </div>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (item.Status == JamesThew.Models.FeedbackStatus.Pending)
-                                        {
-                                            <span class="jt-badge" style="background-color: #FEF3C7; color: #92400E; border: 1px solid #FCD34D;">
-                                                Pending Review
-                                            </span>
-                                        }
-                                        else if (item.Status == JamesThew.Models.FeedbackStatus.Reviewed || item.Status == JamesThew.Models.FeedbackStatus.Approved)
-                                        {
-                                            <span class="jt-badge jt-badge-free">&#10004; Reviewed</span>
-                                        }
-                                        else if (item.Status == JamesThew.Models.FeedbackStatus.Rejected)
-                                        {
-                                            <span class="jt-badge" style="background-color: #FEE2E2; color: #991B1B;">Rejected</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="jt-badge" style="background-color: #F3F4F6; color: #4B5563;">Archived</span>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+            <div class="alert alert-success jt-glass-alert alert-dismissible fade show mb-4" role="alert">
+                <strong>&#10004; Submitted!</strong> @TempData["SuccessMessage"]
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger jt-glass-alert alert-dismissible fade show mb-4" role="alert">
+                <strong>&#9888; Error:</strong> @TempData["ErrorMessage"]
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (!Model.IsAuthenticated)
+        {
+            <!-- Guest Unauthenticated Callout -->
+            <div class="jt-glass-panel jt-card-interactive-utility text-center p-5 mb-5 position-relative">
+                <div class="jt-card-spotlight" aria-hidden="true"></div>
+                <div class="mb-3">
+                    <span class="jt-badge-gold-pill">&#128274; Member-Only Feature</span>
+                </div>
+                <h2 class="h4 jt-serif mb-2 text-light">Sign-In Required to Submit Feedback</h2>
+                <p class="text-light-secondary max-w-600 mx-auto mb-4">
+                    To maintain high-quality culinary discussion and prevent automated spam, submitting feedback requires an active Member account. Unauthenticated visitors are warmly invited to browse our free recipes, tips, and FAQ.
+                </p>
+                <div class="d-flex justify-content-center flex-wrap gap-3">
+                    <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="jt-btn-editorial jt-btn-gold">
+                        Sign In to Submit Feedback &rarr;
+                    </a>
+                    <a asp-controller="Account" asp-action="Register" class="jt-btn-editorial jt-btn-outline-light">
+                        Register New Account
+                    </a>
                 </div>
             </div>
         }
-    }
+        else
+        {
+            <!-- Authenticated Member Feedback Form -->
+            <div class="jt-glass-panel jt-card-interactive-utility mb-5 position-relative">
+                <div class="jt-card-spotlight" aria-hidden="true"></div>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+                    <div>
+                        <h2 class="h4 jt-serif mb-1 text-light">Submit Your Feedback</h2>
+                        <p class="text-light-muted small mb-0">Signed in as <strong class="text-light">@Model.UserDisplayName</strong></p>
+                    </div>
+                    <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25 px-3 py-2">
+                        &#128221; Member Feedback Intake
+                    </span>
+                </div>
+
+                <form asp-controller="Feedback" asp-action="Submit" method="post" id="feedbackForm">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="jt-validation-summary" role="alert"></div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-7">
+                            <label asp-for="Form.Category" class="jt-form-label">Feedback Topic / Category</label>
+                            <select asp-for="Form.Category" class="jt-form-input">
+                                <option value="General Culinary Feedback">General Culinary Feedback</option>
+                                <option value="Recipe Technique Question">Recipe Technique Question</option>
+                                <option value="Masterclass Suggestion">Masterclass Suggestion</option>
+                                <option value="Portal Feature Suggestion">Portal Feature Suggestion</option>
+                                <option value="Ingredients & Sourcing Inquiry">Ingredients &amp; Sourcing Inquiry</option>
+                            </select>
+                            <span asp-validation-for="Form.Category" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-5">
+                            <label asp-for="Form.Rating" class="jt-form-label">Overall Rating (Optional)</label>
+                            <select asp-for="Form.Rating" class="jt-form-input">
+                                <option value="">-- No Rating --</option>
+                                <option value="5">&#9733;&#9733;&#9733;&#9733;&#9733; (5/5) Exceptional</option>
+                                <option value="4">&#9733;&#9733;&#9733;&#9733;&#9734; (4/5) Very Good</option>
+                                <option value="3">&#9733;&#9733;&#9733;&#9734;&#9734; (3/5) Average</option>
+                                <option value="2">&#9733;&#9733;&#9734;&#9734;&#9734; (2/5) Needs Improvement</option>
+                                <option value="1">&#9733;&#9734;&#9734;&#9734;&#9734; (1/5) Poor</option>
+                            </select>
+                            <span asp-validation-for="Form.Rating" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Form.Message" class="jt-form-label">Your Message / Feedback</label>
+                        <textarea asp-for="Form.Message" class="jt-form-input" rows="5" placeholder="Share your experience, culinary observations, questions, or ideas with Chef James Thew..."></textarea>
+                        <div class="form-text text-light-muted small mt-1">Please provide between 10 and 2000 characters. All feedback is reviewed by the culinary editorial team.</div>
+                        <span asp-validation-for="Form.Message" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="jt-btn-editorial jt-btn-gold" id="btnSubmitFeedback">
+                            <span>Submit Feedback</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            @if (Model.UserFeedbacks.Count > 0)
+            {
+                <div class="jt-glass-panel mb-5">
+                    <h3 class="h5 jt-serif mb-3 text-light">Your Submitted Feedback History (@Model.UserFeedbacks.Count)</h3>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-borderless align-middle mb-0" style="background: transparent;">
+                            <thead>
+                                <tr class="small text-light-muted text-uppercase border-bottom border-secondary border-opacity-25">
+                                    <th>Date</th>
+                                    <th>Topic</th>
+                                    <th>Rating</th>
+                                    <th>Message</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.UserFeedbacks)
+                                {
+                                    <tr class="border-bottom border-secondary border-opacity-10">
+                                        <td class="text-nowrap small text-light-muted">@item.CreatedAtUtc.ToString("MMM dd, yyyy")</td>
+                                        <td>
+                                            <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25">@(item.Category ?? "General")</span>
+                                        </td>
+                                        <td>
+                                            @if (item.Rating.HasValue)
+                                            {
+                                                <span class="text-warning">&#9733; @item.Rating/5</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-light-muted small">—</span>
+                                            }
+                                        </td>
+                                        <td class="small" style="max-width: 320px;">
+                                            <div class="text-light-secondary text-break">@item.Message</div>
+                                            @if (!string.IsNullOrWhiteSpace(item.AdminNotes))
+                                            {
+                                                <div class="small text-warning mt-1 p-2 rounded border border-warning border-opacity-25" style="background: rgba(245, 158, 11, 0.08);">
+                                                    <strong>Admin Note:</strong> @item.AdminNotes
+                                                </div>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (item.Status == JamesThew.Models.FeedbackStatus.Pending)
+                                            {
+                                                <span class="badge bg-warning text-dark">
+                                                    Pending Review
+                                                </span>
+                                            }
+                                            else if (item.Status == JamesThew.Models.FeedbackStatus.Reviewed || item.Status == JamesThew.Models.FeedbackStatus.Approved)
+                                            {
+                                                <span class="badge bg-success">&#10004; Reviewed</span>
+                                            }
+                                            else if (item.Status == JamesThew.Models.FeedbackStatus.Rejected)
+                                            {
+                                                <span class="badge bg-danger">Rejected</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Archived</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        }
+
+    </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
+}

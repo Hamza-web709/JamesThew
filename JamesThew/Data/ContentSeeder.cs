@@ -243,7 +243,7 @@ public static class ContentSeeder
             Slug = "the-science-of-pan-searing-and-the-maillard-reaction",
             Summary = "[DEMO CONTENT] How to achieve a deep, caramelized restaurant crust by mastering surface moisture, pan heat capacity, and the Maillard reaction.",
             Visibility = ContentVisibility.Free,
-            ImageUrl = "/images/recipes/classic-roast-chicken.jpg",
+            ImageUrl = "/images/tips/pan-searing-maillard.jpg",
             Body = "That savory, deep-brown, umami-rich crust on a pan-seared steak or chicken thigh is not burning—it is the Maillard reaction, a complex chemical reaction between amino acids and reducing sugars that occurs between 140°C and 165°C (285°F to 330°F).\n\nRule 1: Dry Surfaces are Mandatory\nWater cannot exceed 100°C (212°F) under normal atmospheric pressure. If your protein has moisture on its exterior, all pan heat is wasted boiling water into steam instead of creating caramelization. Always pat meat dry with paper towels, or better yet, salt it and rest uncovered in the refrigerator overnight (dry brining) to dehydrate the surface.\n\nRule 2: Choose Heavy Thermal Mass Pans\nThin aluminum non-stick pans lose temperature the second cold meat hits the surface. Use heavy cast iron, carbon steel, or multi-ply stainless steel. These pans store substantial thermal energy and maintain high searing temperatures.\n\nRule 3: Use High Smoke Point Oils\nAvoid extra virgin olive oil or whole butter for high-heat searing—their solids burn at 175°C. Instead, use avocado oil, clarified butter (ghee), grapeseed, or beef tallow, which stay stable past 230°C (450°F).\n\nRule 4: Do Not Overcrowd the Pan\nLeave at least 1-2 inches of space between items. Crowding traps escaping moisture, converting your sear into a simmer."
         });
 
@@ -391,7 +391,7 @@ public static class ContentSeeder
                 Type = ContestType.Recipe,
                 Status = ContestStatus.Published,
                 PrizeDescription = "Chef James Thew Feature Article & Masterclass Culinary Trophy",
-                ImageUrl = "/images/recipes/classic-roast-chicken.jpg",
+                ImageUrl = "/images/recipes/autumn-heritage-stew.jpg",
                 OpensAtUtc = DateTime.UtcNow.AddDays(-7),
                 ClosesAtUtc = DateTime.UtcNow.AddDays(14)
             },

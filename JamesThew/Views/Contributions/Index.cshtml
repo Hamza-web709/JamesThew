@@ -3,17 +3,31 @@
     ViewData["Title"] = "My Culinary Contributions - Community Recipe & Tip Intake";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-community.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
+</div>
+
+<div class="jt-inner-shell jt-member-page">
+    <div class="jt-inner-container">
+
+
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom">
     <div>
         <span class="jt-brand-tag">Member Submissions</span>
-        <h1 class="h2 jt-serif mb-1">My Culinary Contributions</h1>
+        <h1 class="jt-page-title jt-serif mb-1">My Culinary Contributions</h1>
         <p class="text-muted small mb-0">Share your favorite artisanal recipes and professional kitchen tips with the James Thew community.</p>
     </div>
     <div class="d-flex gap-2 mt-3 mt-md-0">
-        <a asp-action="NewRecipe" class="jt-btn jt-btn-primary" id="btnSubmitNewRecipe">
+        <a asp-action="NewRecipe" class="jt-btn-editorial jt-btn-gold" id="btnSubmitNewRecipe">
             &#127859; Submit Recipe
         </a>
-        <a asp-action="NewTip" class="jt-btn jt-btn-accent" id="btnSubmitNewTip">
+        <a asp-action="NewTip" class="jt-btn-editorial jt-btn-gold" id="btnSubmitNewTip">
             &#128161; Submit Cooking Tip
         </a>
     </div>
@@ -37,7 +51,7 @@
 
 <div class="row g-4 mb-5">
     <div class="col-lg-8">
-        <div class="p-4 bg-white rounded-4 border shadow-sm">
+        <div class="p-4 bg-white rounded-4 border shadow-sm jt-glass-panel jt-member-panel jt-card-interactive-utility position-relative"><div class="jt-card-spotlight" aria-hidden="true"></div>
             <h2 class="h5 jt-serif mb-3">Submitted Contributions (@Model.TotalCount)</h2>
 
             @if (Model.Items.Count == 0)
@@ -49,15 +63,15 @@
                         You have not submitted any recipes or cooking tips yet. Click one of the buttons above to share your culinary creations with Chef James Thew!
                     </p>
                     <div class="d-flex justify-content-center gap-2">
-                        <a asp-action="NewRecipe" class="jt-btn jt-btn-primary jt-btn-sm">Submit First Recipe</a>
-                        <a asp-action="NewTip" class="jt-btn jt-btn-outline jt-btn-sm">Submit First Tip</a>
+                        <a asp-action="NewRecipe" class="jt-btn-editorial jt-btn-gold jt-btn-sm">Submit First Recipe</a>
+                        <a asp-action="NewTip" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm">Submit First Tip</a>
                     </div>
                 </div>
             }
             else
             {
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0 jt-member-contributions-table">
                         <thead class="table-light">
                             <tr>
                                 <th>Type</th>
@@ -116,13 +130,13 @@
                                     <td class="text-end text-nowrap">
                                         @if (item.Kind == JamesThew.Models.ContentKind.Recipe)
                                         {
-                                            <a asp-action="EditRecipe" asp-route-id="@item.Id" class="jt-btn jt-btn-outline jt-btn-sm me-1" id="btnEditRecipe-@item.Id">
+                                            <a asp-action="EditRecipe" asp-route-id="@item.Id" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm me-1" id="btnEditRecipe-@item.Id">
                                                 Edit
                                             </a>
                                         }
                                         else
                                         {
-                                            <a asp-action="EditTip" asp-route-id="@item.Id" class="jt-btn jt-btn-outline jt-btn-sm me-1" id="btnEditTip-@item.Id">
+                                            <a asp-action="EditTip" asp-route-id="@item.Id" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm me-1" id="btnEditTip-@item.Id">
                                                 Edit
                                             </a>
                                         }
@@ -142,7 +156,7 @@
     </div>
 
     <div class="col-lg-4">
-        <div class="p-4 bg-white rounded-4 border shadow-sm mb-4">
+        <div class="p-4 bg-white rounded-4 border shadow-sm mb-4 jt-glass-panel jt-member-panel jt-card-interactive-utility position-relative"><div class="jt-card-spotlight" aria-hidden="true"></div>
             <h3 class="h6 jt-serif mb-2">&#128737; Submission &amp; Moderation Policy</h3>
             <p class="small text-muted mb-3">
                 All submitted community recipes and tips undergo editorial review by the James Thew moderation team before being published.
@@ -155,3 +169,9 @@
         </div>
     </div>
 </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
+}

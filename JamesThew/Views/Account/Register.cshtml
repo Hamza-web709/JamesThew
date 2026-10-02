@@ -1,33 +1,84 @@
-@model JamesThew.ViewModels.RegisterViewModel
-@{ ViewData["Title"] = "Register"; }
-<div class="row"><div class="col-md-6 col-lg-5">
-    <h1>Create an account</h1>
-    <p>Registration creates a Member account. It does not activate paid membership.</p>
-    <form asp-controller="Account" asp-action="Register" method="post">
-        <div asp-validation-summary="All" class="text-danger" role="alert"></div>
-        <div class="mb-3">
-            <label asp-for="DisplayName" class="form-label"></label>
-            <input asp-for="DisplayName" class="form-control" autocomplete="nickname" />
-            <span asp-validation-for="DisplayName" class="text-danger"></span>
+﻿@model JamesThew.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Create Account";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<!-- Fixed Account Background Layer (Family D - Account) -->
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-account.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
+</div>
+
+<div class="jt-inner-shell">
+    <div class="jt-inner-container-sm">
+
+        <!-- Page Header -->
+        <div class="jt-page-hero">
+            <span class="jt-page-eyebrow">
+                <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                Join the Culinary Sanctuary
+            </span>
+            <h1 class="jt-page-title">Create Your <span class="jt-serif-italic">Account</span></h1>
+            <p class="jt-page-lead">
+                Registration creates a free Member account. Connect with the culinary community, submit feedback, and track seasonal contests.
+            </p>
         </div>
-        <div class="mb-3">
-            <label asp-for="Email" class="form-label"></label>
-            <input asp-for="Email" class="form-control" autocomplete="email" />
-            <span asp-validation-for="Email" class="text-danger"></span>
+
+        <!-- Glass Auth Card -->
+        <div class="jt-glass-panel jt-glass-panel-pinnacle jt-form-card jt-card-interactive-utility position-relative">
+            <div class="jt-card-spotlight" aria-hidden="true"></div>
+            <form asp-controller="Account" asp-action="Register" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="jt-validation-summary" role="alert"></div>
+
+                <div class="jt-form-group">
+                    <label asp-for="DisplayName" class="jt-form-label">Display Name / Chef Moniker</label>
+                    <input asp-for="DisplayName" class="jt-form-input" autocomplete="nickname" placeholder="e.g. Chef Laurent" />
+                    <span asp-validation-for="DisplayName" class="text-danger"></span>
+                </div>
+
+                <div class="jt-form-group">
+                    <label asp-for="Email" class="jt-form-label">Email Address</label>
+                    <input asp-for="Email" class="jt-form-input" autocomplete="email" placeholder="chef@jamesthew.com" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="jt-form-group">
+                    <label asp-for="Password" class="jt-form-label">Password</label>
+                    <input asp-for="Password" class="jt-form-input" autocomplete="new-password" aria-describedby="password-help" placeholder="••••••••••••" />
+                    <small id="password-help" class="d-block mt-1" style="color: var(--jt-text-light-muted); font-size: 0.78rem;">
+                        Use 12-128 characters, with uppercase, lowercase, a number and a symbol.
+                    </small>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="jt-form-group">
+                    <label asp-for="ConfirmPassword" class="jt-form-label">Confirm Password</label>
+                    <input asp-for="ConfirmPassword" class="jt-form-input" autocomplete="new-password" placeholder="••••••••••••" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="jt-btn-editorial jt-btn-gold w-100 mt-2">
+                    <span>Create Free Account</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+
+                <div class="jt-auth-links">
+                    <span>Already have a member account?</span>
+                    <a asp-action="Login">Sign in here &rarr;</a>
+                </div>
+            </form>
         </div>
-        <div class="mb-3">
-            <label asp-for="Password" class="form-label"></label>
-            <input asp-for="Password" class="form-control" autocomplete="new-password" aria-describedby="password-help" />
-            <div id="password-help" class="form-text">Use 12-128 characters, with uppercase, lowercase, a number and a symbol.</div>
-            <span asp-validation-for="Password" class="text-danger"></span>
-        </div>
-        <div class="mb-3">
-            <label asp-for="ConfirmPassword" class="form-label"></label>
-            <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
-            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-        </div>
-        <button type="submit" class="btn btn-primary">Register</button>
-        <a asp-action="Login" class="ms-2">Already have an account?</a>
-    </form>
-</div></div>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
+}

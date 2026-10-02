@@ -5,7 +5,22 @@ namespace JamesThew.Tests;
 
 public class AdminMediaBrowserE2ETests
 {
-    private static readonly byte[] ValidPngBytes = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
+    private static byte[] ValidPngBytes => ReadAssetBytes("wwwroot", "assets", "landing", "hero", "generated", "hero-dish-beef-wellington.png");
+
+    private static byte[] ReadAssetBytes(params string[] relativeParts)
+    {
+        var dir = AppContext.BaseDirectory;
+        while (!string.IsNullOrEmpty(dir))
+        {
+            var candidate = Path.Combine(new[] { dir, "JamesThew" }.Concat(relativeParts).ToArray());
+            if (File.Exists(candidate))
+            {
+                return File.ReadAllBytes(candidate);
+            }
+            dir = Path.GetDirectoryName(dir);
+        }
+        throw new FileNotFoundException("Could not locate test image asset.", Path.Combine(relativeParts));
+    }
 
     [Fact]
     public async Task Phase4_Step2_Automated_Browser_Media_Management_Lifecycle()
@@ -98,7 +113,7 @@ public class AdminMediaBrowserE2ETests
             // Scenario 4: Admin uploads valid image
             // -------------------------------------------------------------
             // Open upload modal and set file
-            await adminPage.ClickAsync("button:has-text('+ Upload Image')");
+            await adminPage.ClickAsync("button:has-text('Upload Image')");
             await adminPage.WaitForSelectorAsync("#uploadMediaModal.show", new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible });
 
             await adminPage.SetInputFilesAsync("#uploadMediaModal input[type='file']", tempImagePath);

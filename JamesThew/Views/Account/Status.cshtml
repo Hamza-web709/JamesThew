@@ -1,92 +1,136 @@
-@model JamesThew.ViewModels.UserProfileViewModel
-@{ ViewData["Title"] = "User Profile & Account Dashboard"; }
+﻿@model JamesThew.ViewModels.UserProfileViewModel
+@{
+    ViewData["Title"] = "User Profile & Account Dashboard";
+}
 
-<div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm max-w-700 mx-auto my-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <span class="jt-brand-tag">Member Profile</span>
-            <h1 class="h3 jt-serif mb-0">User Profile &amp; Account</h1>
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<!-- Fixed Account Background Layer (Family D - Account) -->
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-account.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
+</div>
+
+<div class="jt-inner-shell">
+    <div class="jt-inner-container-md">
+
+        <!-- Page Hero -->
+        <div class="jt-page-hero">
+            <span class="jt-page-eyebrow">
+                <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                Member Sanctuary
+            </span>
+            <h1 class="jt-page-title">Account Profile &amp; <span class="jt-serif-italic">Dashboard</span></h1>
+            <p class="jt-page-lead">
+                Welcome, <strong class="text-light">@Model.DisplayName</strong>. Manage your culinary profile, track masterclass access, and explore member activities.
+            </p>
         </div>
-        <span class="badge bg-secondary-subtle text-secondary border">@Model.Roles</span>
-    </div>
 
-    <p class="lead">Welcome, <strong>@Model.DisplayName</strong>.</p>
-    <p class="text-muted">You are signed in. Registration alone does not grant paid membership access.</p>
+        @if (TempData["ProfileSuccess"] != null)
+        {
+            <div class="alert alert-success jt-glass-alert alert-dismissible fade show mb-4" role="alert" id="alertProfileSuccess">
+                <strong>&#10004; Success!</strong> @TempData["ProfileSuccess"]
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
 
-    @if (TempData["ProfileSuccess"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" id="alertProfileSuccess">
-            <strong>&#10004; Success!</strong> @TempData["ProfileSuccess"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <!-- Profile Editing Glass Card (REQ-005) -->
+        <div class="jt-glass-panel mb-4" id="cardEditProfile">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 pb-2 border-bottom border-secondary border-opacity-25">
+                <h2 class="h5 jt-serif mb-0 text-light">&#128100; Edit Profile Details</h2>
+                <span class="badge bg-secondary bg-opacity-25 text-warning border border-secondary border-opacity-25 px-3 py-1 font-monospace">
+                    Role: @Model.Roles
+                </span>
+            </div>
+
+            <form asp-action="UpdateProfile" method="post" id="formEditProfile">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="jt-validation-summary" role="alert"></div>
+
+                <div class="mb-4">
+                    <label class="jt-form-label">Registered Email</label>
+                    <input type="text" class="jt-form-input opacity-75" id="inputEmail" value="@Model.Email" readonly disabled />
+                    <div class="form-text text-light-muted small mt-1">Email address is managed by security policies and cannot be modified directly.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="DisplayName" class="jt-form-label">Public Display Name</label>
+                    <input asp-for="DisplayName" class="jt-form-input" id="inputDisplayName" placeholder="Your full or pen name..." />
+                    <span asp-validation-for="DisplayName" class="text-danger small"></span>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="jt-btn-editorial jt-btn-gold" id="btnUpdateProfile">
+                        <span>Save Profile Changes</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </form>
         </div>
-    }
 
-    <!-- Same-Page Profile Editing Card (REQ-005) -->
-    <div class="p-4 rounded-3 border mb-4 bg-light" id="cardEditProfile">
-        <h2 class="h6 mb-3">&#128100; Edit Profile Details</h2>
-        <form asp-action="UpdateProfile" method="post" id="formEditProfile">
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-uppercase text-muted">Registered Email</label>
-                <input type="text" class="form-control bg-white" id="inputEmail" value="@Model.Email" readonly disabled />
-                <div class="form-text small">Email address is managed by security policies and cannot be modified directly.</div>
+        <!-- Membership & Masterclass Status Card -->
+        <div class="jt-glass-panel p-4 mb-4">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="fs-5 text-warning">&#127859;</span>
+                <h2 class="h5 jt-serif mb-0 text-light">Membership &amp; Masterclass Access</h2>
             </div>
+            <p class="small text-light-secondary mb-2">
+                Status: <strong class="text-warning">@Model.SubscriptionStatus</strong>
+            </p>
+            <p class="small text-light-muted mb-4">
+                Access to exclusive culinary masterclasses and secret preparation techniques requires an approved demo subscription plan ($10/month or $100/year). Standard registration does not grant paid membership access.
+            </p>
+            <a asp-controller="Membership" asp-action="Index" class="jt-btn-editorial jt-btn-gold jt-btn-sm">
+                View / Request Subscription &rarr;
+            </a>
+        </div>
 
-            <div class="mb-3">
-                <label asp-for="DisplayName" class="form-label fw-bold small text-uppercase">Public Display Name</label>
-                <input asp-for="DisplayName" class="form-control" id="inputDisplayName" placeholder="Your full or pen name..." />
-                <span asp-validation-for="DisplayName" class="text-danger small"></span>
+        <!-- Member Quick Activity Navigation -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="jt-glass-panel jt-card-interactive-utility p-4 h-100 d-flex flex-column justify-content-between position-relative">
+                    <div class="jt-card-spotlight" aria-hidden="true"></div>
+                    <div>
+                        <h3 class="h6 jt-serif text-light mb-2">&#127859; My Contributions</h3>
+                        <p class="small text-light-muted mb-3">Submit and manage your artisanal recipes and cooking tips.</p>
+                    </div>
+                    <a asp-controller="Contributions" asp-action="Index" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm text-center">
+                        View Contributions &rarr;
+                    </a>
+                </div>
             </div>
-
-            <div class="d-flex justify-content-end">
-                <button type="submit" class="jt-btn jt-btn-primary" id="btnUpdateProfile">
-                    &#128190; Save Profile Changes
-                </button>
+            <div class="col-md-4">
+                <div class="jt-glass-panel jt-card-interactive-utility p-4 h-100 d-flex flex-column justify-content-between position-relative">
+                    <div class="jt-card-spotlight" aria-hidden="true"></div>
+                    <div>
+                        <h3 class="h6 jt-serif text-light mb-2">&#127942; My Contest Entries</h3>
+                        <p class="small text-light-muted mb-3">Track your culinary competition submissions and jury statuses.</p>
+                    </div>
+                    <a asp-controller="Contests" asp-action="MyEntries" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm text-center">
+                        View Entries &rarr;
+                    </a>
+                </div>
             </div>
-        </form>
-    </div>
-
-    <div class="p-3 rounded-3 border mb-4" style="background-color: var(--jt-surface-warm);">
-        <h2 class="h6 mb-2">&#127859; Membership &amp; Masterclass Access</h2>
-        <p class="small text-muted mb-2">
-            Status: <strong>@Model.SubscriptionStatus</strong>
-        </p>
-        <p class="small text-muted mb-3">
-            Access to exclusive culinary masterclasses and secret preparation techniques requires an approved demo subscription plan ($10/month or $100/year).
-        </p>
-        <a asp-controller="Membership" asp-action="Index" class="jt-btn jt-btn-primary jt-btn-sm">
-            View / Request Subscription &rarr;
-        </a>
-    </div>
-
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="p-3 bg-light rounded-3 border h-100">
-                <h3 class="h6 mb-1">&#127859; My Contributions</h3>
-                <p class="small text-muted mb-3">Submit and manage your artisanal recipes and cooking tips.</p>
-                <a asp-controller="Contributions" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm">
-                    View Contributions &rarr;
-                </a>
+            <div class="col-md-4">
+                <div class="jt-glass-panel jt-card-interactive-utility p-4 h-100 d-flex flex-column justify-content-between position-relative">
+                    <div class="jt-card-spotlight" aria-hidden="true"></div>
+                    <div>
+                        <h3 class="h6 jt-serif text-light mb-2">&#128172; Member Feedback</h3>
+                        <p class="small text-light-muted mb-3">Share observations, suggestions, and inquiries with the chef team.</p>
+                    </div>
+                    <a asp-controller="Feedback" asp-action="Index" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm text-center">
+                        Submit Feedback &rarr;
+                    </a>
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="p-3 bg-light rounded-3 border h-100">
-                <h3 class="h6 mb-1">&#127942; My Contest Entries</h3>
-                <p class="small text-muted mb-3">Track your culinary competition submissions and jury statuses.</p>
-                <a asp-controller="Contests" asp-action="MyEntries" class="jt-btn jt-btn-outline jt-btn-sm">
-                    View Entries &rarr;
-                </a>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="p-3 bg-light rounded-3 border h-100">
-                <h3 class="h6 mb-1">&#128172; Member Feedback</h3>
-                <p class="small text-muted mb-3">Share observations, suggestions, and inquiries with the chef team.</p>
-                <a asp-controller="Feedback" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm">
-                    Submit Feedback &rarr;
-                </a>
-            </div>
-        </div>
+
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
+}

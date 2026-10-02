@@ -1,117 +1,168 @@
-@model JamesThew.ViewModels.TipDetailViewModel
+﻿@model JamesThew.ViewModels.TipDetailViewModel
 @{
     ViewData["Title"] = $"{Model.Title} - Cooking Tip by {Model.AuthorDisplayName}";
 }
 
-<article class="mb-5">
-    <header class="jt-detail-header text-center max-w-700 mx-auto">
-        <div class="mb-2">
-            <a asp-controller="Tips" asp-action="Index" class="text-decoration-none text-muted small">&larr; Back to all cooking tips</a>
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<!-- Fixed Catalog Background Layer (Family A - Catalog) -->
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-catalog.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
+</div>
+
+<div class="jt-inner-shell">
+    <article class="jt-inner-container-md">
+
+        <!-- Top Breadcrumb -->
+        <div class="mb-4">
+            <a asp-controller="Tips" asp-action="Index" class="jt-filter-pill px-3 py-1 text-light-muted">
+                &larr; Back to all cooking tips
+            </a>
         </div>
 
-        <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
-            @if (Model.IsMembersOnly)
-            {
-                <span class="jt-badge jt-badge-paid">&#128274; Exclusive Masterclass Technique</span>
-            }
-            else
-            {
-                <span class="jt-badge jt-badge-free">Free Cooking Tip</span>
-            }
-            <span class="text-muted small">&#128197; Published @Model.CreatedAtUtc.ToString("MMMM dd, yyyy")</span>
-        </div>
-
-        <h1 class="jt-detail-title">@Model.Title</h1>
-
-        <div class="d-flex justify-content-center align-items-center gap-3 text-muted small">
-            <span>&#128100; By <strong>@Model.AuthorDisplayName</strong></span>
-        </div>
-    </header>
-
-    @if (!string.IsNullOrEmpty(Model.ImageUrl))
-    {
-        <div class="jt-detail-img-box max-w-860 mx-auto mb-4">
-            <img src="@Model.ImageUrl" alt="@Model.Title" class="jt-detail-img" />
-        </div>
-    }
-
-    <!-- Summary Box -->
-    <div class="jt-tip-reading mb-4">
-        <h2 class="h6 text-uppercase fw-bold text-muted mb-2" style="letter-spacing: 1px;">Chef's Summary</h2>
-        <p class="lead mb-0" style="color: var(--jt-text); font-size: 1.15rem;">@Model.Summary</p>
-    </div>
-
-    <!-- Protected Locked State vs Unlocked Content -->
-    @if (Model.IsLocked)
-    {
-        <div class="jt-locked-box max-w-860 mx-auto" role="region" aria-label="Members Only Locked Content">
-            <div class="jt-locked-icon">&#128274;</div>
-            <h2 class="jt-locked-title">Exclusive Masterclass Technique</h2>
-            <p class="jt-locked-desc">
-                James Thew's in-depth culinary masterclass—including professional kitchen science, precision emulsion steps, and corrective troubleshooting—is reserved for registered members with an approved demo subscription.
-            </p>
-
-            <div class="jt-locked-pricing">
-                <div>Monthly Plan: <span>$10 / mo</span></div>
-                <div>Annual Plan: <span>$100 / yr</span></div>
-            </div>
-
-            <div class="mb-3">
-                @if (User.Identity?.IsAuthenticated == true)
+        <!-- Technique Hero Header -->
+        <header class="jt-page-hero-left mb-4">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                @if (Model.IsMembersOnly)
                 {
-                    <a asp-controller="Membership" asp-action="Index" class="jt-btn jt-btn-primary">
-                        View Demo Subscription Status &rarr;
-                    </a>
+                    <span class="badge bg-warning text-dark font-monospace px-3 py-1">&#128274; Exclusive Masterclass Technique</span>
                 }
                 else
                 {
-                    <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="jt-btn jt-btn-primary">
-                        Sign In to View
-                    </a>
-                    <a asp-controller="Account" asp-action="Register" class="jt-btn jt-btn-outline ms-2">
-                        Create Member Account
-                    </a>
+                    <span class="badge bg-dark bg-opacity-75 text-light border border-secondary border-opacity-50 px-3 py-1">Free Cooking Tip</span>
                 }
+                <span class="text-light-muted small">&#128197; Published @Model.CreatedAtUtc.ToString("MMMM dd, yyyy")</span>
             </div>
 
-            <p class="small text-muted mb-0">
-                <em>* Policy Notice: In accordance with project specifications, protected tip bodies require an active, approved demo subscription ($10/mo or $100/yr) or administrative review.</em>
-            </p>
-        </div>
-    }
-    else
-    {
-        <div class="jt-tip-reading">
-            <h2 class="h5 jt-serif mb-3 border-bottom pb-2">Culinary Guide &amp; Technique</h2>
-            <div class="jt-tip-body">@Model.Body</div>
-        </div>
-    }
+            <h1 class="jt-page-title mb-3">@Model.Title</h1>
 
-    <!-- Related Tips -->
-    @if (Model.RelatedTips.Count > 0)
-    {
-        <section class="mt-5 max-w-860 mx-auto">
-            <h3 class="h4 jt-serif mb-3">More Kitchen Wisdom</h3>
-            <div class="row g-3">
-                @foreach (var related in Model.RelatedTips)
-                {
-                    <div class="col-md-4">
-                        <div class="p-3 bg-white rounded-3 border h-100 shadow-sm d-flex flex-column">
-                            <span class="small text-muted mb-1">&#128197; @related.CreatedAtUtc.ToString("MMM dd")</span>
-                            <h4 class="h6 mb-2">
-                                <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@related.Slug" class="text-decoration-none text-dark">
-                                    @related.Title
-                                </a>
-                            </h4>
-                            <div class="mt-auto pt-2">
-                                <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@related.Slug" class="small text-danger fw-bold">
-                                    Read tip &rarr;
-                                </a>
+            <div class="d-flex align-items-center gap-3 text-light-muted small font-monospace">
+                <span>&#128100; Curated by <strong class="text-light">@Model.AuthorDisplayName</strong></span>
+            </div>
+        </header>
+
+        <!-- Main Technique Image -->
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <div class="rounded-4 overflow-hidden mb-4 border border-secondary border-opacity-25 shadow-lg" style="max-height: 460px;">
+                <img src="@Model.ImageUrl" alt="@Model.Title" class="w-100 h-100 object-fit-cover" />
+            </div>
+        }
+        else
+        {
+            <div class="rounded-4 overflow-hidden mb-4 border border-secondary border-opacity-25 shadow-lg d-flex flex-column align-items-center justify-content-center p-5 jt-fallback-artwork" style="min-height: 280px;">
+                <span class="fs-1 text-warning mb-2">&#128161;</span>
+                <span class="text-light-muted font-monospace small">Chef James Thew Masterclass Culinary Technique</span>
+            </div>
+        }
+
+        <!-- Summary Box -->
+        <div class="jt-glass-panel p-4 mb-4">
+            <h2 class="h6 text-uppercase fw-bold text-warning mb-2" style="letter-spacing: 1.5px;">Chef's Summary</h2>
+            <p class="lead mb-0 text-light" style="font-size: 1.15rem; line-height: 1.7;">@Model.Summary</p>
+        </div>
+
+        <!-- Protected Locked State vs Unlocked Content -->
+        @if (Model.IsLocked)
+        {
+            <div class="jt-locked-box jt-glass-panel jt-glass-panel-pinnacle jt-card-interactive-utility text-center p-5 mb-5 position-relative" role="region" aria-label="Members Only Locked Content">
+                <div class="jt-card-spotlight" aria-hidden="true"></div>
+                <div class="fs-1 text-warning mb-2">&#128274;</div>
+                <h2 class="h3 jt-serif text-light mb-2">Exclusive Masterclass Technique</h2>
+                <p class="text-light-secondary max-w-600 mx-auto mb-4">
+                    James Thew's in-depth culinary masterclass—including professional kitchen science, precision emulsion steps, and corrective troubleshooting—is reserved for registered members with an approved demo subscription.
+                </p>
+
+                <div class="d-flex justify-content-center gap-4 mb-4">
+                    <div class="p-3 rounded-3 border border-secondary border-opacity-25 text-light" style="background: rgba(255, 255, 255, 0.04);">
+                        Monthly Plan: <span class="text-warning fw-bold">$10 / mo</span>
+                    </div>
+                    <div class="p-3 rounded-3 border border-warning border-opacity-25 text-light" style="background: rgba(243, 198, 105, 0.08);">
+                        Annual Plan: <span class="text-warning fw-bold">$100 / yr</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a asp-controller="Membership" asp-action="Index" class="jt-btn-editorial jt-btn-gold">
+                            View Demo Subscription Status &rarr;
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="jt-btn-editorial jt-btn-gold">
+                            Sign In to View
+                        </a>
+                        <a asp-controller="Account" asp-action="Register" class="jt-btn-editorial jt-btn-outline-light ms-2">
+                            Create Member Account
+                        </a>
+                    }
+                </div>
+
+                <p class="small text-light-muted mb-0">
+                    <em>* Policy Notice: In accordance with project specifications, protected tip bodies require an active, approved demo subscription ($10/mo or $100/yr) or administrative review.</em>
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="jt-glass-panel p-4 p-md-5 mb-5">
+                <div class="d-flex align-items-center gap-2 mb-4 pb-2 border-bottom border-secondary border-opacity-25">
+                    <span class="fs-5 text-warning">&#128161;</span>
+                    <h2 class="h4 jt-serif text-light mb-0">Culinary Guide &amp; Technique</h2>
+                </div>
+                <div class="fs-6 text-light-secondary lh-lg" style="white-space: pre-line;">
+                    @Model.Body
+                </div>
+            </div>
+        }
+
+        <!-- Related Tips Section -->
+        @if (Model.RelatedTips.Count > 0)
+        {
+            <section class="mb-5">
+                <h3 class="h4 jt-serif text-light mb-4">More Kitchen Wisdom</h3>
+                <div class="row g-4">
+                    @foreach (var related in Model.RelatedTips)
+                    {
+                        <div class="col-md-4">
+                            <div class="jt-glass-panel jt-card-interactive-content p-4 h-100 d-flex flex-column justify-content-between position-relative">
+                                <div class="jt-card-spotlight" aria-hidden="true"></div>
+                                <div>
+                                    <span class="small text-light-muted font-monospace d-block mb-2">&#128197; @related.CreatedAtUtc.ToString("MMM dd")</span>
+                                    <h4 class="h6 jt-serif mb-2">
+                                        <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@related.Slug" class="text-light text-decoration-none">
+                                            @related.Title
+                                        </a>
+                                    </h4>
+                                </div>
+                                <div class="pt-3 border-top border-secondary border-opacity-25 mt-3">
+                                    <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@related.Slug" class="small text-warning fw-bold text-decoration-none d-inline-flex align-items-center gap-1">
+                                        <span>Read technique</span> <span class="jt-cta-arrow">&rarr;</span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                }
-            </div>
-        </section>
-    }
-</article>
+                    }
+                </div>
+            </section>
+        }
+
+        <!-- Back to Tips link -->
+        <div class="text-center pt-3 pb-5">
+            <a asp-controller="Tips" asp-action="Index" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm">
+                &larr; Back to Complete Technique Catalog
+            </a>
+        </div>
+
+    </article>
+</div>
+
+@section Scripts {
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
+}

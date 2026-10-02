@@ -4,122 +4,310 @@
     ViewData["Title"] = "Cooking Tips - Professional Kitchen Wisdom";
 }
 
-<div class="mb-4">
-    <span class="jt-brand-tag">Kitchen Wisdom</span>
-    <h1 class="mb-2">Chef's Cooking Tips</h1>
-    <p class="text-muted">Master essential culinary secrets, knife skills, temperature science, and pan kinetics by James Thew.</p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<!-- Fixed Catalog Background Layer (Family A - Catalog) -->
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-catalog.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
 </div>
 
-<!-- Search & Filter Controls -->
-<div class="p-3 p-md-4 bg-white rounded-4 border mb-4 shadow-sm">
-    <form asp-controller="Tips" asp-action="Index" method="get">
-        <div class="row g-3 align-items-center">
-            <div class="col-md-7">
-                <div class="jt-search-form">
-                    <input type="search" name="q" value="@Model.Query" class="jt-search-input" placeholder="Search knife skills, pan searing, emulsions..." aria-label="Search cooking tips" />
-                    <button type="submit" class="jt-btn jt-btn-primary">Search</button>
-                    @if (!string.IsNullOrEmpty(Model.Query))
-                    {
-                        <a asp-controller="Tips" asp-action="Index" class="jt-btn jt-btn-secondary" title="Reset search">Clear</a>
-                    }
-                </div>
-            </div>
+<div class="jt-inner-shell">
+    <div class="jt-inner-container">
 
-            <div class="col-md-5 d-flex flex-wrap gap-2 justify-content-md-end">
+        <!-- Top Header & Search/Filter Controls -->
+        <div class="jt-page-hero">
+            <span class="jt-page-eyebrow">
+                <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                Kitchen Wisdom &bull; Techniques
+            </span>
+            <h1 class="jt-page-title">Chef's Cooking <span class="jt-serif-italic">Tips</span></h1>
+            <p class="jt-page-lead">
+                Master essential culinary secrets, knife skills, temperature science, and pan kinetics curated by Chef James Thew.
+            </p>
+        </div>
+
+        <!-- Search & Filter Capsule Bar -->
+        <div class="jt-filter-bar mb-5">
+            <form asp-controller="Tips" asp-action="Index" method="get" class="jt-search-form">
+                <input type="search" name="q" value="@Model.Query" class="jt-search-input" placeholder="Search knife skills, pan searing, emulsions..." aria-label="Search cooking tips" />
+                @if (Model.Visibility.HasValue)
+                {
+                    <input type="hidden" name="visibility" value="@Model.Visibility" />
+                }
+                <button type="submit" class="jt-search-btn">Search</button>
+                @if (!string.IsNullOrEmpty(Model.Query))
+                {
+                    <a asp-controller="Tips" asp-action="Index" asp-route-visibility="@Model.Visibility" class="jt-filter-pill text-light-muted">Clear</a>
+                }
+            </form>
+
+            <div class="jt-filter-pills">
                 <a asp-controller="Tips" asp-action="Index" asp-route-q="@Model.Query"
-                   class="jt-btn jt-btn-sm @(Model.Visibility == null ? "jt-btn-primary" : "jt-btn-secondary")">
+                   class="jt-filter-pill @(Model.Visibility == null ? "active" : "")">
                     All (@Model.TotalItems)
                 </a>
                 <a asp-controller="Tips" asp-action="Index" asp-route-q="@Model.Query" asp-route-visibility="@ContentVisibility.Free"
-                   class="jt-btn jt-btn-sm @(Model.Visibility == ContentVisibility.Free ? "jt-btn-primary" : "jt-btn-secondary")">
+                   class="jt-filter-pill @(Model.Visibility == ContentVisibility.Free ? "active" : "")">
                     Free Only
                 </a>
                 <a asp-controller="Tips" asp-action="Index" asp-route-q="@Model.Query" asp-route-visibility="@ContentVisibility.MembersOnly"
-                   class="jt-btn jt-btn-sm @(Model.Visibility == ContentVisibility.MembersOnly ? "jt-btn-primary" : "jt-btn-secondary")">
+                   class="jt-filter-pill @(Model.Visibility == ContentVisibility.MembersOnly ? "active" : "")">
                     Members-Only
                 </a>
             </div>
         </div>
-    </form>
-</div>
 
-<!-- Results Information -->
-<div class="d-flex justify-content-between align-items-center mb-3 text-muted small">
-    <div>
-        Showing @Model.Tips.Count of @Model.TotalItems matching tip@(Model.TotalItems == 1 ? "" : "s")
-        @if (!string.IsNullOrEmpty(Model.Query))
+        @if (Model.Tips.Count == 0)
         {
-            <span>for "<strong>@Model.Query</strong>"</span>
+            <!-- Empty State -->
+            <div class="jt-glass-panel text-center p-5 my-5">
+                <div class="display-6 text-warning mb-3">&#128269;</div>
+                <h3 class="h4 jt-serif text-light">No matching tips found</h3>
+                <p class="text-light-secondary max-w-500 mx-auto mb-4">
+                    We couldn't find any cooking tips matching your search. Try different keywords or reset your filter.
+                </p>
+                <a asp-controller="Tips" asp-action="Index" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm">Reset All Filters</a>
+            </div>
         }
-    </div>
-</div>
-
-<!-- Tips Grid -->
-@if (Model.Tips.Count == 0)
-{
-    <div class="p-5 text-center bg-white rounded-4 border shadow-sm my-4">
-        <div class="display-6 text-muted mb-3">&#128269;</div>
-        <h3>No matching tips found</h3>
-        <p class="text-muted max-w-500 mx-auto">We couldn't find any cooking tips matching your search. Try different keywords or reset your filter.</p>
-        <a asp-controller="Tips" asp-action="Index" class="jt-btn jt-btn-outline jt-btn-sm mt-2">Reset All Filters</a>
-    </div>
-}
-else
-{
-    <div class="jt-card-grid mb-5">
-        @foreach (var tip in Model.Tips)
+        else
         {
-            <article class="jt-card">
-                <div class="jt-card-img-wrapper">
-                    @if (!string.IsNullOrEmpty(tip.ImageUrl))
+            <!-- =========================================================================
+                 GSAP PINNED STACKED-CARD SHOWCASE (Mirrors cards-animation.mp4)
+                 Desktop: Pinned stage with sequential card translations, ambient glow, and scrubber
+                 Mobile: Fluid vertical card cards without pin trapping
+                 ========================================================================= -->
+            <div class="jt-deck-showcase-section mb-5">
+                <div class="jt-deck-showcase-pinned">
+                    <div class="jt-deck-layout">
+
+                        <!-- Left Flank: Editorial Context & Scrubber -->
+                        <div class="jt-deck-flank">
+                            <span class="jt-page-eyebrow">
+                                <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                                Technique Showcase
+                            </span>
+                            <h2 class="h2 jt-serif text-light mb-3">
+                                Sequential <span class="jt-serif-italic">Technique Deck</span>
+                            </h2>
+                            <p class="text-light-secondary small mb-4 lh-lg">
+                                Scroll down vertically to explore our fundamental kitchen techniques. From knife kinetics to delicate sauce emulsions, elevate your culinary understanding step-by-step.
+                            </p>
+
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25 px-3 py-1 font-monospace small">
+                                    Showing @Model.Tips.Count of @Model.TotalItems Tip@(Model.TotalItems == 1 ? "" : "s")
+                                </span>
+                            </div>
+
+                            <!-- Scrubber Progress Bar & Counter -->
+                            <div class="jt-deck-counter">
+                                <span class="jt-counter-index">01</span>
+                                <div class="jt-counter-bar">
+                                    <div class="jt-counter-bar-fill"></div>
+                                </div>
+                                <span class="jt-counter-total">/ @Model.Tips.Count.ToString("D2")</span>
+                            </div>
+                        </div>
+
+                        <!-- Right/Center: Stacked 3D Cards Stage -->
+                        <div class="jt-deck-stage">
+                            <!-- Dynamic Ambient Colored Glow -->
+                            <div class="jt-deck-ambient-glow" aria-hidden="true"></div>
+
+                            <!-- Cards Deck Stack -->
+                            @for (int i = 0; i < Model.Tips.Count; i++)
+                            {
+                                var tip = Model.Tips[i];
+                                <article class="jt-deck-card" data-card-index="@i">
+                                    <!-- Media Area -->
+                                    <div class="jt-deck-card-media">
+                                        @if (!string.IsNullOrEmpty(tip.ImageUrl))
+                                        {
+                                            <img src="@tip.ImageUrl" alt="@tip.Title" loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <div class="jt-fallback-artwork">
+                                                <span class="fs-1 text-warning mb-2" aria-hidden="true">&#128161;</span>
+                                                <span class="small font-monospace text-light-muted">Culinary Technique</span>
+                                            </div>
+                                        }
+
+                                        <!-- Card Badges -->
+                                        <div class="jt-deck-card-badges">
+                                            @if (tip.IsMembersOnly)
+                                            {
+                                                <span class="jt-deck-badge jt-deck-badge-gold">&#128274; Masterclass Secret</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="jt-deck-badge">Free Wisdom</span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <!-- Card Content Body -->
+                                    <div class="jt-deck-card-body">
+                                        <div class="jt-deck-card-meta">
+                                            <span>&#128100; @tip.AuthorDisplayName</span>
+                                            <span>&#128197; @tip.CreatedAtUtc.ToString("MMM dd, yyyy")</span>
+                                        </div>
+
+                                        <h3 class="jt-deck-card-title">
+                                            <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug">
+                                                @tip.Title
+                                            </a>
+                                        </h3>
+
+                                        <p class="jt-deck-card-desc">
+                                            @tip.Summary
+                                        </p>
+
+                                        <div class="jt-deck-card-action">
+                                            <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug" class="jt-btn-editorial jt-btn-gold jt-btn-sm">
+                                                <span>Explore Technique</span>
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Complete Technique Catalog Grid -->
+            <div class="mt-5 pt-4 border-top border-secondary border-opacity-25">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="h4 jt-serif text-light mb-0">Complete Technique Archive</h3>
+                    <span class="small text-light-muted">Page @Model.Page of @Model.TotalPages</span>
+                </div>
+
+                <div class="row g-4 mb-5">
+                    @foreach (var tip in Model.Tips)
                     {
-                        <img src="@tip.ImageUrl" alt="@tip.Title" class="jt-card-img" loading="lazy" />
-                    }
-                    <div class="jt-card-badge-pos">
-                        @if (tip.IsMembersOnly)
-                        {
-                            <span class="jt-badge jt-badge-paid">&#128274; Masterclass Secret</span>
-                        }
-                        else
-                        {
-                            <span class="jt-badge jt-badge-free">Free Tip</span>
-                        }
-                    </div>
-                </div>
-                <div class="jt-card-body">
-                    <div class="jt-card-meta">
-                        <span>&#128100; @tip.AuthorDisplayName</span>
-                        <span>&#128197; @tip.CreatedAtUtc.ToString("MMM dd, yyyy")</span>
-                    </div>
-                    <h2 class="jt-card-title">
-                        <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug">@tip.Title</a>
-                    </h2>
-                    <p class="jt-card-text">@tip.Summary</p>
-                    <div class="jt-card-footer">
-                        <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug" class="jt-btn jt-btn-outline jt-btn-sm">
-                            @(tip.IsMembersOnly ? "View Preview" : "Read Full Tip") &rarr;
-                        </a>
-                    </div>
-                </div>
-            </article>
-        }
-    </div>
+                        <div class="col-md-6 col-lg-4">
+                            <article class="jt-glass-panel jt-card-interactive-content jt-card-flip-wrap p-0 h-100 position-relative">
+                                <div class="jt-card-spotlight" aria-hidden="true"></div>
+                                <div class="jt-card-flip-inner">
+                                    <!-- Front Face: Image, Title, Metadata, CTA -->
+                                    <div class="jt-card-front d-flex flex-column h-100 overflow-hidden">
+                                        <div class="jt-card-img-wrap position-relative" style="height: 220px;">
+                                            @if (!string.IsNullOrEmpty(tip.ImageUrl))
+                                            {
+                                                <img src="@tip.ImageUrl" alt="@tip.Title" class="w-100 h-100 object-fit-cover" loading="lazy" />
+                                            }
+                                            else
+                                            {
+                                                <div class="jt-fallback-artwork">
+                                                    <span class="fs-1 text-warning mb-2" aria-hidden="true">&#128161;</span>
+                                                    <span class="small font-monospace text-light-muted">Culinary Technique</span>
+                                                </div>
+                                            }
+                                            <div class="position-absolute top-0 start-0 m-3">
+                                                @if (tip.IsMembersOnly)
+                                                {
+                                                    <span class="badge bg-warning text-dark px-3 py-1 font-monospace">&#128274; Masterclass</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-dark bg-opacity-75 text-light border border-secondary border-opacity-50 px-3 py-1">Free Public</span>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
+                                            <div>
+                                                <div class="d-flex align-items-center justify-content-between gap-2 text-light-muted small mb-2">
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <span>&#128100; @tip.AuthorDisplayName</span>
+                                                        <span>&#128197; @tip.CreatedAtUtc.ToString("MMM dd")</span>
+                                                    </div>
+                                                    <button type="button" class="jt-flip-toggle-btn" aria-label="Flip card for technique details" title="Peek technique details">
+                                                        <span>Details</span> &circlearrowright;
+                                                    </button>
+                                                </div>
+                                                <h4 class="h5 jt-serif mb-2">
+                                                    <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug" class="text-light text-decoration-none">
+                                                        @tip.Title
+                                                    </a>
+                                                </h4>
+                                                <p class="small text-light-secondary line-clamp-2 mb-3">
+                                                    @tip.Summary
+                                                </p>
+                                            </div>
+                                            <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug" class="jt-btn-editorial jt-btn-outline-light jt-btn-sm text-center">
+                                                <span>@(tip.IsMembersOnly ? "View Preview" : "Read Full Tip")</span> <span class="jt-cta-arrow">&rarr;</span>
+                                            </a>
+                                        </div>
+                                    </div>
 
-    <!-- Pagination -->
-    @if (Model.TotalPages > 1)
-    {
-        <nav aria-label="Tips pagination" class="d-flex justify-content-center my-4">
-            <ul class="pagination">
-                @for (int p = 1; p <= Model.TotalPages; p++)
+                                    <!-- Back Face: Short Summary, Authentic Metadata, Explore CTA -->
+                                    <div class="jt-card-back d-flex flex-column justify-content-between h-100 p-4">
+                                        <div>
+                                            <div class="d-flex align-items-center justify-content-between pb-2 mb-3 border-bottom border-secondary border-opacity-25">
+                                                <span class="jt-badge-gold-pill">&#128161; Technique Insight</span>
+                                                <button type="button" class="jt-flip-close-btn" aria-label="Return to card overview" title="Close details">
+                                                    &times;
+                                                </button>
+                                            </div>
+                                            <h4 class="h6 jt-serif text-warning mb-2">@tip.Title</h4>
+                                            <p class="small text-light-secondary lh-base mb-3">@tip.Summary</p>
+                                            <div class="p-2 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-25 small mb-3">
+                                                <div class="d-flex justify-content-between py-1 border-bottom border-secondary border-opacity-25">
+                                                    <span class="text-light-muted">Author / Expert:</span>
+                                                    <span class="text-light">@tip.AuthorDisplayName</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between py-1">
+                                                    <span class="text-light-muted">Published:</span>
+                                                    <span class="text-light">@tip.CreatedAtUtc.ToString("MMMM d, yyyy")</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug" class="jt-btn-editorial jt-btn-gold jt-btn-sm w-100 text-center mb-2">
+                                                <span>Explore Full Technique</span> <span class="jt-cta-arrow">&rarr;</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    }
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.TotalPages > 1)
                 {
-                    <li class="page-item @(p == Model.Page ? "active" : "")">
-                        <a class="page-link" asp-controller="Tips" asp-action="Index"
-                           asp-route-page="@p"
-                           asp-route-q="@Model.Query"
-                           asp-route-visibility="@Model.Visibility">@p</a>
-                    </li>
+                    <nav aria-label="Tips pagination" class="d-flex justify-content-center my-5">
+                        <ul class="pagination pagination-dark gap-2">
+                            @for (int p = 1; p <= Model.TotalPages; p++)
+                            {
+                                <li class="page-item @(p == Model.Page ? "active" : "")">
+                                    <a class="jt-filter-pill @(p == Model.Page ? "active" : "")"
+                                       asp-controller="Tips" asp-action="Index"
+                                       asp-route-page="@p"
+                                       asp-route-q="@Model.Query"
+                                       asp-route-visibility="@Model.Visibility">@p</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
                 }
-            </ul>
-        </nav>
-    }
+            </div>
+        }
+
+    </div>
+</div>
+
+@section Scripts {
+    <!-- GSAP CDN for Pinned Card Deck Choreography -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
 }

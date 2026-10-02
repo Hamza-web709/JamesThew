@@ -1,61 +1,92 @@
-@model JamesThew.ViewModels.FaqViewModel
+﻿@model JamesThew.ViewModels.FaqViewModel
 @{
     ViewData["Title"] = "FAQ - Frequently Asked Questions & Official Policies";
 }
 
-<div class="text-center max-w-700 mx-auto mb-5">
-    <span class="jt-brand-tag">Help &amp; Documentation</span>
-    <h1 class="mb-2">Frequently Asked Questions</h1>
-    <p class="lead text-muted">
-        Comprehensive answers to all seven core questions regarding membership registration, subscription demo pricing, recipe access, community contributions, and contest participation.
-    </p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<!-- Fixed Community Background Layer (Family B - Community) -->
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-community.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
 </div>
 
-<!-- Quick Navigation Anchors -->
-<div class="p-3 bg-white rounded-4 border mb-5 max-w-860 mx-auto shadow-sm">
-    <span class="small text-uppercase fw-bold text-muted d-block mb-2">Jump directly to question:</span>
-    <div class="d-flex flex-wrap gap-2">
-        @foreach (var faq in Model.Faqs)
-        {
-            <a href="#@faq.QuestionKey" class="jt-btn jt-btn-secondary jt-btn-sm text-decoration-none">
-                #@faq.SortOrder: @faq.Question.Substring(0, Math.Min(35, faq.Question.Length))...
-            </a>
-        }
+<div class="jt-inner-shell">
+    <div class="jt-inner-container-md">
+
+        <!-- Page Hero -->
+        <div class="jt-page-hero">
+            <span class="jt-page-eyebrow">
+                <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                Help &amp; Documentation
+            </span>
+            <h1 class="jt-page-title">Frequently Asked <span class="jt-serif-italic">Questions</span></h1>
+            <p class="jt-page-lead">
+                Comprehensive answers to all seven core questions regarding membership registration, subscription demo pricing, recipe access, community contributions, and contest participation.
+            </p>
+        </div>
+
+        <!-- Quick Navigation Jump Pill Bar -->
+        <div class="jt-glass-panel p-3 mb-5">
+            <span class="small text-uppercase fw-bold text-light-muted d-block mb-2">Jump directly to question:</span>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var faq in Model.Faqs)
+                {
+                    <a href="#@faq.QuestionKey" class="jt-filter-pill">
+                        <span class="text-warning me-1">#@faq.SortOrder</span> @faq.Question.Substring(0, Math.Min(32, faq.Question.Length))...
+                    </a>
+                }
+            </div>
+        </div>
+
+        <!-- 7 Required FAQ Accordions (Native Details with Custom Glass Styling) -->
+        <div class="jt-faq-list mb-5">
+            @foreach (var faq in Model.Faqs)
+            {
+                <details class="jt-faq-item jt-card-interactive-utility position-relative" id="@faq.QuestionKey" open>
+                    <div class="jt-card-spotlight" aria-hidden="true"></div>
+                    <summary class="jt-faq-summary">
+                        <span class="d-flex align-items-center gap-3">
+                            <span class="jt-faq-num">Q@(faq.SortOrder).</span>
+                            <span class="jt-faq-q-text">@faq.Question</span>
+                        </span>
+                        <span class="jt-faq-icon" aria-hidden="true"></span>
+                    </summary>
+                    <div class="jt-faq-answer">
+                        <p class="mb-3 text-light-secondary lh-lg">@faq.Answer</p>
+                        <div class="text-end">
+                            <a href="#@faq.QuestionKey" class="small text-light-muted text-decoration-none" title="Direct link to this answer">
+                                &#128279; Direct link to Q@(faq.SortOrder)
+                            </a>
+                        </div>
+                    </div>
+                </details>
+            }
+        </div>
+
+        <!-- Academic Demonstration Note -->
+        <div class="jt-glass-panel jt-card-interactive-utility p-4 mb-5 position-relative">
+            <div class="jt-card-spotlight" aria-hidden="true"></div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="jt-badge-demo-pill">&#9888; Policy Standard</span>
+                <h2 class="h5 jt-serif mb-0 text-light">Academic Demonstration Policy Summary</h2>
+            </div>
+            <p class="small text-light-secondary mb-3">
+                In accordance with the approved eProject requirements and baseline assumptions:
+            </p>
+            <ul class="small text-light-muted mb-0 ps-3">
+                <li class="mb-2"><strong>Simulated Payments:</strong> Membership plan amounts ($10 monthly / $100 yearly) are purely demonstration rates. No real credit card or payment gateway is integrated.</li>
+                <li class="mb-2"><strong>Administrative Approval:</strong> Membership requests remain Pending until verified and manually approved by the administrator.</li>
+                <li class="mb-0"><strong>Guest Access:</strong> Foundational Free recipes and tips, contest rules, and announcements are open to all visitors. Submissions and feedback require member authentication.</li>
+            </ul>
+        </div>
+
     </div>
 </div>
 
-<!-- 7 Required FAQ Accordions (Works natively without JavaScript) -->
-<div class="jt-faq-list mb-5">
-    @foreach (var faq in Model.Faqs)
-    {
-        <details class="jt-faq-item" id="@faq.QuestionKey" open>
-            <summary class="jt-faq-summary">
-                <span>
-                    <span class="text-danger fw-bold me-2">Q@(faq.SortOrder).</span>
-                    @faq.Question
-                </span>
-            </summary>
-            <div class="jt-faq-answer">
-                <p class="mb-2">@faq.Answer</p>
-                <div class="text-end">
-                    <a href="#@faq.QuestionKey" class="small text-muted text-decoration-none" title="Direct link to this answer">
-                        &#128279; Direct link to Q@(faq.SortOrder)
-                    </a>
-                </div>
-            </div>
-        </details>
-    }
-</div>
-
-<!-- Academic Demonstration Note -->
-<div class="p-4 rounded-4 border max-w-860 mx-auto" style="background-color: var(--jt-surface-warm); border-color: var(--jt-border);">
-    <h2 class="h5 jt-serif mb-2">Academic Demonstration Policy Summary</h2>
-    <p class="small text-muted mb-2">
-        In accordance with the approved eProject requirements and baseline assumptions:
-    </p>
-    <ul class="small text-muted mb-0 ps-3">
-        <li><strong>Simulated Payments:</strong> Membership plan amounts ($10 monthly / $100 yearly) are purely demonstration rates. No real credit card or payment gateway is integrated.</li>
-        <li><strong>Administrative Approval:</strong> Membership requests remain Pending until verified and manually approved by the administrator in Phase 3.</li>
-        <li><strong>Guest Access:</strong> Foundational Free recipes and tips, contest rules, and announcements are open to all visitors. Submissions and feedback require member authentication.</li>
-    </ul>
-</div>
+@section Scripts {
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
+}

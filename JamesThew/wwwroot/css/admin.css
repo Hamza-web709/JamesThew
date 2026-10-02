@@ -1,0 +1,1035 @@
+/* JamesThew Admin Console */
+:root {
+  --jt-admin-obsidian: #07090d;
+  --jt-admin-charcoal: #10141b;
+  --jt-admin-panel: rgba(18, 22, 28, 0.84);
+  --jt-admin-panel-strong: rgba(22, 27, 35, 0.94);
+  --jt-admin-border: rgba(232, 211, 164, 0.16);
+  --jt-admin-border-strong: rgba(232, 211, 164, 0.28);
+  --jt-admin-gold: #d6a85a;
+  --jt-admin-gold-soft: rgba(214, 168, 90, 0.16);
+  --jt-admin-ivory: #f8f1e3;
+  --jt-admin-muted: #b8ad9d;
+  --jt-admin-muted-2: #8d8376;
+  --jt-font-display: "Playfair Display", Georgia, Cambria, serif;
+  --jt-font-body: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.jt-admin-body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 84% 12%, rgba(214, 168, 90, 0.16), transparent 34rem),
+    linear-gradient(rgba(7, 9, 13, 0.88), rgba(7, 9, 13, 0.94)),
+    url("/assets/landing/hero/optimized/backgrounds/v2-f04-chef-kitchen-wide.webp") center / cover fixed;
+  color: var(--jt-admin-ivory);
+  font-family: var(--jt-font-body);
+}
+
+.jt-admin-body h1,
+.jt-admin-body h2,
+.jt-admin-body h3,
+.jt-admin-body h4,
+.jt-admin-body h5,
+.jt-admin-body h6,
+.jt-admin-body .jt-serif {
+  color: var(--jt-admin-ivory);
+  font-family: var(--jt-font-display);
+}
+
+.jt-admin-shell {
+  display: grid;
+  grid-template-columns: 284px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.jt-admin-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 1.25rem;
+  background: linear-gradient(180deg, rgba(8, 10, 15, 0.94), rgba(12, 15, 20, 0.86));
+  border-right: 1px solid var(--jt-admin-border);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  z-index: 1100;
+}
+
+.jt-admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 0.4rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.jt-admin-brand-mark {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f3c669, #b9822d);
+  color: #11151c;
+  font: 700 1rem/1 var(--jt-font-display);
+  box-shadow: 0 10px 24px rgba(214, 168, 90, 0.28);
+}
+
+.jt-admin-kicker,
+.jt-admin-top-label {
+  display: block;
+  color: var(--jt-admin-gold);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.jt-admin-brand-name {
+  display: block;
+  color: var(--jt-admin-ivory);
+  font-family: var(--jt-font-display);
+  font-size: 1.2rem;
+  line-height: 1.1;
+}
+
+.jt-admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.jt-admin-nav-link {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: rgba(248, 241, 227, 0.78);
+  text-decoration: none;
+  padding: 0.72rem 0.78rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.jt-admin-nav-link:hover,
+.jt-admin-nav-link:focus-visible,
+.jt-admin-nav-link.active {
+  color: var(--jt-admin-ivory);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--jt-admin-border-strong);
+}
+
+.jt-admin-nav-link.active {
+  box-shadow: inset 3px 0 0 var(--jt-admin-gold);
+}
+
+.jt-admin-nav-code {
+  color: var(--jt-admin-gold);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+
+.jt-admin-sidebar-note {
+  margin-top: auto;
+  padding: 1rem;
+  border: 1px solid var(--jt-admin-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--jt-admin-muted);
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+}
+
+.jt-admin-sidebar-note strong {
+  color: var(--jt-admin-ivory);
+}
+
+.jt-admin-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.jt-admin-topbar {
+  position: sticky;
+  top: 0;
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem clamp(1rem, 3vw, 2rem);
+  background: rgba(8, 10, 15, 0.78);
+  border-bottom: 1px solid var(--jt-admin-border);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  z-index: 1000;
+}
+
+.jt-admin-top-title {
+  color: var(--jt-admin-ivory);
+  font-family: var(--jt-font-display);
+  font-size: 1.1rem;
+}
+
+.jt-admin-menu {
+  display: none;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--jt-admin-border-strong);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--jt-admin-ivory);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.jt-admin-menu span {
+  width: 18px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+}
+
+.jt-admin-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.jt-admin-action-link,
+.jt-admin-action-button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--jt-admin-border);
+  background: rgba(255, 255, 255, 0.055);
+  color: var(--jt-admin-ivory);
+  padding: 0.55rem 0.8rem;
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.jt-admin-public-link {
+  border-color: rgba(214, 168, 90, 0.48);
+  color: #f8d895;
+  background: var(--jt-admin-gold-soft);
+}
+
+.jt-admin-action-link:hover,
+.jt-admin-action-button:hover {
+  color: #fff;
+  border-color: var(--jt-admin-gold);
+  background: rgba(214, 168, 90, 0.18);
+}
+
+.jt-admin-logout-form {
+  margin: 0;
+}
+
+.jt-admin-main {
+  width: min(100%, 1320px);
+  margin: 0 auto;
+  padding: clamp(1.25rem, 3vw, 2.1rem);
+  flex: 1;
+}
+
+.jt-admin-footer {
+  width: min(100%, 1320px);
+  margin: 0 auto;
+  padding: 1rem clamp(1.25rem, 3vw, 2.1rem) 1.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.2rem;
+  color: var(--jt-admin-muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.8rem;
+}
+
+.jt-admin-main .text-muted,
+.jt-admin-main .text-secondary,
+.jt-admin-main .form-text {
+  color: var(--jt-admin-muted) !important;
+}
+
+.jt-admin-main .text-dark,
+.jt-admin-main .card-title {
+  color: var(--jt-admin-ivory) !important;
+}
+
+.jt-admin-main .bg-white,
+.jt-admin-main .card,
+.jt-admin-main .modal-content,
+.jt-admin-main .bg-light {
+  background: var(--jt-admin-panel-strong) !important;
+  color: var(--jt-admin-ivory);
+  border-color: var(--jt-admin-border) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.32) !important;
+}
+
+.jt-admin-main .card-header,
+.jt-admin-main .modal-header,
+.jt-admin-main .modal-footer {
+  background: rgba(255, 255, 255, 0.035) !important;
+  border-color: var(--jt-admin-border) !important;
+}
+
+.jt-admin-main .rounded-4 {
+  border-radius: 8px !important;
+}
+
+.jt-admin-main .border,
+.jt-admin-main .border-bottom,
+.jt-admin-main .border-top {
+  border-color: var(--jt-admin-border) !important;
+}
+
+.jt-admin-main .table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--jt-admin-ivory);
+  --bs-table-border-color: rgba(232, 211, 164, 0.14);
+  --bs-table-hover-bg: rgba(214, 168, 90, 0.08);
+  color: var(--jt-admin-ivory);
+}
+
+.jt-admin-main .table-light {
+  --bs-table-bg: rgba(255, 255, 255, 0.065);
+  --bs-table-color: var(--jt-admin-ivory);
+}
+
+.jt-admin-main .form-control,
+.jt-admin-main .form-select,
+.jt-admin-main textarea,
+.jt-admin-main input[type="text"],
+.jt-admin-main input[type="number"],
+.jt-admin-main input[type="datetime-local"],
+.jt-admin-main input[type="file"],
+.jt-admin-main select {
+  min-height: 44px;
+  background-color: rgba(255, 255, 255, 0.075);
+  color: var(--jt-admin-ivory);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.jt-admin-main textarea {
+  min-height: auto;
+}
+
+.jt-admin-main .form-control:focus,
+.jt-admin-main .form-select:focus,
+.jt-admin-main textarea:focus,
+.jt-admin-main input:focus,
+.jt-admin-main select:focus {
+  color: var(--jt-admin-ivory);
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--jt-admin-gold);
+  box-shadow: 0 0 0 0.2rem rgba(214, 168, 90, 0.18);
+}
+
+.jt-admin-main option {
+  color: #11151c;
+}
+
+.jt-admin-main .input-group-text {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--jt-admin-muted);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.jt-admin-main .jt-btn-primary {
+  background: linear-gradient(135deg, #d6a85a, #b9822d);
+  border-color: #d6a85a;
+  color: #11151c;
+}
+
+.jt-admin-main .jt-btn-outline {
+  border-color: rgba(214, 168, 90, 0.55);
+  color: #f8d895;
+}
+
+.jt-admin-main .jt-btn-outline:hover,
+.jt-admin-main .jt-btn-secondary:hover {
+  background: rgba(214, 168, 90, 0.16);
+  color: #fff;
+}
+
+.jt-admin-main .jt-btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--jt-admin-border);
+  color: var(--jt-admin-ivory);
+}
+
+.jt-admin-main .nav-pills .nav-link {
+  color: var(--jt-admin-muted);
+}
+
+.jt-admin-main .nav-pills .nav-link.active {
+  background: var(--jt-admin-gold);
+  color: #11151c;
+}
+
+.jt-admin-dashboard {
+  display: grid;
+  gap: 1.4rem;
+}
+
+.jt-admin-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: end;
+  padding: clamp(1.35rem, 3vw, 2rem);
+  border: 1px solid var(--jt-admin-border);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.035)),
+    linear-gradient(90deg, rgba(7, 9, 13, 0.9), rgba(7, 9, 13, 0.42));
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
+}
+
+.jt-admin-eyebrow {
+  display: inline-flex;
+  color: var(--jt-admin-gold);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 0.55rem;
+}
+
+.jt-admin-hero h1 {
+  margin-bottom: 0.45rem;
+}
+
+.jt-admin-hero p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--jt-admin-muted);
+}
+
+.jt-admin-health-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  justify-content: flex-end;
+}
+
+.jt-admin-health-pill {
+  min-width: 118px;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--jt-admin-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.jt-admin-health-pill strong {
+  display: block;
+  color: var(--jt-admin-ivory);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.jt-admin-health-pill span {
+  display: block;
+  color: var(--jt-admin-muted);
+  font-size: 0.75rem;
+  margin-top: 0.28rem;
+}
+
+.jt-admin-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.jt-admin-module-card {
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid var(--jt-admin-border);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.04));
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.jt-admin-module-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(214, 168, 90, 0.42);
+}
+
+.jt-admin-module-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.jt-admin-module-icon {
+  width: 46px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid rgba(214, 168, 90, 0.38);
+  color: var(--jt-admin-gold);
+  background: rgba(214, 168, 90, 0.12);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.jt-admin-module-stat {
+  color: var(--jt-admin-muted);
+  text-align: right;
+  font-size: 0.78rem;
+}
+
+.jt-admin-module-stat strong {
+  display: block;
+  color: var(--jt-admin-ivory);
+  font-size: 1rem;
+}
+
+.jt-admin-module-card h2 {
+  font-size: 1.2rem;
+  margin-bottom: 0.4rem;
+}
+
+.jt-admin-module-card p {
+  color: var(--jt-admin-muted);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.jt-admin-module-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.jt-admin-nav-link:focus-visible {
+  outline: 3px solid var(--jt-admin-gold);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jt-admin-body *,
+  .jt-admin-body *::before,
+  .jt-admin-body *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  .jt-admin-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .jt-admin-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(320px, calc(100vw - 36px));
+    transform: translateX(-105%);
+    transition: transform 0.22s ease;
+  }
+
+  .jt-admin-sidebar.show {
+    transform: translateX(0);
+  }
+
+  .jt-admin-menu {
+    display: inline-flex;
+  }
+
+  .jt-admin-nav-open::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.56);
+    z-index: 1090;
+  }
+
+  .jt-admin-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .jt-admin-topbar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .jt-admin-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: stretch;
+  }
+
+  .jt-admin-action-link,
+  .jt-admin-action-button,
+  .jt-admin-logout-form {
+    flex: 1 1 auto;
+  }
+
+  .jt-admin-logout-form {
+    display: flex;
+  }
+
+  .jt-admin-action-button {
+    width: 100%;
+  }
+
+  .jt-admin-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .jt-admin-health-strip {
+    justify-content: stretch;
+  }
+
+  .jt-admin-health-pill {
+    flex: 1 1 130px;
+  }
+
+  .jt-admin-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 430px) {
+  .jt-admin-main {
+    padding: 1rem;
+  }
+
+  .jt-admin-action-link,
+  .jt-admin-action-button {
+    font-size: 0.8rem;
+    padding-inline: 0.55rem;
+  }
+}
+
+.jt-admin-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--jt-admin-border);
+}
+
+.jt-admin-page-actions,
+.jt-admin-media-actions,
+.jt-admin-action-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.jt-admin-page-actions,
+.jt-admin-action-cluster {
+  justify-content: flex-end;
+}
+
+.jt-admin-inline-form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.jt-admin-actions-cell {
+  min-width: 0;
+}
+
+.jt-admin-record-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.jt-admin-record-table th,
+.jt-admin-record-table td {
+  overflow-wrap: anywhere;
+}
+
+.jt-admin-record-table img {
+  max-width: 48px;
+}
+
+.jt-admin-table-action {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.48rem 0.78rem;
+  border-radius: 8px;
+  border: 1px solid var(--jt-admin-border-strong);
+  background: rgba(255, 255, 255, 0.075);
+  color: var(--jt-admin-ivory);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.jt-admin-table-action:hover,
+.jt-admin-table-action:focus-visible {
+  color: #fff;
+  border-color: var(--jt-admin-gold);
+  background: rgba(214, 168, 90, 0.18);
+}
+
+.jt-admin-table-action-primary {
+  border-color: rgba(214, 168, 90, 0.62);
+  background: rgba(214, 168, 90, 0.16);
+  color: #ffe0a0;
+}
+
+.jt-admin-table-action-secondary {
+  border-color: rgba(205, 214, 224, 0.28);
+  color: #f2eee5;
+}
+
+.jt-admin-table-action-success {
+  border-color: rgba(109, 191, 143, 0.58);
+  background: rgba(109, 191, 143, 0.14);
+  color: #bdf3d2;
+}
+
+.jt-admin-table-action-warning {
+  border-color: rgba(238, 190, 88, 0.62);
+  background: rgba(238, 190, 88, 0.13);
+  color: #ffe1a3;
+}
+
+.jt-admin-table-action-danger {
+  border-color: rgba(232, 104, 93, 0.66);
+  background: rgba(232, 104, 93, 0.12);
+  color: #ffb5ae;
+}
+
+.jt-admin-table-action-danger:hover,
+.jt-admin-table-action-danger:focus-visible {
+  border-color: #ff7f73;
+  background: rgba(232, 104, 93, 0.22);
+  color: #fff;
+}
+
+.jt-admin-table-action-disabled,
+.jt-admin-table-action:disabled {
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(248, 241, 227, 0.38);
+}
+
+.jt-admin-table-action.is-confirmed {
+  border-color: rgba(109, 191, 143, 0.7);
+  background: rgba(109, 191, 143, 0.2);
+  color: #d9ffe7;
+}
+
+.jt-admin-media-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--jt-admin-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.jt-admin-media-metrics,
+.jt-admin-media-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.jt-admin-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0.32rem 0.68rem;
+  border-radius: 999px;
+  border: 1px solid var(--jt-admin-border);
+  color: var(--jt-admin-ivory);
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.jt-admin-media-search {
+  flex: 1 1 340px;
+  justify-content: flex-end;
+}
+
+.jt-admin-media-search .form-control {
+  max-width: 340px;
+}
+
+.jt-admin-empty-state {
+  padding: 3rem 1.5rem;
+  border: 1px solid var(--jt-admin-border);
+  border-radius: 8px;
+  background: var(--jt-admin-panel-strong);
+  text-align: center;
+}
+
+.jt-admin-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 1rem;
+}
+
+.jt-admin-media-card {
+  overflow: hidden;
+  border-radius: 8px !important;
+}
+
+.jt-admin-media-preview {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+
+.jt-admin-media-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.jt-media-preview-fallback {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  color: var(--jt-admin-muted);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025)),
+    rgba(0, 0, 0, 0.24);
+  text-align: center;
+  font-weight: 800;
+}
+
+.jt-admin-media-preview.is-unavailable .jt-media-preview-fallback {
+  display: flex;
+}
+
+.jt-admin-ext-badge,
+.jt-admin-use-badge {
+  position: absolute;
+  z-index: 2;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.jt-admin-ext-badge {
+  top: 0.65rem;
+  right: 0.65rem;
+  padding: 0.2rem 0.52rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(9, 11, 14, 0.78);
+  color: #fff;
+}
+
+.jt-admin-use-badge {
+  left: 0.65rem;
+  bottom: 0.65rem;
+}
+
+.jt-admin-media-body {
+  min-height: 230px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.jt-admin-media-name {
+  margin: 0 0 0.7rem;
+  color: var(--jt-admin-ivory);
+  font-family: var(--jt-font-body);
+  font-size: 0.96rem;
+  font-weight: 900;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jt-admin-media-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  margin: 0 0 0.85rem;
+}
+
+.jt-admin-media-meta div {
+  min-width: 0;
+}
+
+.jt-admin-media-meta dt {
+  margin-bottom: 0.15rem;
+  color: var(--jt-admin-muted-2);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.jt-admin-media-meta dd {
+  margin: 0;
+  color: var(--jt-admin-ivory);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.jt-admin-media-usage {
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.jt-admin-usage-label {
+  margin-bottom: 0.35rem;
+  color: var(--jt-admin-muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.jt-admin-media-usage ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.28rem;
+}
+
+.jt-admin-media-usage li {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--jt-admin-muted);
+  font-size: 0.76rem;
+}
+
+.jt-admin-media-usage li span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jt-admin-mini-badge {
+  flex: 0 0 auto;
+  padding: 0.08rem 0.36rem;
+  border-radius: 5px;
+  border: 1px solid var(--jt-admin-border);
+  color: #f8d895;
+  font-size: 0.64rem;
+  font-weight: 900;
+}
+
+.jt-admin-more-usage {
+  color: var(--jt-admin-muted-2) !important;
+  font-style: italic;
+}
+
+@media (max-width: 760px) {
+  .jt-admin-media-search,
+  .jt-admin-media-search .form-control,
+  .jt-admin-page-actions {
+    width: 100%;
+    max-width: none;
+  }
+
+  .jt-admin-page-actions .jt-btn,
+  .jt-admin-media-search .jt-btn {
+    flex: 1 1 auto;
+  }
+
+  .jt-admin-record-table-card .table-responsive {
+    overflow-x: visible;
+  }
+
+  .jt-admin-record-table thead {
+    display: none;
+  }
+
+  .jt-admin-record-table,
+  .jt-admin-record-table tbody,
+  .jt-admin-record-table tr,
+  .jt-admin-record-table td {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .jt-admin-record-table tr {
+    padding: 0.95rem;
+    border-bottom: 1px solid var(--jt-admin-border);
+  }
+
+  .jt-admin-record-table td {
+    padding: 0.45rem 0 !important;
+    border: 0;
+    text-align: left !important;
+  }
+
+  .jt-admin-actions-cell,
+  .jt-admin-action-cluster,
+  .jt-admin-inline-form,
+  .jt-admin-table-action {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .jt-admin-action-cluster {
+    justify-content: stretch;
+  }
+}

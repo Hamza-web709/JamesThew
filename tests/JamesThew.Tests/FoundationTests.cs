@@ -49,11 +49,11 @@ public class FoundationTests(FoundationFixture fixture)
     }
 
     private static async Task<HttpResponseMessage> Login(HttpClient client, string email, string password,
-        string returnUrl = "/account/status") => await client.PostAsync("/account/login", new FormUrlEncodedContent(
+        string? returnUrl = "/account/status") => await client.PostAsync("/account/login", new FormUrlEncodedContent(
             new Dictionary<string, string>
             {
                 ["__RequestVerificationToken"] = await Token(client, "/account/login"),
-                ["Email"] = email, ["Password"] = password, ["ReturnUrl"] = returnUrl
+                ["Email"] = email, ["Password"] = password, ["ReturnUrl"] = returnUrl ?? string.Empty
             }));
 
     private static async Task Logout(HttpClient client)
@@ -195,6 +195,35 @@ public class FoundationTests(FoundationFixture fixture)
         await Register(client, email, password); await Logout(client);
         var result = await Login(client, email, password, returnUrl);
         Assert.Equal("/account/status", result.Headers.Location!.ToString());
+    }
+
+    [Fact]
+    public async Task Admin_login_without_return_url_defaults_to_admin_dashboard()
+    {
+        var email = NewEmail(); var password = NewPassword();
+        await using var scope = fixture.Services.CreateAsyncScope();
+        await IdentitySeeder.SeedLocalAdminAsync(scope.ServiceProvider, SeedConfig(email, password), new TestEnvironment("Development"));
+
+        using var client = fixture.NewClient();
+        var login = await Login(client, email, password, null);
+
+        Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
+        Assert.Equal("/admin", login.Headers.Location!.ToString());
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/admin")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Admin_login_still_preserves_safe_local_return_url()
+    {
+        var email = NewEmail(); var password = NewPassword();
+        await using var scope = fixture.Services.CreateAsyncScope();
+        await IdentitySeeder.SeedLocalAdminAsync(scope.ServiceProvider, SeedConfig(email, password), new TestEnvironment("Development"));
+
+        using var client = fixture.NewClient();
+        var login = await Login(client, email, password, "/feedback");
+
+        Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
+        Assert.Equal("/feedback", login.Headers.Location!.ToString());
     }
 
     [Fact]

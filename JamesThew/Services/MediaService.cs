@@ -12,6 +12,7 @@ namespace JamesThew.Services;
 public class MediaService(ApplicationDbContext db, IWebHostEnvironment env, IConfiguration? config = null) : IMediaService
 {
     public const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
+    public const long MinFileSize = 128; // Reject header-only test fixtures and empty-looking images.
     public const string UploadsRelativePath = "/uploads/editorial";
 
     private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
@@ -169,21 +170,24 @@ public class MediaService(ApplicationDbContext db, IWebHostEnvironment env, ICon
             return (false, $"Unsupported MIME type '{mime}'. Allowed image MIME types: image/jpeg, image/png, image/webp.", null, null);
         }
 
-        // 5. Magic bytes inspection
-        var header = new byte[16];
-        using (var stream = file.OpenReadStream())
+        if (file.Length < MinFileSize)
         {
-            var read = await stream.ReadAsync(header.AsMemory(0, 16));
-            if (read < 12)
-            {
-                return (false, "The file header is incomplete or corrupt.", null, null);
-            }
+            return (false, $"File is too small to be a valid image asset ({FormatBytes(file.Length)}).", null, null);
         }
 
-        var (isValidMagic, detectedType) = ValidateMagicBytes(header);
+        // 5. Signature and lightweight structure inspection.
+        byte[] bytes;
+        using (var stream = file.OpenReadStream())
+        {
+            using var memory = new MemoryStream();
+            await stream.CopyToAsync(memory);
+            bytes = memory.ToArray();
+        }
+
+        var (isValidMagic, detectedType) = ValidateImageBytes(bytes);
         if (!isValidMagic)
         {
-            return (false, "File signature verification failed: the file content does not match a valid image.", null, null);
+            return (false, "File signature verification failed: the file content does not match a valid decodable image.", null, null);
         }
 
         // Verify detected magic type matches extension
@@ -217,10 +221,9 @@ public class MediaService(ApplicationDbContext db, IWebHostEnvironment env, ICon
         }
 
         // 8. Save file to disk
-        using (var stream = file.OpenReadStream())
-        using (var destStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write))
+        await using (var destStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write))
         {
-            await stream.CopyToAsync(destStream);
+            await destStream.WriteAsync(bytes);
         }
 
         var webUrl = $"{UploadsRelativePath}/{uniqueFileName}";
@@ -291,29 +294,143 @@ public class MediaService(ApplicationDbContext db, IWebHostEnvironment env, ICon
         return (true, message, unlinkedCount);
     }
 
-    private static (bool IsValid, string DetectedType) ValidateMagicBytes(byte[] header)
+    internal static (bool IsValid, string DetectedType) ValidateImageBytes(byte[] bytes)
     {
+        if (bytes.Length < MinFileSize)
+            return (false, "unknown");
+
         // JPEG: FF D8 FF
-        if (header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF)
+        if (bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF)
         {
-            return (true, "jpeg");
+            return (IsStructurallyValidJpeg(bytes), "jpeg");
         }
 
         // PNG: 89 50 4E 47 0D 0A 1A 0A
-        if (header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47 &&
-            header[4] == 0x0D && header[5] == 0x0A && header[6] == 0x1A && header[7] == 0x0A)
+        if (bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47 &&
+            bytes[4] == 0x0D && bytes[5] == 0x0A && bytes[6] == 0x1A && bytes[7] == 0x0A)
         {
-            return (true, "png");
+            return (IsStructurallyValidPng(bytes), "png");
         }
 
         // WEBP: 'RIFF' (offset 0..3) ... 'WEBP' (offset 8..11)
-        if (header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46 &&
-            header[8] == 0x57 && header[9] == 0x45 && header[10] == 0x42 && header[11] == 0x50)
+        if (bytes.Length >= 16 &&
+            bytes[0] == 0x52 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x46 &&
+            bytes[8] == 0x57 && bytes[9] == 0x45 && bytes[10] == 0x42 && bytes[11] == 0x50)
         {
-            return (true, "webp");
+            return (IsStructurallyValidWebp(bytes), "webp");
         }
 
         return (false, "unknown");
+    }
+
+    private static bool IsStructurallyValidJpeg(byte[] bytes)
+    {
+        if (bytes.Length < MinFileSize || bytes[^2] != 0xFF || bytes[^1] != 0xD9)
+            return false;
+
+        var hasStartOfFrame = false;
+        var hasStartOfScan = false;
+        var index = 2;
+        while (index < bytes.Length - 1)
+        {
+            if (bytes[index] != 0xFF)
+            {
+                index++;
+                continue;
+            }
+
+            while (index < bytes.Length - 1 && bytes[index + 1] == 0xFF)
+                index++;
+
+            if (index >= bytes.Length - 1)
+                break;
+
+            var marker = bytes[index + 1];
+            index += 2;
+
+            if (marker == 0xD9)
+                break;
+
+            if (marker is 0x01 or >= 0xD0 and <= 0xD7)
+                continue;
+
+            if (index + 1 >= bytes.Length)
+                return false;
+
+            var segmentLength = (bytes[index] << 8) + bytes[index + 1];
+            if (segmentLength < 2 || index + segmentLength > bytes.Length)
+                return false;
+
+            if (marker is >= 0xC0 and <= 0xC3 or >= 0xC5 and <= 0xC7 or >= 0xC9 and <= 0xCB or >= 0xCD and <= 0xCF)
+                hasStartOfFrame = true;
+
+            if (marker == 0xDA)
+            {
+                hasStartOfScan = true;
+                break;
+            }
+
+            index += segmentLength;
+        }
+
+        return hasStartOfFrame && hasStartOfScan;
+    }
+
+    private static bool IsStructurallyValidPng(byte[] bytes)
+    {
+        if (bytes.Length < MinFileSize)
+            return false;
+
+        var index = 8;
+        var sawIhdr = false;
+        while (index + 12 <= bytes.Length)
+        {
+            var length = ((long)bytes[index] << 24) |
+                         ((long)bytes[index + 1] << 16) |
+                         ((long)bytes[index + 2] << 8) |
+                         bytes[index + 3];
+            if (length < 0 || length > int.MaxValue)
+                return false;
+
+            var type = System.Text.Encoding.ASCII.GetString(bytes, index + 4, 4);
+            var chunkEnd = index + 12 + (int)length;
+            if (chunkEnd > bytes.Length)
+                return false;
+
+            if (!sawIhdr && type != "IHDR")
+                return false;
+
+            sawIhdr = sawIhdr || type == "IHDR";
+            if (type == "IEND")
+                return sawIhdr && chunkEnd == bytes.Length;
+
+            index = chunkEnd;
+        }
+
+        return false;
+    }
+
+    private static bool IsStructurallyValidWebp(byte[] bytes)
+    {
+        if (bytes.Length < MinFileSize)
+            return false;
+
+        var riffSize = BitConverter.ToUInt32(bytes, 4);
+        if (riffSize != bytes.Length - 8)
+            return false;
+
+        var chunkType = System.Text.Encoding.ASCII.GetString(bytes, 12, 4);
+        if (chunkType is not ("VP8 " or "VP8L" or "VP8X"))
+            return false;
+
+        var payloadLength = BitConverter.ToUInt32(bytes, 16);
+        if (20L + payloadLength > bytes.Length)
+            return false;
+
+        if (chunkType == "VP8L" && (payloadLength < 5 || bytes[20] != 0x2F))
+            return false;
+
+        return true;
     }
 
     private static string FormatBytes(long bytes)

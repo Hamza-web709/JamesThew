@@ -1,25 +1,25 @@
 @using JamesThew.Authorization
-<ul class="jt-nav-links ms-auto">
-    <li><a class="jt-nav-link" asp-area="" asp-controller="Membership" asp-action="Index">Membership</a></li>
+<div class="jt-nav-auth">
+    <a class="jt-nav-link jt-nav-membership" asp-area="" asp-controller="Membership" asp-action="Index">Membership</a>
 @if (User.Identity?.IsAuthenticated == true)
 {
-    <li><a class="jt-nav-link" asp-area="" asp-controller="Contributions" asp-action="Index">Contribute</a></li>
-    <li><a class="jt-nav-link" asp-area="" asp-controller="Contests" asp-action="MyEntries">My Entries</a></li>
-    <li><a class="jt-nav-link" asp-area="" asp-controller="Account" asp-action="Status">Account</a></li>
     @if (User.IsInRole(AppRoles.Admin))
     {
-        <li><a class="jt-nav-link" asp-area="" asp-controller="Admin" asp-action="Index">Admin</a></li>
+        <a class="jt-nav-link" asp-area="" asp-controller="Admin" asp-action="Index">Admin Console</a>
     }
-    <li>
-        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-            <button class="jt-btn jt-btn-outline jt-btn-sm" type="submit">Logout</button>
-        </form>
-    </li>
+    else
+    {
+        <a class="jt-nav-link" asp-area="" asp-controller="Contributions" asp-action="Index">Contribute</a>
+        <a class="jt-nav-link" asp-area="" asp-controller="Contests" asp-action="MyEntries">My Entries</a>
+    }
+    <a class="jt-nav-link" asp-area="" asp-controller="Account" asp-action="Status">Account</a>
+    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+        <button class="jt-btn jt-btn-outline jt-btn-sm jt-capsule-logout-btn" type="submit">Logout</button>
+    </form>
 }
 else
 {
-    <li><a class="jt-nav-link" asp-area="" asp-controller="Account" asp-action="Register">Register</a></li>
-    <li><a class="jt-btn jt-btn-primary jt-btn-sm" asp-area="" asp-controller="Account" asp-action="Login">Sign In</a></li>
+    <a class="jt-nav-link jt-nav-register" asp-area="" asp-controller="Account" asp-action="Register">Register</a>
+    <a class="jt-btn jt-btn-primary jt-btn-sm jt-capsule-signin-btn" asp-area="" asp-controller="Account" asp-action="Login">Sign In</a>
 }
-</ul>
-
+</div>

@@ -1,0 +1,2130 @@
+/* ==========================================================================
+   JamesThew.com — Haute Cuisine & Editorial Scroll Choreography
+   Design System, Token Architecture & Continuous Scroll Layout
+   ========================================================================== */
+
+:root {
+  /* Dark Sanctuary Tokens */
+  --jt-obsidian: #090b0e;
+  --jt-charcoal-deep: #11151c;
+  --jt-charcoal-surface: #181d26;
+  --jt-charcoal-glass: rgba(18, 22, 28, 0.78);
+  --jt-charcoal-border: rgba(255, 255, 255, 0.1);
+
+  /* Light Editorial Canvas Tokens */
+  --jt-cream-canvas: #fbf9f5;
+  --jt-linen-subtle: #f4efe6;
+  --jt-parchment-border: #e8dfd1;
+  --jt-parchment-glass: rgba(251, 249, 245, 0.85);
+
+  /* Gastronomic Accents */
+  --jt-gold-primary: #f3c669;
+  --jt-gold-burnished: #c89847;
+  --jt-gold-glow: rgba(243, 198, 105, 0.32);
+  --jt-sear-ember: #c2412e;
+  --jt-sear-copper: #d97736;
+
+  /* Typography Colors */
+  --jt-text-light-primary: #fdfbf7;
+  --jt-text-light-secondary: #c9bfb2;
+  --jt-text-light-muted: #8e877d;
+  --jt-text-dark-primary: #181b20;
+  --jt-text-dark-secondary: #5f584e;
+  --jt-text-dark-muted: #8b8377;
+
+  /* Font Families */
+  --jt-font-display: 'Playfair Display', Georgia, Cambria, serif;
+  --jt-font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+  /* Layout Constants */
+  --jt-header-h: 0px;
+}
+
+/* Global Scope Guard & Reset */
+html,
+body {
+  overflow-x: clip;
+  background-color: var(--jt-obsidian);
+  color: var(--jt-text-light-primary);
+  font-family: var(--jt-font-body);
+}
+
+.jt-main-content:has(.jt-editorial-experience),
+.jt-main-content.jt-main-fullbleed {
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.jt-editorial-experience {
+  position: relative;
+  width: 100%;
+  overflow-x: clip;
+}
+
+/* Universal Editorial Section Container */
+.jt-section {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   BUTTONS & CONTROLS
+   ========================================================================== */
+
+.jt-btn-editorial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.75rem;
+  border-radius: 9999px;
+  font-family: var(--jt-font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.jt-btn-gold {
+  background: linear-gradient(135deg, var(--jt-gold-primary) 0%, var(--jt-gold-burnished) 100%);
+  color: #11151c !important;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px var(--jt-gold-glow);
+}
+
+.jt-btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(243, 198, 105, 0.45);
+  color: #000 !important;
+}
+
+.jt-btn-glass {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--jt-text-light-primary) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.jt-btn-glass:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff !important;
+  transform: translateY(-2px);
+}
+
+.jt-btn-outline-dark {
+  background: transparent;
+  color: var(--jt-text-dark-primary) !important;
+  border: 1.5px solid var(--jt-text-dark-primary);
+}
+
+.jt-btn-outline-dark:hover {
+  background: var(--jt-text-dark-primary);
+  color: #fff !important;
+  transform: translateY(-2px);
+}
+
+.jt-btn-outline-gold {
+  background: transparent;
+  color: var(--jt-gold-burnished) !important;
+  border: 1.5px solid var(--jt-gold-burnished);
+}
+
+.jt-btn-outline-gold:hover {
+  background: var(--jt-gold-burnished);
+  color: #11151c !important;
+  transform: translateY(-2px);
+}
+
+.jt-btn-sm {
+  padding: 0.55rem 1.25rem;
+  font-size: 0.8125rem;
+  min-height: 44px;
+}
+
+/* Eyebrows & Serif Italics */
+.jt-editorial-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--jt-gold-primary);
+  margin-bottom: 0.75rem;
+}
+
+.jt-light-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--jt-sear-copper);
+  margin-bottom: 0.75rem;
+}
+
+.jt-eyebrow-line {
+  width: 24px;
+  height: 2px;
+  background: currentColor;
+  display: inline-block;
+}
+
+.jt-serif-italic {
+  font-style: italic;
+  font-family: var(--jt-font-display);
+  font-weight: 400;
+  color: var(--jt-gold-burnished);
+}
+
+/* ==========================================================================
+   SECTION 01: CINEMATIC HERO (Distributed Asymmetric Layout)
+   ========================================================================== */
+
+.jt-hero-section {
+  height: 140vh; /* Tightly controlled scroll length without blank dead zones */
+  background-color: var(--jt-obsidian);
+}
+
+.jt-hero-stage {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  background-color: var(--jt-obsidian);
+  z-index: 10;
+}
+
+.jt-hero-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.jt-hero-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.jt-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(9, 11, 14, 0.45) 0%,
+    rgba(9, 11, 14, 0.85) 75%,
+    rgba(9, 11, 14, 0.96) 100%
+  );
+}
+
+.jt-hero-vignette {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.85);
+}
+
+/* Hanging Aromatics (Suspended from top center - mirrors grapes in reference) */
+.jt-hanging-aromatics {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2rem;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.jt-hanging-item {
+  position: relative;
+  will-change: transform, opacity;
+}
+
+.jt-hang-tomato {
+  top: -15px;
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.65));
+}
+
+.jt-hang-basil {
+  top: 10px;
+  filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.55));
+}
+
+.jt-aromatic-img {
+  display: block;
+  object-fit: contain;
+}
+
+/* Distributed Asymmetric Typography Container */
+.jt-hero-distributed-layout {
+  position: relative;
+  width: 100%;
+  max-width: 1400px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 6.5rem 2.5rem 2.5rem;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  grid-template-rows: auto 1fr auto;
+  z-index: 5;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.jt-hero-distributed-layout a,
+.jt-hero-distributed-layout button {
+  pointer-events: auto;
+}
+
+.jt-hero-quadrant {
+  will-change: transform, opacity;
+}
+
+.jt-quadrant-top-left {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+  align-self: start;
+}
+
+.jt-hero-headline {
+  font-family: var(--jt-font-display);
+  font-size: clamp(2.4rem, 5.2vw, 4.4rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--jt-text-light-primary);
+  margin: 0;
+}
+
+.jt-hero-headline-em {
+  font-family: var(--jt-font-display);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--jt-gold-primary);
+}
+
+.jt-quadrant-mid-right {
+  grid-column: 2 / 3;
+  grid-row: 2 / 3;
+  align-self: center;
+  justify-self: end;
+  max-width: 380px;
+  text-align: right;
+}
+
+.jt-editorial-statement {
+  background: rgba(18, 22, 28, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 1.5rem 1.75rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--jt-charcoal-border);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+}
+
+.jt-statement-tag {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--jt-gold-primary);
+  margin-bottom: 0.5rem;
+}
+
+.jt-statement-text {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--jt-text-light-secondary);
+  margin: 0;
+}
+
+.jt-quadrant-bottom-left {
+  grid-column: 1 / 2;
+  grid-row: 3 / 4;
+  align-self: end;
+}
+
+.jt-scroll-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.875rem;
+  color: var(--jt-text-light-muted);
+}
+
+.jt-scroll-mouse-icon {
+  width: 22px;
+  height: 34px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.jt-scroll-wheel {
+  width: 3px;
+  height: 7px;
+  background: var(--jt-gold-primary);
+  border-radius: 2px;
+  margin-top: 6px;
+  animation: jtScrollBob 1.8s infinite ease-in-out;
+}
+
+@keyframes jtScrollBob {
+  0% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(8px); opacity: 0.3; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.jt-scroll-cue-text {
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.jt-quadrant-bottom-right {
+  grid-column: 2 / 3;
+  grid-row: 3 / 4;
+  align-self: end;
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1.25rem;
+}
+
+.jt-hero-cta-cluster {
+  display: flex;
+  gap: 0.875rem;
+}
+
+.jt-hero-stats-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.jt-hero-stat-pill {
+  font-size: 0.75rem;
+  color: var(--jt-text-light-muted);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.jt-hero-stat-pill strong {
+  color: var(--jt-gold-primary);
+}
+
+/* ==========================================================================
+   SECTION 02: INGREDIENT-TO-DISH TRANSFORMATION
+   ========================================================================== */
+
+.jt-transform-section {
+  height: 150vh;
+  background-color: var(--jt-obsidian);
+  position: relative;
+}
+
+.jt-transform-stage {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--jt-obsidian);
+  z-index: 12;
+}
+
+.jt-transform-flanks {
+  position: absolute;
+  inset: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 6.5rem 2.5rem 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.jt-flank-copy {
+  max-width: 320px;
+  will-change: transform, opacity;
+}
+
+.jt-flank-left {
+  text-align: left;
+}
+
+.jt-flank-right {
+  text-align: right;
+}
+
+.jt-flank-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--jt-gold-primary);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.jt-flank-heading {
+  font-family: var(--jt-font-display);
+  font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--jt-text-light-primary);
+  line-height: 1.2;
+}
+
+.jt-transform-assembly {
+  position: relative;
+  width: 600px;
+  height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 8;
+}
+
+/* Thermal Core for seamless focal transformation */
+.jt-thermal-core {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(243, 198, 105, 0.95) 0%, rgba(217, 119, 54, 0.6) 50%, transparent 70%);
+  filter: blur(20px);
+  opacity: 0;
+  z-index: 3;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* Sizzle Kinetic Burst */
+.jt-kinetic-burst {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 2;
+  will-change: transform, opacity;
+}
+
+.jt-burst-glow {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(243, 198, 105, 0.45) 0%, rgba(194, 65, 46, 0.25) 50%, transparent 72%);
+  filter: blur(40px);
+}
+
+.jt-burst-chips {
+  display: flex;
+  gap: 0.75rem;
+  z-index: 3;
+}
+
+.jt-burst-chip {
+  padding: 0.5rem 1rem;
+  background: rgba(18, 22, 28, 0.85);
+  border: 1px solid var(--jt-gold-burnished);
+  color: var(--jt-gold-primary);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+/* Converging Aromatics */
+.jt-converging-aromatics {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.jt-converge-item {
+  position: absolute;
+  object-fit: contain;
+  filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.6));
+  will-change: transform, opacity;
+}
+
+#convergeGarlic {
+  top: 15%;
+  left: 10%;
+  width: 90px;
+  height: auto;
+}
+
+#convergeChili {
+  top: 18%;
+  right: 12%;
+  width: 110px;
+  height: auto;
+}
+
+#convergeLemon {
+  bottom: 15%;
+  left: 20%;
+  width: 95px;
+  height: auto;
+}
+
+/* Plate & Plated Masterpiece */
+.jt-plate-wrapper {
+  position: relative;
+  width: 520px;
+  height: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 6;
+  will-change: transform, opacity;
+}
+
+.jt-ceramic-plate-img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.9));
+}
+
+.jt-plated-dish-img {
+  position: absolute;
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+  z-index: 2;
+  filter: drop-shadow(0 18px 36px rgba(0, 0, 0, 0.75));
+  will-change: transform, opacity, clip-path, filter;
+}
+
+.jt-transform-dish-tag {
+  position: absolute;
+  bottom: -40px;
+  background: rgba(18, 22, 28, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 0.6rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--jt-gold-burnished);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.8125rem;
+  z-index: 10;
+  will-change: transform, opacity;
+}
+
+.jt-tag-time {
+  color: var(--jt-text-light-muted);
+}
+
+.jt-tag-sep {
+  color: var(--jt-gold-burnished);
+}
+
+.jt-tag-badge {
+  color: var(--jt-gold-primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.6875rem;
+}
+
+.jt-tag-name {
+  color: var(--jt-text-light-primary);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   SECTION 03: THE STORY OF FOOD (Light French Linen Editorial Canvas)
+   ========================================================================== */
+
+.jt-story-canvas {
+  background-color: var(--jt-cream-canvas);
+  color: var(--jt-text-dark-primary);
+  padding: 8rem 2.5rem 7rem;
+  border-top: 1px solid var(--jt-parchment-border);
+  border-bottom: 1px solid var(--jt-parchment-border);
+}
+
+.jt-story-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.jt-story-header {
+  max-width: 760px;
+  margin-bottom: 4rem;
+}
+
+.jt-story-headline {
+  font-family: var(--jt-font-display);
+  font-size: clamp(2.5rem, 4.5vw, 4rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--jt-text-dark-primary);
+  margin: 0.5rem 0 1.25rem;
+}
+
+.jt-story-lead {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--jt-text-dark-secondary);
+  margin: 0;
+}
+
+/* Staggered Horizontal Photo Deck */
+.jt-story-photo-deck {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+  margin-bottom: 6rem;
+}
+
+.jt-story-card {
+  background: #ffffff;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--jt-parchment-border);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+  will-change: transform;
+}
+
+.jt-story-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.12);
+}
+
+.jt-story-card-media {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.jt-story-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.jt-story-card:hover .jt-story-card-media img {
+  transform: scale(1.06);
+}
+
+.jt-story-card-body {
+  padding: 1.75rem 1.5rem;
+}
+
+.jt-story-card-num {
+  font-family: var(--jt-font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--jt-gold-burnished);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.jt-story-card-title {
+  font-family: var(--jt-font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--jt-text-dark-primary);
+  margin: 0 0 0.5rem;
+}
+
+.jt-story-card-desc {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--jt-text-dark-secondary);
+  margin: 0;
+}
+
+/* Milestone Columns */
+.jt-story-milestones {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3rem;
+  padding-top: 3rem;
+  border-top: 1px solid var(--jt-parchment-border);
+}
+
+.jt-milestone-col {
+  border-left: 3px solid var(--jt-gold-burnished);
+  padding-left: 1.5rem;
+}
+
+.jt-milestone-stat {
+  font-family: var(--jt-font-display);
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--jt-sear-copper);
+  line-height: 1;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.jt-milestone-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--jt-text-dark-primary);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.jt-milestone-sub {
+  font-size: 0.875rem;
+  color: var(--jt-text-dark-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   SECTION 04: RECIPE EDITORIAL COLLAGE
+   ========================================================================== */
+
+.jt-collage-section {
+  background-color: var(--jt-cream-canvas);
+  color: var(--jt-text-dark-primary);
+  padding: 6.5rem 2.5rem 4rem;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.jt-collage-stage {
+  position: relative;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.jt-collage-header {
+  text-align: center;
+  max-width: 780px;
+  margin: 0 auto 3.5rem;
+  will-change: transform, opacity;
+}
+
+.jt-collage-headline {
+  font-family: var(--jt-font-display);
+  font-size: clamp(2.4rem, 4.2vw, 3.8rem);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--jt-text-dark-primary);
+  margin: 0.5rem 0 1rem;
+}
+
+.jt-collage-lead {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--jt-text-dark-secondary);
+  margin: 0;
+}
+
+/* Irregular 6-Card Mosaic Grid */
+.jt-mosaic-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: 120px;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.jt-mosaic-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--jt-parchment-border);
+  display: flex;
+  flex-direction: column;
+  will-change: transform, opacity;
+  transition: box-shadow 0.3s ease;
+  z-index: 10;
+}
+
+.jt-mosaic-card:hover {
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15);
+}
+
+.jt-mosaic-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.jt-mosaic-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.jt-mosaic-card:hover .jt-mosaic-media img {
+  transform: scale(1.05);
+}
+
+.jt-mosaic-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.75rem 1.5rem 1.25rem;
+  background: linear-gradient(to top, rgba(9, 11, 14, 0.92) 0%, rgba(9, 11, 14, 0.6) 60%, transparent 100%);
+  color: #ffffff;
+  z-index: 2;
+}
+
+.jt-mosaic-badge {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  margin-bottom: 0.4rem;
+}
+
+.jt-badge-gold {
+  background: linear-gradient(135deg, var(--jt-gold-primary), var(--jt-gold-burnished)) !important;
+  color: #11151c !important;
+}
+
+.jt-mosaic-title {
+  font-family: var(--jt-font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+  color: #ffffff;
+}
+
+.jt-mosaic-meta {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+}
+
+/* Mosaic Specific Grid Positions */
+.jt-mosaic-tall {
+  grid-column: 1 / 5;
+  grid-row: 1 / 4; /* Height: 360px */
+}
+
+.jt-mosaic-wide {
+  grid-column: 5 / 9;
+  grid-row: 1 / 3; /* Height: 240px */
+}
+
+.jt-mosaic-square {
+  grid-column: 9 / 13;
+  grid-row: 1 / 4; /* Height: 360px */
+}
+
+.jt-collage-dark-curtain {
+  position: absolute;
+  inset: 0;
+  background-color: var(--jt-obsidian);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 15;
+  will-change: opacity;
+}
+
+/* FOCAL CARD: Masterclass Beef Wellington (Enlarges to take over viewport into Section 05) */
+.jt-mosaic-focal {
+  grid-column: 4 / 10;
+  grid-row: 3 / 6; /* Height: 360px */
+  z-index: 25;
+  border: 2px solid var(--jt-gold-burnished);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  transform-origin: center center;
+  will-change: transform, border-radius, box-shadow;
+}
+
+.jt-focal-title {
+  font-size: 1.75rem;
+}
+
+.jt-mosaic-landscape {
+  grid-column: 1 / 4;
+  grid-row: 4 / 6;
+}
+
+.jt-mosaic-portrait {
+  grid-column: 10 / 13;
+  grid-row: 4 / 6;
+}
+
+/* ==========================================================================
+   SECTION 05: DARK SIGNATURE DISH FEATURE (Deep 3D Z-Index Typography)
+   ========================================================================== */
+
+.jt-signature-dark-section {
+  height: 150vh;
+  background-color: var(--jt-obsidian);
+  color: var(--jt-text-light-primary);
+  position: relative;
+}
+
+.jt-signature-stage {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--jt-obsidian);
+  z-index: 14;
+}
+
+/* Split Background Typography (Z-Index 2) */
+.jt-signature-bg-text {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--jt-font-display);
+  font-size: clamp(4.5rem, 11vw, 10.5rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.05);
+  text-transform: uppercase;
+  z-index: 2;
+  pointer-events: none;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.jt-sig-top {
+  top: 10%;
+}
+
+.jt-sig-bottom {
+  bottom: 8%;
+}
+
+/* Central Plated Dish (Z-Index 4) */
+.jt-signature-dish-center {
+  position: relative;
+  width: 560px;
+  height: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+  will-change: transform;
+}
+
+.jt-sig-halo {
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--jt-gold-glow) 0%, rgba(200, 152, 71, 0.15) 50%, transparent 70%);
+  filter: blur(50px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.jt-sig-plate-layer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.jt-sig-plate-img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 35px 70px rgba(0, 0, 0, 0.95));
+}
+
+.jt-sig-dish-img {
+  position: absolute;
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.85));
+}
+
+/* Foreground Specifications */
+.jt-signature-specs {
+  position: absolute;
+  bottom: 5%;
+  z-index: 6;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  will-change: transform, opacity;
+}
+
+.jt-spec-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(18, 22, 28, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 0.6rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--jt-charcoal-border);
+  font-size: 0.8125rem;
+  color: var(--jt-text-light-secondary);
+}
+
+.jt-spec-chip-sep {
+  color: var(--jt-gold-burnished);
+}
+
+/* ==========================================================================
+   SECTION 06: HORIZONTAL SIGNATURE RECIPE COLLECTION
+   ========================================================================== */
+
+.jt-horizontal-rail-section {
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  background-color: var(--jt-obsidian);
+  position: relative;
+  overflow: hidden;
+}
+
+.jt-horizontal-sticky {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1rem 0 2rem;
+  box-sizing: border-box;
+  z-index: 15;
+}
+
+.jt-horizontal-rail-header {
+  padding: clamp(3.5rem, 6vh, 5rem) 4rem 1rem;
+  max-width: 1400px;
+}
+
+.jt-horizontal-headline {
+  font-family: var(--jt-font-display);
+  font-size: clamp(2rem, 3.8vw, 3.2rem);
+  font-weight: 600;
+  color: var(--jt-text-light-primary);
+  margin: 0;
+}
+
+.jt-horizontal-track {
+  display: flex;
+  gap: 2.5rem;
+  padding: 0 4rem;
+  width: max-content;
+  will-change: transform;
+}
+
+/* Luxury Rail Card */
+.jt-rail-card {
+  position: relative;
+  width: 420px;
+  background: var(--jt-charcoal-deep);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  border: 1px solid var(--jt-charcoal-border);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: transform 0.4s ease, border-color 0.4s ease;
+}
+
+.jt-rail-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(243, 198, 105, 0.4);
+}
+
+.jt-rail-card-glow {
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--jt-gold-glow) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.jt-rail-num {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  font-family: var(--jt-font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--jt-gold-primary);
+  z-index: 3;
+}
+
+.jt-rail-media {
+  width: 100%;
+  height: clamp(210px, 24vh, 280px);
+  overflow: hidden;
+  position: relative;
+}
+
+.jt-rail-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.jt-rail-card:hover .jt-rail-media img {
+  transform: scale(1.06);
+}
+
+.jt-rail-card-body {
+  padding: clamp(1.2rem, 2vh, 1.75rem);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.jt-rail-badge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 0.3rem 0.75rem;
+  background: rgba(243, 198, 105, 0.15);
+  border: 1px solid var(--jt-gold-burnished);
+  color: var(--jt-gold-primary);
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.jt-rail-free {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--jt-text-light-secondary);
+}
+
+.jt-rail-title {
+  font-family: var(--jt-font-display);
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: var(--jt-text-light-primary);
+  margin: 0 0 0.6rem;
+}
+
+.jt-rail-desc {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--jt-text-light-secondary);
+  margin: 0 0 1.25rem;
+  flex-grow: 1;
+}
+
+.jt-rail-meta {
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--jt-text-light-muted);
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.jt-rail-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--jt-gold-primary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: gap 0.2s ease;
+}
+
+.jt-rail-link:hover {
+  gap: 0.7rem;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   SECTION 07: CULINARY TECHNIQUE / MASTERCLASS (3D Fan-In)
+   ========================================================================== */
+
+.jt-technique-section {
+  background-color: var(--jt-charcoal-deep);
+  color: var(--jt-text-light-primary);
+  padding: 8rem 2.5rem;
+  border-top: 1px solid var(--jt-charcoal-border);
+  border-bottom: 1px solid var(--jt-charcoal-border);
+}
+
+.jt-technique-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.jt-technique-header {
+  text-align: center;
+  max-width: 780px;
+  margin: 0 auto 5rem;
+}
+
+.jt-technique-headline {
+  font-family: var(--jt-font-display);
+  font-size: clamp(2.4rem, 4.2vw, 3.6rem);
+  font-weight: 600;
+  margin: 0.5rem 0 1rem;
+}
+
+.jt-technique-lead {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--jt-text-light-secondary);
+  margin: 0;
+}
+
+.jt-technique-deck {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+  perspective: 1200px;
+}
+
+.jt-technique-card {
+  background: var(--jt-charcoal-surface);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  border: 1px solid var(--jt-charcoal-border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+  will-change: transform;
+}
+
+.jt-technique-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  border-color: rgba(243, 198, 105, 0.35);
+}
+
+.jt-tech-media {
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+}
+
+.jt-tech-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.jt-technique-card:hover .jt-tech-media img {
+  transform: scale(1.06);
+}
+
+.jt-tech-body {
+  padding: 2rem 1.75rem;
+}
+
+.jt-tech-badge {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--jt-gold-primary);
+  margin-bottom: 0.6rem;
+}
+
+.jt-tech-title {
+  font-family: var(--jt-font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  color: var(--jt-text-light-primary);
+}
+
+.jt-tech-desc {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--jt-text-light-secondary);
+  margin: 0 0 1.5rem;
+}
+
+.jt-tech-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--jt-gold-primary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: gap 0.2s ease;
+}
+
+.jt-tech-link:hover {
+  gap: 0.7rem;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   SECTION 08: CONTESTS & EXPERIENCES (3D Deck Fan-Out)
+   ========================================================================== */
+
+.jt-contests-section {
+  background-color: var(--jt-obsidian);
+  color: var(--jt-text-light-primary);
+  padding: 8rem 2.5rem;
+  overflow: hidden;
+}
+
+.jt-contests-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.jt-contests-header {
+  text-align: center;
+  max-width: 780px;
+  margin: 0 auto 5rem;
+}
+
+.jt-contests-headline {
+  font-family: var(--jt-font-display);
+  font-size: clamp(2.4rem, 4.2vw, 3.6rem);
+  font-weight: 600;
+  margin: 0.5rem 0 1rem;
+}
+
+.jt-contests-lead {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--jt-text-light-secondary);
+  margin: 0;
+}
+
+.jt-contests-deck {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+  perspective: 1200px;
+}
+
+.jt-contest-card {
+  background: var(--jt-charcoal-deep);
+  border-radius: 1.5rem;
+  padding: 2.5rem 2rem;
+  border: 1px solid var(--jt-charcoal-border);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  transform-origin: bottom center;
+  will-change: transform;
+  transition: transform 0.4s ease, border-color 0.4s ease;
+}
+
+.jt-contest-card:hover {
+  transform: translateY(-8px) !important;
+  border-color: rgba(243, 198, 105, 0.4);
+}
+
+.jt-contest-badge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.jt-status-badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+}
+
+.jt-status-active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.jt-status-upcoming {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.jt-status-concluded {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.jt-prize-pill {
+  font-size: 0.8125rem;
+  color: var(--jt-gold-primary);
+  font-weight: 600;
+}
+
+.jt-contest-title {
+  font-family: var(--jt-font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  color: var(--jt-text-light-primary);
+}
+
+.jt-contest-desc {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--jt-text-light-secondary);
+  margin: 0 0 2rem;
+  flex-grow: 1;
+}
+
+.jt-contest-footer {
+  padding-top: 1rem;
+}
+
+/* ==========================================================================
+   SECTION 09: FINAL EDITORIAL CTA (French Linen Ivory Canvas)
+   ========================================================================== */
+
+.jt-cta-section {
+  background-color: var(--jt-cream-canvas);
+  color: var(--jt-text-dark-primary);
+  padding: 9rem 2.5rem;
+  border-top: 1px solid var(--jt-parchment-border);
+  overflow: hidden;
+}
+
+.jt-cta-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.jt-cta-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.jt-cta-massive-title {
+  font-family: var(--jt-font-display);
+  font-size: clamp(3rem, 5.5vw, 5.2rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--jt-text-dark-primary);
+  margin: 0.5rem 0 1.5rem;
+}
+
+.jt-cta-lead {
+  font-size: 1.1875rem;
+  line-height: 1.7;
+  color: var(--jt-text-dark-secondary);
+  margin: 0 0 2.5rem;
+  max-width: 580px;
+}
+
+.jt-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.jt-cta-disclaimer {
+  font-size: 0.8125rem;
+  color: var(--jt-text-dark-muted);
+  margin: 0;
+  font-style: italic;
+}
+
+.jt-cta-visual-block {
+  position: relative;
+  will-change: transform;
+}
+
+.jt-cta-img-card {
+  position: relative;
+  border-radius: 2rem;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.16);
+  border: 8px solid #ffffff;
+  aspect-ratio: 1 / 1;
+}
+
+.jt-cta-feature-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ==========================================================================
+   SECTION: FREQUENTLY ASKED QUESTIONS (Light Editorial Accordion)
+   ========================================================================== */
+
+.jt-faq-editorial-section {
+  background-color: var(--jt-cream-canvas);
+  color: var(--jt-text-dark-primary);
+  padding: 6rem 2.5rem 7rem;
+  border-top: 1px solid var(--jt-parchment-border);
+}
+
+.jt-faq-editorial-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.jt-faq-editorial-header {
+  text-align: center;
+  margin-bottom: 3.5rem;
+}
+
+.jt-faq-editorial-headline {
+  font-family: var(--jt-font-display);
+  font-size: clamp(2.2rem, 3.8vw, 3.2rem);
+  font-weight: 600;
+  margin: 0.5rem 0 1rem;
+  color: var(--jt-text-dark-primary);
+}
+
+.jt-faq-editorial-lead {
+  font-size: 1.0625rem;
+  color: var(--jt-text-dark-secondary);
+  margin: 0;
+}
+
+.jt-faq-editorial-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.jt-faq-editorial-card {
+  background: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid var(--jt-parchment-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.jt-faq-editorial-card[open] {
+  border-color: var(--jt-gold-burnished);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.jt-faq-editorial-summary {
+  padding: 1.25rem 1.75rem;
+  font-family: var(--jt-font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--jt-text-dark-primary);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style: none;
+  user-select: none;
+}
+
+.jt-faq-editorial-summary::-webkit-details-marker {
+  display: none;
+}
+
+.jt-faq-editorial-icon {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--jt-gold-burnished);
+  transition: transform 0.2s ease;
+}
+
+.jt-faq-editorial-card[open] .jt-faq-editorial-icon {
+  transform: rotate(45deg);
+}
+
+.jt-faq-editorial-answer {
+  padding: 0 1.75rem 1.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--jt-text-dark-secondary);
+}
+
+/* ==========================================================================
+   SECTION 10: PREMIUM FOOTER (Obsidian Base with Giant Watermark)
+   ========================================================================== */
+
+.jt-luxury-footer {
+  background-color: var(--jt-obsidian);
+  color: var(--jt-text-light-secondary);
+  position: relative;
+  padding: 8rem 2.5rem 3.5rem;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.jt-footer-watermark {
+  position: absolute;
+  top: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--jt-font-display);
+  font-size: clamp(5rem, 14vw, 15rem);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.035);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.jt-footer-inner-content {
+  position: relative;
+  max-width: 1400px;
+  margin: 0 auto;
+  z-index: 2;
+}
+
+.jt-footer-columns {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(3, 1fr);
+  gap: 4rem;
+  margin-bottom: 5rem;
+}
+
+.jt-footer-crest {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-bottom: 1.25rem;
+}
+
+.jt-crest-initials {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, var(--jt-gold-primary), var(--jt-gold-burnished));
+  color: #11151c;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--jt-font-display);
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.jt-crest-title {
+  font-family: var(--jt-font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--jt-text-light-primary);
+}
+
+.jt-footer-bio {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--jt-text-light-secondary);
+  margin: 0 0 1.5rem;
+}
+
+.jt-footer-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.jt-badge-pill {
+  font-size: 0.6875rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--jt-text-light-muted);
+}
+
+.jt-footer-heading {
+  font-family: var(--jt-font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--jt-text-light-primary);
+  margin: 0 0 1.5rem;
+  letter-spacing: 0.04em;
+}
+
+.jt-footer-nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.jt-footer-nav-list a {
+  color: var(--jt-text-light-secondary);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color 0.2s ease, transform 0.2s ease;
+  display: inline-block;
+}
+
+.jt-footer-nav-list a:hover {
+  color: var(--jt-gold-primary);
+  transform: translateX(4px);
+}
+
+.jt-footer-bottom-bar {
+  padding-top: 2.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8125rem;
+  color: var(--jt-text-light-muted);
+}
+
+.jt-bottom-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.jt-bottom-links a {
+  color: var(--jt-text-light-muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.jt-bottom-links a:hover {
+  color: var(--jt-text-light-primary);
+}
+
+.jt-sep {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN BREAKPOINTS
+   ========================================================================== */
+
+/* TABLET & MOBILE UNIFIED PIN-SAFETY (< 992px) */
+@media (max-width: 991px) {
+  .jt-hero-section,
+  .jt-transform-section,
+  .jt-signature-dark-section {
+    height: auto !important;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .jt-hero-stage,
+  .jt-transform-stage,
+  .jt-signature-stage {
+    position: relative !important;
+    top: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}
+
+/* TABLET (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .jt-hero-distributed-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    gap: 2rem;
+  }
+  .jt-quadrant-mid-right {
+    justify-self: start;
+    text-align: left;
+  }
+  .jt-quadrant-bottom-right {
+    justify-self: start;
+    align-items: flex-start;
+  }
+  .jt-story-photo-deck {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .jt-story-milestones {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .jt-mosaic-grid {
+    grid-template-columns: repeat(6, 1fr);
+    grid-auto-rows: 140px;
+  }
+  .jt-mosaic-tall { grid-column: 1 / 4; grid-row: 1 / 3; }
+  .jt-mosaic-wide { grid-column: 4 / 7; grid-row: 1 / 3; }
+  .jt-mosaic-square { grid-column: 1 / 4; grid-row: 3 / 5; }
+  .jt-mosaic-focal { grid-column: 2 / 6; grid-row: 5 / 8; }
+  .jt-mosaic-landscape { grid-column: 4 / 7; grid-row: 3 / 5; }
+  .jt-mosaic-portrait { grid-column: 1 / 4; grid-row: 8 / 10; }
+  .jt-technique-deck {
+    grid-template-columns: 1fr;
+  }
+  .jt-contests-deck {
+    grid-template-columns: 1fr;
+  }
+  .jt-cta-grid {
+    grid-template-columns: 1fr;
+  }
+  .jt-footer-columns {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* MOBILE (< 768px) */
+@media (max-width: 767px) {
+  .jt-hero-distributed-layout {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem 1.25rem;
+    gap: 1.5rem;
+  }
+  .jt-hero-headline {
+    font-size: 2.2rem;
+  }
+  .jt-quadrant-mid-right {
+    display: none;
+  }
+  .jt-hero-cta-cluster {
+    flex-direction: column;
+    width: 100%;
+  }
+  .jt-hero-stats-row {
+    flex-wrap: wrap;
+  }
+  .jt-transform-flanks {
+    display: none;
+  }
+  .jt-transform-assembly {
+    width: 320px;
+    height: 320px;
+  }
+  .jt-plate-wrapper {
+    width: 300px;
+    height: 300px;
+  }
+  .jt-story-canvas {
+    padding: 5rem 1.25rem;
+  }
+  .jt-story-photo-deck {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .jt-story-milestones {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .jt-collage-section {
+    padding: 5rem 1.25rem;
+  }
+  .jt-mosaic-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .jt-mosaic-card {
+    height: 300px;
+  }
+  .jt-signature-bg-text {
+    font-size: 3.5rem;
+  }
+  .jt-signature-dish-center {
+    width: 320px;
+    height: 320px;
+  }
+  .jt-horizontal-rail-section {
+    height: auto !important;
+    min-height: auto !important;
+  }
+  .jt-horizontal-sticky {
+    position: static !important;
+    height: auto !important;
+    padding: 4rem 1.25rem;
+  }
+  .jt-horizontal-rail-header {
+    padding: 0 0 2rem;
+  }
+  .jt-horizontal-track {
+    flex-direction: column;
+    padding: 0;
+    width: 100%;
+    transform: none !important;
+  }
+  .jt-rail-card {
+    width: 100%;
+  }
+  .jt-technique-section {
+    padding: 5rem 1.25rem;
+  }
+  .jt-technique-deck {
+    grid-template-columns: 1fr;
+  }
+  .jt-contests-section {
+    padding: 5rem 1.25rem;
+  }
+  .jt-contests-deck {
+    grid-template-columns: 1fr;
+  }
+  .jt-cta-section {
+    padding: 5rem 1.25rem;
+  }
+  .jt-cta-grid {
+    grid-template-columns: 1fr;
+  }
+  .jt-cta-massive-title {
+    font-size: 2.6rem;
+  }
+  .jt-luxury-footer {
+    padding: 5rem 1.25rem 3rem;
+  }
+  .jt-footer-columns {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .jt-footer-bottom-bar {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+}
+
+/* ==========================================================================
+   PREFERS-REDUCED-MOTION (WCAG 2.2 AA Compliance)
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .jt-hero-section,
+  .jt-transform-section,
+  .jt-signature-dark-section,
+  .jt-horizontal-rail-section {
+    height: auto !important;
+    min-height: auto !important;
+  }
+
+  .jt-hero-stage,
+  .jt-transform-stage,
+  .jt-signature-stage,
+  .jt-horizontal-sticky {
+    position: static !important;
+    height: auto !important;
+    padding: 4rem 2rem;
+  }
+
+  .jt-horizontal-track {
+    flex-direction: row;
+    overflow-x: auto;
+    width: 100%;
+    transform: none !important;
+    scroll-snap-type: x mandatory;
+  }
+
+  .jt-rail-card {
+    scroll-snap-align: start;
+  }
+
+  .jt-story-card,
+  .jt-technique-card,
+  .jt-contest-card,
+  .jt-mosaic-card {
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .jt-hero-quadrant,
+  .jt-flank-copy,
+  .jt-hanging-item,
+  .jt-signature-bg-text,
+  .jt-kinetic-burst {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .jt-scroll-wheel {
+    animation: none !important;
+  }
+}

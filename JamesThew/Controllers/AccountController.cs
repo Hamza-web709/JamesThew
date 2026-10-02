@@ -65,7 +65,7 @@ public class AccountController(UserManager<ApplicationUser> users,
 
     [AllowAnonymous, HttpGet("login")]
     public IActionResult Login(string? returnUrl = null) => User.Identity?.IsAuthenticated == true
-        ? RedirectToLocal(returnUrl) : View(new LoginViewModel { ReturnUrl = SafeReturnUrl(returnUrl) });
+        ? RedirectAfterLogin(returnUrl) : View(new LoginViewModel { ReturnUrl = SafeLocalReturnUrl(returnUrl) });
 
     [AllowAnonymous, HttpPost("login")]
     public async Task<IActionResult> Login(LoginViewModel model)
@@ -77,7 +77,10 @@ public class AccountController(UserManager<ApplicationUser> users,
         var result = await signIn.PasswordSignInAsync(model.Email, model.Password,
             model.RememberMe, lockoutOnFailure: true);
         if (result.Succeeded)
-            return RedirectToLocal(model.ReturnUrl);
+        {
+            var user = await users.FindByEmailAsync(model.Email);
+            return await RedirectAfterLoginAsync(model.ReturnUrl, user);
+        }
 
         ModelState.AddModelError(string.Empty, "Unable to sign in. Check your details or try again later.");
         return View(model);
@@ -174,9 +177,30 @@ public class AccountController(UserManager<ApplicationUser> users,
         return View();
     }
 
-    private IActionResult RedirectToLocal(string? returnUrl) => LocalRedirect(SafeReturnUrl(returnUrl));
-    private string SafeReturnUrl(string? returnUrl) => Url.IsLocalUrl(returnUrl)
-        ? returnUrl! : Url.Action(nameof(Status), "Account")!;
+    private IActionResult RedirectAfterLogin(string? returnUrl)
+    {
+        var safeReturnUrl = SafeLocalReturnUrl(returnUrl);
+        if (!string.IsNullOrWhiteSpace(safeReturnUrl))
+            return LocalRedirect(safeReturnUrl);
+
+        return User.IsInRole(AppRoles.Admin)
+            ? RedirectToAction("Index", "Admin")
+            : RedirectToAction(nameof(Status));
+    }
+
+    private async Task<IActionResult> RedirectAfterLoginAsync(string? returnUrl, ApplicationUser? user)
+    {
+        var safeReturnUrl = SafeLocalReturnUrl(returnUrl);
+        if (!string.IsNullOrWhiteSpace(safeReturnUrl))
+            return LocalRedirect(safeReturnUrl);
+
+        if (user is not null && await users.IsInRoleAsync(user, AppRoles.Admin))
+            return RedirectToAction("Index", "Admin");
+
+        return RedirectToAction(nameof(Status));
+    }
+
+    private string? SafeLocalReturnUrl(string? returnUrl) => Url.IsLocalUrl(returnUrl) ? returnUrl : null;
 
     private void AddRegistrationErrors(IdentityResult result)
     {

@@ -1,0 +1,111 @@
+@using JamesThew.Authorization
+@{
+    var title = ViewData["Title"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+    var isDashboard = string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
+    var contentActions = new[] { "Content", "NewRecipe", "EditRecipe", "NewTip", "EditTip" };
+    var contestActions = new[] { "Contests", "NewContest", "CreateContest", "EditContest", "UpdateContest", "ContestEntries" };
+    string Active(params string[] actions) => actions.Any(action => string.Equals(action, currentAction, StringComparison.OrdinalIgnoreCase)) ? "active" : "";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(string.IsNullOrWhiteSpace(title) ? "JamesThew Admin Console" : $"{title} - JamesThew Admin Console")</title>
+    <meta name="description" content="JamesThew administration console for editorial content, membership operations, feedback, contributions, media, and contests." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="jt-admin-body">
+    <a href="#admin-main-content" class="skip-link jt-admin-skip">Skip to admin content</a>
+
+    <div class="jt-admin-shell">
+        <aside class="jt-admin-sidebar" id="adminSidebar" aria-label="Admin Console Navigation">
+            <div class="jt-admin-brand">
+                <span class="jt-admin-brand-mark">JT</span>
+                <span>
+                    <span class="jt-admin-kicker">Admin Console</span>
+                    <span class="jt-admin-brand-name">James Thew</span>
+                </span>
+            </div>
+
+            <nav class="jt-admin-nav" aria-label="Admin sections">
+                <a class="jt-admin-nav-link @(isDashboard ? "active" : "")" asp-controller="Admin" asp-action="Index">
+                    <span class="jt-admin-nav-code" aria-hidden="true">01</span>
+                    <span>Dashboard</span>
+                </a>
+                <a class="jt-admin-nav-link @Active(contentActions)" asp-controller="Admin" asp-action="Content">
+                    <span class="jt-admin-nav-code" aria-hidden="true">02</span>
+                    <span>Editorial Content</span>
+                </a>
+                <a class="jt-admin-nav-link @Active("Media")" asp-controller="Admin" asp-action="Media">
+                    <span class="jt-admin-nav-code" aria-hidden="true">03</span>
+                    <span>Media Library</span>
+                </a>
+                <a class="jt-admin-nav-link @Active("Subscriptions")" asp-controller="Admin" asp-action="Subscriptions">
+                    <span class="jt-admin-nav-code" aria-hidden="true">04</span>
+                    <span>Membership</span>
+                </a>
+                <a class="jt-admin-nav-link @Active("Feedback")" asp-controller="Admin" asp-action="Feedback">
+                    <span class="jt-admin-nav-code" aria-hidden="true">05</span>
+                    <span>Feedback</span>
+                </a>
+                <a class="jt-admin-nav-link @Active("Contributions")" asp-controller="Admin" asp-action="Contributions">
+                    <span class="jt-admin-nav-code" aria-hidden="true">06</span>
+                    <span>Content Intake</span>
+                </a>
+                <a class="jt-admin-nav-link @Active(contestActions)" asp-controller="Admin" asp-action="Contests">
+                    <span class="jt-admin-nav-code" aria-hidden="true">07</span>
+                    <span>Contest Management</span>
+                </a>
+            </nav>
+
+            <div class="jt-admin-sidebar-note">
+                <strong>Academic Demo Project</strong>
+                <span>ASP.NET Core MVC</span>
+            </div>
+        </aside>
+
+        <div class="jt-admin-panel">
+            <header class="jt-admin-topbar">
+                <button class="jt-admin-menu" id="adminMenuToggle" type="button" aria-expanded="false" aria-controls="adminSidebar" aria-label="Toggle admin navigation">
+                    <span></span>
+                    <span></span>
+                </button>
+                <div>
+                    <div class="jt-admin-top-label">ADMIN CONSOLE</div>
+                    <div class="jt-admin-top-title">Operational workspace</div>
+                </div>
+                <div class="jt-admin-actions">
+                    <a class="jt-admin-action-link jt-admin-public-link" asp-controller="Home" asp-action="Index">View Public Site <span aria-hidden="true">&rarr;</span></a>
+                    <a class="jt-admin-action-link" asp-controller="Account" asp-action="Status">Account</a>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="jt-admin-logout-form">
+                        <button class="jt-admin-action-button" type="submit">Logout</button>
+                    </form>
+                </div>
+            </header>
+
+            <main id="admin-main-content" class="jt-admin-main">
+                @RenderBody()
+            </main>
+
+            <footer class="jt-admin-footer">
+                <span>JamesThew Admin Console</span>
+                <span>Academic Demo Project</span>
+                <span>ASP.NET Core MVC</span>
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

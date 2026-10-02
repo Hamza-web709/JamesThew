@@ -1,0 +1,1957 @@
+/* ==========================================================================
+   JamesThew.com — Unified Inner-Page Design System & Card Motion Architecture
+   Applies luxury culinary identity across all non-admin visitor-facing routes.
+   ========================================================================== */
+
+:root {
+  /* Sanctuary Palette Tokens */
+  --jt-obsidian: #090b0e;
+  --jt-charcoal-deep: #11151c;
+  --jt-charcoal-surface: #181d26;
+  --jt-charcoal-glass: rgba(18, 22, 28, 0.78);
+  --jt-charcoal-border: rgba(255, 255, 255, 0.1);
+
+  /* Light Editorial Canvas */
+  --jt-cream-canvas: #fbf9f5;
+  --jt-linen-subtle: #f4efe6;
+  --jt-parchment-border: #e8dfd1;
+
+  /* Gastronomic Accents */
+  --jt-gold-primary: #f3c669;
+  --jt-gold-burnished: #c89847;
+  --jt-gold-glow: rgba(243, 198, 105, 0.32);
+  --jt-sear-ember: #c2412e;
+  --jt-sear-copper: #d97736;
+
+  /* Typography Colors */
+  --jt-text-light-primary: #fdfbf7;
+  --jt-text-light-secondary: #e2dbd0;
+  --jt-text-light-muted: #a8a095;
+
+  /* Fonts */
+  --jt-font-display: 'Playfair Display', Georgia, Cambria, serif;
+  --jt-font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* ==========================================================================
+   FIXED BACKGROUND ARCHITECTURE
+   ========================================================================== */
+
+.jt-page-backdrop {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.jt-page-bg-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.02);
+  filter: brightness(0.68) contrast(1.05);
+  transition: opacity 0.6s ease;
+}
+
+.jt-page-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 30%,
+    rgba(9, 11, 14, 0.58) 0%,
+    rgba(9, 11, 14, 0.88) 75%,
+    rgba(9, 11, 14, 0.97) 100%
+  );
+}
+
+.jt-page-vignette {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 160px rgba(0, 0, 0, 0.92);
+}
+
+/* ==========================================================================
+   FOREGROUND INNER SHELL & SECTION CONTAINERS
+   ========================================================================== */
+
+html,
+body {
+  overflow-x: clip;
+}
+
+.jt-inner-shell {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  min-height: calc(100vh - 104px);
+  box-sizing: border-box;
+  padding: 2.5rem 1.5rem 2.5rem;
+  color: var(--jt-text-light-primary);
+  font-family: var(--jt-font-body);
+  overflow-x: clip;
+}
+
+.jt-inner-container {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.jt-inner-container-sm {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.jt-inner-container-md {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+   PAGE HERO & EDITORIAL HEADINGS
+   ========================================================================== */
+
+.jt-page-hero {
+  text-align: center;
+  max-width: 780px;
+  margin: 0 auto 3.5rem;
+}
+
+.jt-page-hero-left {
+  text-align: left;
+  max-width: 100%;
+  margin: 0 0 2.5rem;
+}
+
+.jt-page-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--jt-gold-primary);
+  margin-bottom: 0.75rem;
+}
+
+.jt-page-eyebrow .jt-eyebrow-line {
+  width: 24px;
+  height: 2px;
+  background: currentColor;
+  display: inline-block;
+}
+
+.jt-page-title {
+  font-family: var(--jt-font-display);
+  font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--jt-text-light-primary);
+  margin: 0 0 1rem;
+}
+
+.jt-page-title em,
+.jt-page-title .jt-serif-italic {
+  font-family: var(--jt-font-display);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--jt-gold-primary);
+}
+
+.jt-page-lead {
+  font-size: 1.0625rem;
+  line-height: 1.68;
+  color: var(--jt-text-light-secondary);
+  margin: 0;
+}
+
+/* ==========================================================================
+   GLASS PANELS & CARDS
+   ========================================================================== */
+
+.jt-glass-panel {
+  background: var(--jt-charcoal-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--jt-charcoal-border);
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  padding: 2.5rem;
+  box-sizing: border-box;
+}
+
+.jt-glass-panel-pinnacle {
+  border-color: rgba(243, 198, 105, 0.35);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 35px rgba(243, 198, 105, 0.12);
+}
+
+/* ==========================================================================
+   FILTER BAR & SEARCH CONTROLS
+   ========================================================================== */
+
+.jt-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-bottom: 3rem;
+  padding: 0.75rem 1rem;
+  background: rgba(18, 22, 28, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--jt-charcoal-border);
+  border-radius: 999px;
+}
+
+.jt-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.jt-filter-pill {
+  padding: 0.5rem 1.15rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--jt-text-light-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.jt-filter-pill:hover {
+  color: var(--jt-text-light-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.jt-filter-pill.active {
+  color: #11151c !important;
+  background: linear-gradient(135deg, var(--jt-gold-primary) 0%, var(--jt-gold-burnished) 100%);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 10px var(--jt-gold-glow);
+}
+
+.jt-search-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.jt-search-input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 0.48rem 1.1rem;
+  font-size: 0.84rem;
+  color: var(--jt-text-light-primary);
+  outline: none;
+  min-width: 220px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.jt-search-input:focus {
+  border-color: var(--jt-gold-primary);
+  box-shadow: 0 0 0 3px rgba(243, 198, 105, 0.25);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.jt-search-btn {
+  background: var(--jt-gold-primary);
+  color: #11151c;
+  border: none;
+  border-radius: 999px;
+  padding: 0.48rem 1.1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+  min-height: 44px;
+}
+
+.jt-search-btn:hover {
+  background: #fadb8a;
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   RECIPE & TIPS PINNED STACKED-CARD SHOWCASE
+   (Translates cards-animation.mp4 into JamesThew culinary deck)
+   ========================================================================== */
+
+.jt-deck-showcase-section {
+  position: relative;
+  width: 100%;
+  overflow-x: clip;
+}
+
+@media (min-width: 992px) {
+  .jt-deck-showcase-pinned {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    overflow-x: clip;
+  }
+
+  .jt-deck-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 3rem;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .jt-deck-flank {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-right: 1.5rem;
+  }
+
+  .jt-deck-stage {
+    position: relative;
+    width: 100%;
+    height: 580px;
+    perspective: 1200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .jt-deck-card {
+    position: absolute;
+    width: 480px;
+    max-width: 100%;
+    height: 520px;
+    background: rgba(18, 22, 28, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 1.75rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .jt-deck-card:hover {
+    box-shadow: 0 35px 80px rgba(0, 0, 0, 0.85);
+  }
+
+  /* Ambient Colored Glow behind Active Card (mirrors reference) */
+  .jt-deck-ambient-glow {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(243, 198, 105, 0.35) 0%, rgba(217, 119, 54, 0.15) 50%, transparent 70%);
+    filter: blur(50px);
+    z-index: 1;
+    pointer-events: none;
+    transition: background 0.6s ease;
+  }
+
+  /* Scrubber Progress Counter on left flank */
+  .jt-deck-counter {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .jt-counter-index {
+    font-family: var(--jt-font-display);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--jt-gold-primary);
+  }
+
+  .jt-counter-bar {
+    flex-grow: 1;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .jt-counter-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--jt-gold-primary), var(--jt-gold-burnished));
+    transition: width 0.15s ease-out;
+  }
+
+  .jt-counter-total {
+    font-size: 0.875rem;
+    color: var(--jt-text-light-muted);
+  }
+}
+
+/* Card Visual Sub-Elements */
+.jt-deck-card-media {
+  position: relative;
+  width: 100%;
+  height: 290px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.jt-deck-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.jt-deck-card:hover .jt-deck-card-media img {
+  transform: scale(1.05);
+}
+
+.jt-deck-card-badges {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 5;
+}
+
+.jt-deck-badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(9, 11, 14, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.jt-deck-badge-gold {
+  background: linear-gradient(135deg, var(--jt-gold-primary), var(--jt-gold-burnished)) !important;
+  color: #11151c !important;
+  border: none !important;
+}
+
+.jt-deck-card-body {
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+
+.jt-deck-card-title {
+  font-family: var(--jt-font-display);
+  font-size: 1.45rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--jt-text-light-primary);
+  margin: 0 0 0.5rem;
+}
+
+.jt-deck-card-desc {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--jt-text-light-secondary);
+  margin: 0 0 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.jt-deck-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.jt-deck-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: 0.8125rem;
+  color: var(--jt-text-light-muted);
+}
+
+.jt-deck-card-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.jt-deck-card-cta {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--jt-gold-primary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.jt-deck-card-cta:hover {
+  color: #fff;
+  transform: translateX(4px);
+}
+
+/* Mobile & Tablet Fallback for Deck (< 992px) */
+@media (max-width: 991px) {
+  .jt-deck-showcase-pinned {
+    position: static;
+    height: auto;
+  }
+
+  .jt-deck-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+
+  .jt-deck-stage {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.75rem;
+    perspective: none;
+    height: auto;
+  }
+
+  .jt-deck-card {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .jt-deck-ambient-glow,
+  .jt-deck-counter {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   STANDARD STATIC GRID FOR RECIPES / TIPS / CONTESTS
+   ========================================================================== */
+
+.jt-content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.jt-content-card {
+  background: var(--jt-charcoal-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--jt-charcoal-border);
+  border-radius: 1.35rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.jt-content-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  border-color: rgba(243, 198, 105, 0.35);
+}
+
+.jt-card-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+
+.jt-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.jt-content-card:hover .jt-card-media img {
+  transform: scale(1.06);
+}
+
+.jt-card-badges {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.85rem;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 2;
+}
+
+.jt-card-body {
+  padding: 1.5rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.jt-card-title {
+  font-family: var(--jt-font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--jt-text-light-primary);
+  margin: 0 0 0.5rem;
+}
+
+.jt-card-desc {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--jt-text-light-secondary);
+  margin: 0 0 1.25rem;
+  flex-grow: 1;
+}
+
+.jt-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.8125rem;
+}
+
+.jt-card-meta {
+  color: var(--jt-text-light-muted);
+}
+
+.jt-card-link {
+  color: var(--jt-gold-primary);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.jt-card-link:hover {
+  color: #fff;
+  transform: translateX(3px);
+}
+
+/* ==========================================================================
+   FORM CONTROLS (LOGIN, REGISTER, FEEDBACK, CONTEST ENTRY)
+   ========================================================================== */
+
+.jt-form-card {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.jt-form-group {
+  margin-bottom: 1.35rem;
+}
+
+.jt-form-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--jt-gold-primary);
+  margin-bottom: 0.45rem;
+}
+
+.jt-form-input,
+.jt-form-select,
+.jt-form-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  font-family: var(--jt-font-body);
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.jt-form-input:focus,
+.jt-form-select:focus,
+.jt-form-textarea:focus {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: var(--jt-gold-primary);
+  box-shadow: 0 0 0 3px rgba(243, 198, 105, 0.22);
+}
+
+.jt-form-input::placeholder,
+.jt-form-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.jt-form-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.jt-form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  color: var(--jt-text-light-secondary);
+  cursor: pointer;
+}
+
+.jt-form-check input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--jt-gold-primary);
+  cursor: pointer;
+}
+
+.jt-validation-summary {
+  background: rgba(194, 65, 46, 0.15);
+  border: 1px solid rgba(194, 65, 46, 0.4);
+  border-radius: 0.75rem;
+  padding: 0.85rem 1.15rem;
+  margin-bottom: 1.5rem;
+  color: #ff9d8f;
+  font-size: 0.875rem;
+}
+
+.jt-validation-summary.validation-summary-valid {
+  display: none;
+}
+
+.jt-validation-summary ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.text-danger {
+  color: #ff9d8f !important;
+  font-size: 0.8125rem;
+  margin-top: 0.3rem;
+  display: block;
+}
+
+.jt-auth-links {
+  margin-top: 1.75rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--jt-text-light-secondary);
+}
+
+.jt-auth-links a {
+  color: var(--jt-gold-primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.jt-auth-links a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   EDITORIAL DETAIL PAGES (RECIPES & TIPS)
+   ========================================================================== */
+
+.jt-detail-hero {
+  position: relative;
+  border-radius: 1.75rem;
+  overflow: hidden;
+  margin-bottom: 3.5rem;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--jt-charcoal-border);
+}
+
+.jt-detail-cover {
+  width: 100%;
+  height: clamp(320px, 45vh, 480px);
+  object-fit: cover;
+  display: block;
+}
+
+.jt-detail-hero-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 3rem 2.5rem 2rem;
+  background: linear-gradient(to top, rgba(9, 11, 14, 0.95) 0%, rgba(9, 11, 14, 0.65) 65%, transparent 100%);
+}
+
+.jt-detail-headline {
+  font-family: var(--jt-font-display);
+  font-size: clamp(2.2rem, 4.2vw, 3.5rem);
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0.5rem 0 1rem;
+}
+
+.jt-detail-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+  color: var(--jt-text-light-secondary);
+}
+
+.jt-detail-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.jt-detail-body-grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 3.5rem;
+}
+
+@media (max-width: 991px) {
+  .jt-detail-body-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.jt-ingredients-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.jt-ingredient-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.9375rem;
+}
+
+.jt-ingredient-qty {
+  font-weight: 700;
+  color: var(--jt-gold-primary);
+}
+
+.jt-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.jt-step-card {
+  display: flex;
+  gap: 1.5rem;
+  background: rgba(18, 22, 28, 0.65);
+  border: 1px solid var(--jt-charcoal-border);
+  border-radius: 1.25rem;
+  padding: 1.5rem 1.75rem;
+}
+
+.jt-step-number {
+  font-family: var(--jt-font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--jt-gold-primary);
+  line-height: 1;
+  flex-shrink: 0;
+  width: 40px;
+}
+
+.jt-step-text {
+  font-size: 1rem;
+  line-height: 1.68;
+  color: var(--jt-text-light-secondary);
+  margin: 0;
+}
+
+/* Members Locked Paywall Banner */
+.jt-paywall-banner {
+  background: linear-gradient(135deg, rgba(24, 29, 38, 0.95), rgba(17, 21, 28, 0.98));
+  border: 1.5px solid var(--jt-gold-burnished);
+  border-radius: 1.5rem;
+  padding: 3rem 2rem;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(243, 198, 105, 0.15);
+  margin: 2rem 0;
+}
+
+.jt-paywall-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.jt-paywall-title {
+  font-family: var(--jt-font-display);
+  font-size: 1.85rem;
+  color: #fff;
+  margin: 0 0 0.75rem;
+}
+
+.jt-paywall-text {
+  max-width: 540px;
+  margin: 0 auto 1.75rem;
+  color: var(--jt-text-light-secondary);
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   FAQ EDITORIAL ACCORDIONS
+   ========================================================================== */
+
+.jt-faq-accordion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.jt-faq-card {
+  background: var(--jt-charcoal-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--jt-charcoal-border);
+  border-radius: 1.15rem;
+  overflow: hidden;
+  transition: border-color 0.25s ease;
+}
+
+.jt-faq-card[open] {
+  border-color: rgba(243, 198, 105, 0.35);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.jt-faq-summary {
+  padding: 1.35rem 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-family: var(--jt-font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--jt-text-light-primary);
+  user-select: none;
+  list-style: none;
+}
+
+.jt-faq-summary::-webkit-details-marker {
+  display: none;
+}
+
+.jt-faq-num {
+  color: var(--jt-gold-primary);
+  font-weight: 700;
+  margin-right: 0.75rem;
+}
+
+.jt-faq-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--jt-gold-primary);
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+.jt-faq-card[open] .jt-faq-icon {
+  transform: rotate(180deg);
+}
+
+.jt-faq-answer {
+  padding: 0 1.75rem 1.5rem;
+  font-size: 0.95rem;
+  line-height: 1.68;
+  color: var(--jt-text-light-secondary);
+}
+
+/* ==========================================================================
+   MEMBERSHIP PRICING CARDS
+   ========================================================================== */
+
+.jt-pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2.5rem;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+@media (max-width: 767px) {
+  .jt-pricing-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.jt-pricing-card {
+  background: var(--jt-charcoal-glass);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--jt-charcoal-border);
+  border-radius: 1.75rem;
+  padding: 3rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.jt-pricing-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.65);
+}
+
+.jt-pricing-featured {
+  border: 1.5px solid var(--jt-gold-burnished);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(243, 198, 105, 0.15);
+}
+
+.jt-pricing-badge {
+  position: absolute;
+  top: -14px;
+  right: 2rem;
+  background: linear-gradient(135deg, var(--jt-gold-primary), var(--jt-gold-burnished));
+  color: #11151c;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  box-shadow: 0 4px 15px var(--jt-gold-glow);
+}
+
+.jt-price-val {
+  font-family: var(--jt-font-display);
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.jt-price-period {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--jt-text-light-muted);
+}
+
+.jt-feature-list {
+  list-style: none;
+  margin: 2rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  flex-grow: 1;
+}
+
+.jt-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.9375rem;
+  color: var(--jt-text-light-secondary);
+}
+
+.jt-feature-item svg {
+  color: var(--jt-gold-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.jt-demo-alert {
+  background: rgba(243, 198, 105, 0.08);
+  border: 1px solid rgba(243, 198, 105, 0.25);
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.75rem;
+  max-width: 980px;
+  margin: 0 auto 3rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--jt-text-light-secondary);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.jt-demo-alert-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   EMPTY STATES
+   ========================================================================== */
+
+.jt-empty-state {
+  text-align: center;
+  padding: 5rem 2rem;
+  background: var(--jt-charcoal-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 1.5rem;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.jt-empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 1.25rem;
+  display: block;
+}
+
+.jt-empty-state-title {
+  font-family: var(--jt-font-display);
+  font-size: 1.65rem;
+  color: #fff;
+  margin: 0 0 0.5rem;
+}
+
+.jt-empty-state-text {
+  color: var(--jt-text-light-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+/* ==========================================================================
+   ENHANCED INNER-PAGE HELPER COMPONENTS
+   ========================================================================== */
+
+.jt-faq-item {
+  background: var(--jt-charcoal-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--jt-charcoal-border);
+  border-radius: 1.15rem;
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.jt-faq-item[open] {
+  border-color: rgba(243, 198, 105, 0.35);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.jt-faq-item[open] .jt-faq-icon {
+  transform: rotate(180deg);
+}
+
+.jt-badge-demo-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.95rem;
+  border-radius: 999px;
+  background: rgba(243, 198, 105, 0.14);
+  color: var(--jt-gold-primary);
+  border: 1px solid rgba(243, 198, 105, 0.3);
+  box-shadow: 0 2px 10px rgba(243, 198, 105, 0.1);
+}
+
+.jt-badge-gold-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.95rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--jt-gold-primary), var(--jt-gold-burnished));
+  color: #11151c;
+  box-shadow: 0 4px 14px var(--jt-gold-glow);
+}
+
+.jt-academic-disclaimer {
+  background: rgba(243, 198, 105, 0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(243, 198, 105, 0.22);
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.75rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 640px) {
+  .jt-academic-disclaimer > .d-flex {
+    flex-direction: column;
+  }
+}
+
+.jt-glass-alert {
+  background: rgba(18, 22, 28, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  color: var(--jt-text-light-primary);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.jt-glass-alert.alert-success {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+}
+
+.jt-glass-alert.alert-danger {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+}
+
+.jt-plan-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--jt-charcoal-border);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  width: 100%;
+}
+
+.jt-plan-radio-label:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(243, 198, 105, 0.4);
+}
+
+.jt-plan-radio-label:has(input:checked) {
+  background: rgba(243, 198, 105, 0.08);
+  border-color: var(--jt-gold-primary);
+  box-shadow: 0 0 20px rgba(243, 198, 105, 0.15);
+}
+
+.jt-radio-input {
+  accent-color: var(--jt-gold-primary);
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.jt-empty-crest {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(243, 198, 105, 0.1);
+  border: 1px solid rgba(243, 198, 105, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.jt-rules-content {
+  color: var(--jt-text-light-secondary);
+  line-height: 1.85;
+}
+
+/* ==========================================================================
+   SHARED EDITORIAL BUTTON SYSTEM (Phase 6 / 7B Unified)
+   ========================================================================== */
+
+.jt-btn-editorial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.75rem;
+  min-height: 44px;
+  border-radius: 9999px;
+  font-family: var(--jt-font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  line-height: 1.25;
+  border: 1px solid transparent;
+}
+
+.jt-btn-editorial:focus-visible {
+  outline: 2px solid var(--jt-gold-primary);
+  outline-offset: 3px;
+}
+
+.jt-btn-editorial:active {
+  transform: translateY(1px);
+}
+
+/* Primary Action: Warm Burnished Gold */
+.jt-btn-gold {
+  background: linear-gradient(135deg, #f5cd79 0%, #c89847 100%);
+  color: #0d1017 !important;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 18px rgba(243, 198, 105, 0.3);
+  font-weight: 600;
+}
+
+.jt-btn-gold:hover {
+  background: linear-gradient(135deg, #fce09b 0%, #d8a858 100%);
+  color: #000000 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(243, 198, 105, 0.45);
+  text-decoration: none;
+}
+
+.jt-btn-gold:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(243, 198, 105, 0.3);
+}
+
+/* Secondary Action: Outline Light / Glass */
+.jt-btn-outline-light {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--jt-text-light-primary) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.jt-btn-outline-light:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.jt-btn-outline-light:active {
+  transform: translateY(1px);
+}
+
+/* Glass Accent */
+.jt-btn-glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--jt-text-light-primary) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.jt-btn-glass:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+/* Compact Button */
+.jt-btn-sm {
+  min-height: 44px;
+  padding: 0.55rem 1.25rem;
+  font-size: 0.8125rem;
+}
+
+/* Login & Register Primary Submit Buttons (Part 8 & 9) */
+button.jt-btn-editorial.jt-btn-gold.w-100 {
+  min-height: 48px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* ==========================================================================
+   TEXT CONTRAST & TYPOGRAPHY UTILITIES (Part 6)
+   ========================================================================== */
+
+.text-light-primary {
+  color: var(--jt-text-light-primary) !important;
+}
+
+.text-light-secondary {
+  color: var(--jt-text-light-secondary) !important;
+}
+
+.text-light-muted {
+  color: var(--jt-text-light-muted) !important;
+}
+
+/* High-Contrast Glass Panel Content */
+.jt-glass-panel {
+  color: var(--jt-text-light-secondary);
+}
+
+.jt-glass-panel p {
+  color: var(--jt-text-light-secondary);
+}
+
+.jt-glass-panel h1,
+.jt-glass-panel h2,
+.jt-glass-panel h3,
+.jt-glass-panel h4,
+.jt-glass-panel h5,
+.jt-glass-panel h6 {
+  color: var(--jt-text-light-primary);
+}
+
+/* FAQ Answer Contrast */
+.jt-faq-answer {
+  color: var(--jt-text-light-secondary) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.jt-faq-answer p {
+  color: var(--jt-text-light-secondary) !important;
+}
+
+/* Form Labels & Helpers */
+.jt-form-label {
+  color: var(--jt-text-light-primary) !important;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.02em;
+}
+
+.form-text,
+.jt-form-helper {
+  color: var(--jt-text-light-muted) !important;
+}
+
+/* ==========================================================================
+   PAGE-BOTTOM SPACING & MAIN CONTAINER FLOW (Part 5)
+   ========================================================================== */
+
+.jt-main-content:has(.jt-inner-shell) {
+  max-width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* ==========================================================================
+   DESIGNED CULINARY FALLBACK ARTWORK (Part 1 & 2)
+   ========================================================================== */
+
+.jt-fallback-artwork {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(212, 163, 89, 0.18) 0%, rgba(15, 17, 21, 0.95) 75%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  user-select: none;
+}
+
+/* ==========================================================================
+   SHARED LUXURY EDITORIAL INNER-PAGE FOOTER (Part 4)
+   ========================================================================== */
+
+.jt-footer {
+  position: relative;
+  z-index: 20;
+  background: var(--jt-obsidian, #090b0e);
+  color: var(--jt-text-light-secondary, #e2dbd0);
+  padding: 4rem 1.5rem 2.5rem;
+  margin-top: auto;
+  border-top: 1px solid rgba(243, 198, 105, 0.2);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+}
+
+.jt-footer-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, 1fr);
+  gap: 3rem;
+  margin-bottom: 3rem;
+}
+
+.jt-footer-title {
+  color: var(--jt-text-light-primary, #fdfbf7);
+  font-family: var(--jt-font-display, 'Playfair Display', Georgia, serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1.15rem;
+  letter-spacing: -0.01em;
+}
+
+.jt-footer-desc {
+  font-size: 0.9rem;
+  line-height: 1.68;
+  color: var(--jt-text-light-secondary, #e2dbd0);
+}
+
+.jt-badge-demo {
+  background: rgba(243, 198, 105, 0.12);
+  color: var(--jt-gold-primary, #f3c669);
+  border: 1px solid rgba(243, 198, 105, 0.3);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  display: inline-block;
+}
+
+.jt-footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.jt-footer-links li {
+  margin: 0;
+}
+
+.jt-footer-links a {
+  color: var(--jt-text-light-secondary, #e2dbd0);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.jt-footer-links a:hover {
+  color: var(--jt-gold-primary, #f3c669);
+  transform: translateX(4px);
+  text-decoration: none;
+}
+
+.jt-footer-bottom {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding-top: 1.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.825rem;
+  color: var(--jt-text-light-muted, #a8a095);
+  gap: 1rem;
+}
+
+@media (max-width: 991px) {
+  .jt-footer-inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .jt-footer-inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .jt-footer-bottom {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* ==========================================================================
+   PHASE 7C — PREMIUM CARD INTERACTION POLISH
+   Subtle, cinematic pointer-driven interactions for content & utility cards.
+   ========================================================================== */
+
+/* Base Custom Properties for Interactive Cards */
+.jt-card-interactive-content,
+.jt-card-interactive-utility {
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --lift-y: 0px;
+  position: relative;
+}
+
+/* --------------------------------------------------------------------------
+   CURSOR-FOLLOW SPOTLIGHT OVERLAY
+   Lightweight radial gradient driven by CSS custom properties --mouse-x and --mouse-y.
+   -------------------------------------------------------------------------- */
+.jt-card-spotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background: radial-gradient(
+    circle 280px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(243, 198, 105, 0.14),
+    transparent 70%
+  );
+  z-index: 3;
+}
+
+.jt-card-interactive-content:hover .jt-card-spotlight,
+.jt-card-interactive-utility:hover .jt-card-spotlight,
+.jt-card-interactive-content:focus-within .jt-card-spotlight,
+.jt-card-interactive-utility:focus-within .jt-card-spotlight {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   FAMILY A: CONTENT CARDS
+   (Recipe archive cards, Tip archive cards, Contest cards, Announcement cards)
+   Subtle lift (-6px to -8px), 3D perspective tilt (max 4-5deg), image zoom (1.04),
+   soft spotlight, CTA arrow translation (4px).
+   -------------------------------------------------------------------------- */
+.jt-card-interactive-content {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 0.25s ease,
+              border-color 0.25s ease;
+  will-change: transform;
+}
+
+.jt-card-interactive-content:hover {
+  transform: perspective(1000px) translateY(var(--lift-y, -8px)) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  border-color: rgba(243, 198, 105, 0.35) !important;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.55), 0 0 25px rgba(243, 198, 105, 0.08) !important;
+}
+
+/* Card image zoom & crispness */
+.jt-card-interactive-content .jt-card-img-wrap {
+  overflow: hidden;
+  position: relative;
+  border-radius: calc(1.5rem - 1px) calc(1.5rem - 1px) 0 0;
+}
+
+.jt-card-interactive-content .jt-card-img-wrap img {
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.4s ease;
+  will-change: transform;
+}
+
+.jt-card-interactive-content:hover .jt-card-img-wrap img {
+  transform: scale(1.04);
+  filter: brightness(1.04) contrast(1.02);
+}
+
+/* CTA Arrow micro-interaction (3-5px translation) */
+.jt-card-interactive-content .jt-cta-arrow,
+.jt-card-interactive-content .jt-btn-editorial svg {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+
+.jt-card-interactive-content:hover .jt-cta-arrow,
+.jt-card-interactive-content:hover .jt-btn-editorial svg,
+.jt-card-interactive-content .jt-btn-editorial:hover .jt-cta-arrow,
+.jt-card-interactive-content .jt-btn-editorial:hover svg {
+  transform: translateX(4px);
+}
+
+/* Status Badges stay stable & crisp */
+.jt-card-interactive-content .badge {
+  transform: translateZ(10px);
+  backface-visibility: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   FAMILY B: UTILITY / INFORMATION CARDS
+   (FAQ accordions, Feedback panels, Membership pricing, Login/Register cards,
+   Account dashboard panels, Privacy policy, Locked content barrier)
+   NO 3D flip. NO 3D tilt. Small lift (-3px to -4px), border highlight,
+   soft cursor-follow radial glow, subtle inner shadow.
+   -------------------------------------------------------------------------- */
+.jt-card-interactive-utility {
+  transition: transform 0.25s ease,
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
+  will-change: transform;
+}
+
+.jt-card-interactive-utility:hover {
+  transform: translateY(-4px);
+  border-color: rgba(243, 198, 105, 0.35) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08),
+              0 18px 38px rgba(0, 0, 0, 0.45),
+              0 0 20px rgba(243, 198, 105, 0.06) !important;
+}
+
+/* FAQ Details Item Special Hover */
+details.jt-faq-item.jt-card-interactive-utility:hover {
+  transform: translateY(-2px);
+  border-color: rgba(243, 198, 105, 0.35) !important;
+}
+
+/* --------------------------------------------------------------------------
+   OPTIONAL FLIP / DETAILS REVEAL FOR RECIPE & TIP CARDS
+   Front: image, title, basic metadata
+   Back: short summary, authentic metadata, Explore CTA
+   -------------------------------------------------------------------------- */
+.jt-card-flip-wrap {
+  perspective: 1200px;
+}
+
+.jt-card-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+  border-radius: inherit;
+}
+
+.jt-card-flip-wrap.is-flipped .jt-card-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.jt-card-front,
+.jt-card-back {
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: inherit;
+  transition: opacity 0.3s ease;
+}
+
+.jt-card-front {
+  position: relative;
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.jt-card-flip-wrap.is-flipped .jt-card-front {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.jt-card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transform: rotateY(180deg);
+  background: rgba(14, 18, 24, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(243, 198, 105, 0.35);
+  box-shadow: inset 0 0 30px rgba(243, 198, 105, 0.06);
+  z-index: 2;
+  box-sizing: border-box;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.jt-card-flip-wrap.is-flipped .jt-card-back {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+}
+
+/* Flip control toggle buttons */
+.jt-flip-toggle-btn {
+  background: rgba(243, 198, 105, 0.1);
+  border: 1px solid rgba(243, 198, 105, 0.25);
+  color: var(--jt-gold-primary, #f3c669);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.45rem 0.75rem;
+  min-height: 44px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.jt-flip-toggle-btn:hover {
+  background: rgba(243, 198, 105, 0.2);
+  border-color: var(--jt-gold-primary, #f3c669);
+  color: #fff;
+  transform: scale(1.04);
+}
+
+.jt-flip-close-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--jt-text-light-secondary, #e2dbd0);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+.jt-flip-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--jt-gold-primary, #f3c669);
+  color: var(--jt-gold-primary, #f3c669);
+}
+
+/* --------------------------------------------------------------------------
+   KEYBOARD ACCESSIBILITY
+   -------------------------------------------------------------------------- */
+.jt-card-interactive-content:focus-visible,
+.jt-card-interactive-content:focus-within,
+.jt-card-interactive-utility:focus-visible,
+.jt-card-interactive-utility:focus-within {
+  transition-property: transform !important;
+  border-color: var(--jt-gold-primary, #f3c669) !important;
+  box-shadow: 0 0 0 3px rgba(243, 198, 105, 0.35), 0 16px 36px rgba(0, 0, 0, 0.45) !important;
+  outline: none;
+}
+
+/* Member contribution and contest workflows */
+.jt-member-page .jt-inner-container { max-width: 1120px; }
+.jt-member-page .jt-page-title { color: var(--jt-text-light-primary); line-height: 1.13; }
+.jt-member-page .jt-member-panel { background: rgba(18, 22, 28, .83) !important; border-color: rgba(243, 198, 105, .16) !important; color: var(--jt-text-light-primary); }
+.jt-member-page .jt-member-subpanel { background: rgba(255, 255, 255, .045) !important; border-color: rgba(255, 255, 255, .13) !important; border-radius: 1rem; }
+.jt-member-page .text-muted,
+.jt-member-page .form-text,
+.jt-member-page .text-secondary { color: var(--jt-text-light-muted) !important; }
+.jt-member-page .jt-member-back-link,
+.jt-member-page .jt-member-panel a:not(.jt-btn-editorial) { color: var(--jt-gold-primary); }
+.jt-member-page .jt-member-back-link:hover,
+.jt-member-page .jt-member-panel a:not(.jt-btn-editorial):hover { color: #ffe4a5; }
+.jt-member-page .jt-member-section-title { margin: 1.65rem 0 .8rem; padding-bottom: .55rem; border-bottom: 1px solid rgba(243, 198, 105, .25); color: var(--jt-gold-primary); font: 600 1.12rem var(--jt-font-display); }
+.jt-member-page .jt-member-label { color: var(--jt-text-light-secondary); letter-spacing: .035em; }
+.jt-member-page .jt-member-input { min-height: 44px; width: 100%; background: rgba(255, 255, 255, .065); border: 1px solid rgba(255, 255, 255, .18); border-radius: .75rem; color: #fff; font-family: var(--jt-font-body); }
+.jt-member-page textarea.jt-member-input { min-height: 110px; }
+.jt-member-page .jt-member-input:focus { background: rgba(255, 255, 255, .09); color: #fff; border-color: var(--jt-gold-primary); box-shadow: 0 0 0 3px rgba(243, 198, 105, .2); }
+.jt-member-page .jt-member-input::placeholder { color: rgba(255, 255, 255, .48); }
+.jt-member-page .jt-member-input:disabled { background: rgba(255, 255, 255, .035); color: var(--jt-text-light-muted); }
+.jt-member-page .list-group-item { background: transparent; color: var(--jt-text-light-secondary); border-color: rgba(255, 255, 255, .14); }
+.jt-member-page .table { --bs-table-bg: transparent; --bs-table-color: var(--jt-text-light-secondary); --bs-table-hover-bg: rgba(243, 198, 105, .07); --bs-table-hover-color: #fff; color: var(--jt-text-light-secondary); }
+.jt-member-page .table thead,
+.jt-member-page .table thead.table-light { --bs-table-bg: rgba(255, 255, 255, .07); --bs-table-color: var(--jt-gold-primary); }
+.jt-member-page .table td,
+.jt-member-page .table th { border-color: rgba(255, 255, 255, .12); }
+.jt-member-page .border-top,
+.jt-member-page .border-bottom { border-color: rgba(255, 255, 255, .17) !important; }
+.jt-member-page .alert { color: #fff; border-radius: 1rem; }
+.jt-member-page .alert-success { background: rgba(31, 92, 69, .82); border-color: rgba(118, 211, 153, .45); }
+.jt-member-page .alert-danger { background: rgba(117, 43, 43, .86); border-color: rgba(255, 143, 143, .4); }
+.jt-member-page .alert-warning { background: rgba(109, 76, 29, .87); border-color: rgba(243, 198, 105, .45); }
+.jt-member-page .alert-info { background: rgba(38, 74, 95, .86); border-color: rgba(129, 204, 233, .4); }
+.jt-member-page .alert .text-dark,
+.jt-member-page .alert .text-muted,
+.jt-member-page .alert .text-secondary { color: #f4ecde !important; }
+.jt-member-page .jt-btn-editorial { min-height: 44px; white-space: normal; text-align: center; }
+.jt-member-page .jt-glass-panel p,
+.jt-member-page .jt-glass-panel li { color: var(--jt-text-light-secondary); }
+.jt-member-page .table-responsive { overflow-x: visible; }
+.jt-member-page .jt-member-contributions-table,
+.jt-member-page .jt-member-contributions-table tbody,
+.jt-member-page .jt-member-contributions-table tr,
+.jt-member-page .jt-member-contributions-table td { display: block; width: 100%; }
+.jt-member-page .jt-member-contributions-table thead { display: none; }
+.jt-member-page .jt-member-contributions-table tr { margin-bottom: 1rem; padding: 1rem; border: 1px solid rgba(243, 198, 105, .2); border-radius: 1rem; background: rgba(255, 255, 255, .04); }
+.jt-member-page .jt-member-contributions-table td { padding: .4rem 0; border: 0; text-align: left !important; white-space: normal !important; }
+.jt-member-page .jt-member-contributions-table td:last-child { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.jt-member-page .jt-member-contributions-table td:last-child form { display: inline-flex !important; }
+.jt-member-page .jt-member-contributions-table .badge { display: inline-flex; width: max-content; max-width: 100%; align-items: center; }
+.jt-member-page .jt-member-contributions-table .bg-danger-subtle { color: #8f2636 !important; }
+.jt-member-page .jt-member-contributions-table td:last-child .btn { min-height: 44px; padding-inline: 1rem; }
+@media (max-width: 767px) {
+  .jt-member-page { padding-inline: 1rem; }
+  .jt-member-page .jt-member-panel { padding: 1.35rem !important; }
+  .jt-member-page .jt-page-title { font-size: clamp(2rem, 8vw, 3rem); }
+  .jt-member-page .d-flex.gap-2 { flex-wrap: wrap; }
+}
+
+/* --------------------------------------------------------------------------
+   MOBILE & TOUCH ACCESSIBILITY (hover: none, pointer: coarse)
+   -------------------------------------------------------------------------- */
+@media (hover: none), (pointer: coarse) {
+  .jt-card-interactive-content,
+  .jt-card-interactive-utility {
+    transform: none !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+  }
+  .jt-card-spotlight {
+    display: none !important;
+  }
+  .jt-card-interactive-content:hover {
+    transform: none !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45) !important;
+  }
+  .jt-card-interactive-content .jt-card-img-wrap img {
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   REDUCED MOTION (prefers-reduced-motion: reduce)
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .jt-card-interactive-content,
+  .jt-card-interactive-utility,
+  .jt-card-interactive-content .jt-card-img-wrap img,
+  .jt-card-flip-inner,
+  .jt-cta-arrow,
+  .jt-btn-editorial svg {
+    transform: none !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, outline 0.2s ease !important;
+    animation: none !important;
+  }
+  .jt-card-spotlight {
+    display: none !important;
+  }
+}

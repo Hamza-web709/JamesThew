@@ -3,10 +3,24 @@
     ViewData["Title"] = "Edit Cooking Tip Contribution - JamesThew";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-community.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
+</div>
+
+<div class="jt-inner-shell jt-member-page">
+    <div class="jt-inner-container">
+
+
 <div class="max-w-860 mx-auto mb-5">
     <div class="mb-4">
-        <a asp-action="Index" class="text-decoration-none text-muted small">&larr; Back to Contributions</a>
-        <h1 class="h2 jt-serif mt-2 mb-1">Edit Cooking Tip Contribution</h1>
+        <a asp-action="Index" class="jt-member-back-link text-decoration-none small">&larr; Back to Contributions</a>
+        <h1 class="jt-page-title jt-serif mt-2 mb-1">Edit Cooking Tip Contribution</h1>
         <p class="text-muted small">Update your professional kitchen tip. Any edits will be resubmitted for editorial moderation.</p>
     </div>
 
@@ -24,41 +38,47 @@
         </div>
     }
 
-    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm">
+    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm jt-glass-panel jt-member-panel jt-card-interactive-utility position-relative"><div class="jt-card-spotlight" aria-hidden="true"></div>
         <form asp-action="EditTip" asp-route-id="@Model.Id" method="post" id="editTipContributionForm">
             <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
 
             <div class="mb-3">
-                <label asp-for="Title" class="form-label fw-bold small text-uppercase">Tip Title</label>
-                <input asp-for="Title" class="form-control form-control-lg" placeholder="e.g., Emulsifying Pan Sauces with Cold Butter" />
+                <label asp-for="Title" class="jt-member-label form-label fw-bold small text-uppercase">Tip Title</label>
+                <input asp-for="Title" class="jt-member-input form-control form-control-lg" placeholder="e.g., Emulsifying Pan Sauces with Cold Butter" />
                 <span asp-validation-for="Title" class="text-danger small"></span>
             </div>
 
             <div class="mb-4">
-                <label asp-for="Summary" class="form-label fw-bold small text-uppercase">Teaser Summary</label>
-                <textarea asp-for="Summary" class="form-control" rows="2" placeholder="A concise 1-2 sentence culinary summary of the technique..."></textarea>
+                <label asp-for="Summary" class="jt-member-label form-label fw-bold small text-uppercase">Teaser Summary</label>
+                <textarea asp-for="Summary" class="jt-member-input form-control" rows="2" placeholder="A concise 1-2 sentence culinary summary of the technique..."></textarea>
                 <span asp-validation-for="Summary" class="text-danger small"></span>
             </div>
 
             <div class="mb-4">
-                <label asp-for="Body" class="form-label fw-bold small text-uppercase">Technique &amp; Cooking Instructions</label>
-                <textarea asp-for="Body" class="form-control" rows="8" placeholder="Detailed culinary wisdom, explanation, pitfalls to avoid, and chef secrets..."></textarea>
+                <label asp-for="Body" class="jt-member-label form-label fw-bold small text-uppercase">Technique &amp; Cooking Instructions</label>
+                <textarea asp-for="Body" class="jt-member-input form-control" rows="8" placeholder="Detailed culinary wisdom, explanation, pitfalls to avoid, and chef secrets..."></textarea>
                 <div class="form-text small">Explain the underlying culinary science or step-by-step practical wisdom (minimum 20 characters).</div>
                 <span asp-validation-for="Body" class="text-danger small"></span>
             </div>
 
             <div class="mb-4">
-                <label asp-for="Notes" class="form-label fw-bold small text-uppercase">Chef's Notes (Optional)</label>
-                <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Additional background, regional heritage, or variations..."></textarea>
+                <label asp-for="Notes" class="jt-member-label form-label fw-bold small text-uppercase">Chef's Notes (Optional)</label>
+                <textarea asp-for="Notes" class="jt-member-input form-control" rows="3" placeholder="Additional background, regional heritage, or variations..."></textarea>
                 <span asp-validation-for="Notes" class="text-danger small"></span>
             </div>
 
             <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                <a asp-action="Index" class="jt-btn jt-btn-outline">Cancel</a>
-                <button type="submit" class="jt-btn jt-btn-primary" id="btnSaveTipEdit">
+                <a asp-action="Index" class="jt-btn-editorial jt-btn-outline-light">Cancel</a>
+                <button type="submit" class="jt-btn-editorial jt-btn-gold" id="btnSaveTipEdit">
                     Save Changes &amp; Resubmit &#8594;
                 </button>
             </div>
         </form>
     </div>
 </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
+}
