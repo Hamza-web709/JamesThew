@@ -6,8 +6,10 @@ namespace JamesThew.Models;
 public class ApplicationUser : IdentityUser
 {
     public string DisplayName { get; set; } = string.Empty;
+    public bool IsDemoAdminOtpBypass { get; set; }
 
     public ICollection<SubscriptionRequest> SubscriptionRequests { get; set; } = [];
+    public ICollection<EmailOtpChallenge> EmailOtpChallenges { get; set; } = [];
     public ICollection<Feedback> Feedbacks { get; set; } = [];
     public ICollection<ContentItem> ContributedContentItems { get; set; } = [];
     public ICollection<ContestEntry> ContestEntries { get; set; } = [];

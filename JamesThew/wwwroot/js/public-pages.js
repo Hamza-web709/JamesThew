@@ -308,3 +308,161 @@ document.addEventListener('DOMContentLoaded', function () {
         initCardInteractions();
     }
 })();
+
+// =========================================================================
+// PHASE 8A — EMAIL OTP + DEMO PAYMENT CHECKOUT INPUTS
+// =========================================================================
+(function () {
+    'use strict';
+
+    function digitsOnly(value) {
+        return (value || '').replace(/\D/g, '');
+    }
+
+    function initOtpForms() {
+        document.querySelectorAll('.jt-otp-form').forEach(function (form) {
+            var boxes = Array.prototype.slice.call(form.querySelectorAll('.jt-otp-box'));
+            var hidden = form.querySelector('.jt-otp-hidden');
+            var length = Number(form.getAttribute('data-otp-length') || boxes.length || 0);
+            if (!boxes.length || !hidden || !length) {
+                return;
+            }
+
+            function syncHidden() {
+                hidden.value = boxes.map(function (box) { return box.value; }).join('').slice(0, length);
+            }
+
+            function fillFromText(text, startIndex) {
+                var chars = digitsOnly(text).slice(0, length - startIndex).split('');
+                chars.forEach(function (char, offset) {
+                    boxes[startIndex + offset].value = char;
+                });
+                syncHidden();
+                var focusIndex = Math.min(startIndex + chars.length, boxes.length - 1);
+                boxes[focusIndex].focus();
+            }
+
+            if (hidden.value) {
+                fillFromText(hidden.value, 0);
+            }
+
+            boxes.forEach(function (box, index) {
+                box.addEventListener('input', function () {
+                    var value = digitsOnly(box.value);
+                    if (value.length > 1) {
+                        fillFromText(value, index);
+                        return;
+                    }
+                    box.value = value;
+                    syncHidden();
+                    if (value && index < boxes.length - 1) {
+                        boxes[index + 1].focus();
+                    }
+                });
+
+                box.addEventListener('keydown', function (event) {
+                    if (event.key === 'Backspace' && !box.value && index > 0) {
+                        boxes[index - 1].focus();
+                        boxes[index - 1].value = '';
+                        syncHidden();
+                    }
+                    if (event.key === 'ArrowLeft' && index > 0) {
+                        event.preventDefault();
+                        boxes[index - 1].focus();
+                    }
+                    if (event.key === 'ArrowRight' && index < boxes.length - 1) {
+                        event.preventDefault();
+                        boxes[index + 1].focus();
+                    }
+                });
+
+                box.addEventListener('paste', function (event) {
+                    event.preventDefault();
+                    fillFromText(event.clipboardData.getData('text'), index);
+                });
+            });
+        });
+    }
+
+    function initResendTimers() {
+        document.querySelectorAll('.jt-resend-form').forEach(function (form) {
+            var button = form.querySelector('.jt-resend-button');
+            var label = form.querySelector('.jt-resend-countdown');
+            var remaining = Number(form.getAttribute('data-cooldown') || 0);
+            if (!button || !label || remaining <= 0) {
+                return;
+            }
+
+            function tick() {
+                if (remaining <= 0) {
+                    button.disabled = false;
+                    label.textContent = '';
+                    return;
+                }
+                button.disabled = true;
+                label.textContent = '(' + remaining + 's)';
+                remaining -= 1;
+                window.setTimeout(tick, 1000);
+            }
+
+            tick();
+        });
+    }
+
+    function detectCardNetwork(digits) {
+        if (/^4\d{12,18}$/.test(digits)) {
+            return 'Visa';
+        }
+        var prefix2 = Number(digits.slice(0, 2));
+        var prefix4 = Number(digits.slice(0, 4));
+        if (digits.length >= 2 && prefix2 >= 51 && prefix2 <= 55) {
+            return 'Mastercard';
+        }
+        if (digits.length >= 4 && prefix4 >= 2221 && prefix4 <= 2720) {
+            return 'Mastercard';
+        }
+        return 'Unknown Card';
+    }
+
+    function initDemoCardForm() {
+        var cardInput = document.querySelector('.jt-card-number-input');
+        var expiryInput = document.querySelector('.jt-expiry-input');
+        var cvvInput = document.querySelector('.jt-cvv-input');
+        var networkLabel = document.querySelector('.jt-card-network span');
+
+        if (cardInput) {
+            cardInput.addEventListener('input', function () {
+                var digits = digitsOnly(cardInput.value).slice(0, 19);
+                cardInput.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
+                if (networkLabel) {
+                    networkLabel.textContent = detectCardNetwork(digits);
+                }
+            });
+        }
+
+        if (expiryInput) {
+            expiryInput.addEventListener('input', function () {
+                var digits = digitsOnly(expiryInput.value).slice(0, 4);
+                expiryInput.value = digits.length > 2 ? digits.slice(0, 2) + '/' + digits.slice(2) : digits;
+            });
+        }
+
+        if (cvvInput) {
+            cvvInput.addEventListener('input', function () {
+                cvvInput.value = digitsOnly(cvvInput.value).slice(0, 3);
+            });
+        }
+    }
+
+    function initPhase8AInputs() {
+        initOtpForms();
+        initResendTimers();
+        initDemoCardForm();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPhase8AInputs);
+    } else {
+        initPhase8AInputs();
+    }
+})();

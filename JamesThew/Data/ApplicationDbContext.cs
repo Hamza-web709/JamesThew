@@ -14,6 +14,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Tip> Tips => Set<Tip>();
     public DbSet<FaqItem> FaqItems => Set<FaqItem>();
     public DbSet<SubscriptionRequest> SubscriptionRequests => Set<SubscriptionRequest>();
+    public DbSet<EmailOtpChallenge> EmailOtpChallenges => Set<EmailOtpChallenge>();
     public DbSet<Feedback> Feedbacks => Set<Feedback>();
     public DbSet<Contest> Contests => Set<Contest>();
     public DbSet<ContestEntry> ContestEntries => Set<ContestEntry>();
@@ -28,8 +29,24 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.Entity<ApplicationUser>(user =>
         {
             user.Property(x => x.DisplayName).HasMaxLength(100).IsRequired();
+            user.Property(x => x.IsDemoAdminOtpBypass).HasDefaultValue(false);
             user.HasIndex(x => x.NormalizedEmail).HasDatabaseName("EmailIndex")
                 .IsUnique().HasFilter("[NormalizedEmail] IS NOT NULL");
+        });
+
+        builder.Entity<EmailOtpChallenge>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Email).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.CodeHash).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.CodeSalt).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ReturnUrl).HasMaxLength(300);
+            entity.HasIndex(x => new { x.UserId, x.Purpose, x.ConsumedAtUtc });
+            entity.HasIndex(x => x.ExpiresAtUtc);
+            entity.HasOne(x => x.User)
+                .WithMany(u => u.EmailOtpChallenges)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<ContentItem>(entity =>

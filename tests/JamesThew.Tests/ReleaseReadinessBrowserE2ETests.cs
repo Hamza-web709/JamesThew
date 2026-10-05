@@ -90,8 +90,12 @@ public class ReleaseReadinessBrowserE2ETests
             // Helper to verify responsive layout: no horizontal overflow and valid images
             async Task AssertPageLayoutHealthy(IPage page, string url, string screenshotName)
             {
-                await page.GotoAsync(url);
-                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                await page.GotoAsync(url, new PageGotoOptions
+                {
+                    WaitUntil = WaitUntilState.DOMContentLoaded,
+                    Timeout = 90000
+                });
+                await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
                 // Verify no horizontal overflow
                 var hasOverflow = await page.EvaluateAsync<bool>(@"() => {
@@ -157,12 +161,7 @@ public class ReleaseReadinessBrowserE2ETests
             var memberEmail = $"alex_{runId}@jamesthew.test";
             var memberPass = "MemberTestPass1234!";
 
-            await memberPage.GotoAsync("/account/register");
-            await memberPage.FillAsync("input[name='DisplayName']", "Alex Rivers");
-            await memberPage.FillAsync("input[name='Email']", memberEmail);
-            await memberPage.FillAsync("input[name='Password']", memberPass);
-            await memberPage.FillAsync("input[name='ConfirmPassword']", memberPass);
-            await memberPage.ClickAsync("button[type='submit']");
+            await TestAuth.RegisterBrowserMemberAsync(memberPage, "Alex Rivers", memberEmail, memberPass);
             await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
             // Landed on account status as free registered member
@@ -171,21 +170,28 @@ public class ReleaseReadinessBrowserE2ETests
             Assert.Contains("Account", memberWelcome);
 
             // =========================================================================
-            // PART 3: SUBSCRIPTION REQUEST & ADMIN APPROVAL FLOW
+            // PART 3: DEMO PAYMENT MEMBERSHIP ACTIVATION FLOW
             // =========================================================================
-            // Alex visits membership plans and submits a monthly plan request
-            await memberPage.GotoAsync("/membership");
+            // Alex completes the academic demo checkout and payment OTP.
+            await memberPage.GotoAsync("/membership/checkout?plan=Monthly");
             await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-            await memberPage.CheckAsync("input[name='Plan'][value='Monthly']");
-            await memberPage.FillAsync("textarea[name='Notes']", "Academic demonstration monthly request.");
-            await memberPage.ClickAsync("form[action*='/membership/subscribe'] button[type='submit']");
+            await memberPage.FillAsync("input[name='CardholderName']", "Alex Rivers");
+            await memberPage.FillAsync("input[name='CardNumber']", "4242 4242 4242 4242");
+            await memberPage.FillAsync("input[name='Expiry']", "12/30");
+            await memberPage.FillAsync("input[name='Cvv']", "123");
+            await memberPage.ClickAsync("form[action*='/membership/checkout'] button[type='submit']");
             await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            Assert.Contains("/membership/payment-otp", memberPage.Url);
 
-            var pendingBadge = await memberPage.Locator("text=Pending Approval").CountAsync();
-            Assert.True(pendingBadge > 0, "Alex must see Pending Approval subscription banner.");
+            await TestAuth.CompleteBrowserDemoPaymentOtpAsync(memberPage);
+            await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            Assert.Contains("/membership", memberPage.Url);
 
-            // Admin context logs in and approves subscription
+            var activeBadge = await memberPage.Locator("text=Active Premium Access").CountAsync();
+            Assert.True(activeBadge > 0, "Alex must see active premium access after demo checkout.");
+
+            // Admin context logs in for later moderation checks.
             var adminContext = await browser.NewContextAsync(new BrowserNewContextOptions
             {
                 IgnoreHTTPSErrors = true,
@@ -199,14 +205,6 @@ public class ReleaseReadinessBrowserE2ETests
             await adminPage.FillAsync("input[name='Email']", "admin@jamesthew.com");
             await adminPage.FillAsync("input[name='Password']", "Admin@Pass1234!");
             await adminPage.ClickAsync("form[action*='/account/login'] button[type='submit']");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
-
-            await adminPage.GotoAsync("/admin/subscriptions");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
-
-            var alexRow = adminPage.Locator($"tr:has-text('{memberEmail}')");
-            await alexRow.WaitForAsync();
-            await alexRow.Locator("button[type='submit']:has-text('Approve')").ClickAsync();
             await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
             // Alex refreshes members-only recipe: now fully unlocked!

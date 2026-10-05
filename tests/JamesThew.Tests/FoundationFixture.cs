@@ -24,6 +24,7 @@ public class FoundationFixture : WebApplicationFactory<Program>, IAsyncLifetime
     {
         builder.UseEnvironment("Development");
         builder.UseSetting("Media:UploadPath", TestUploadDir);
+        builder.UseSetting("Email:UseDevelopmentTestSink", "true");
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<DbContextOptions<ApplicationDbContext>>();

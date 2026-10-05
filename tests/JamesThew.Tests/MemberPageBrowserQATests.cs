@@ -22,10 +22,7 @@ public class MemberPageBrowserQATests
             });
             var page = await context.NewPageAsync();
 
-            await page.GotoAsync("/account/login");
-            await page.FillAsync("input[name='Email']", "member@jamesthew.com");
-            await page.FillAsync("input[name='Password']", "Member@Pass1234!");
-            await page.ClickAsync("form[action*='/account/login'] button[type='submit']");
+            await TestAuth.LoginBrowserMemberAsync(page, server.MemberEmail, "Member@Pass1234!");
             await page.WaitForURLAsync("**/account/status*");
 
             await page.GotoAsync("/contributions/recipe/new");

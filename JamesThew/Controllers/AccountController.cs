@@ -15,7 +15,7 @@ namespace JamesThew.Controllers;
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public class AccountController(UserManager<ApplicationUser> users,
     SignInManager<ApplicationUser> signIn, ApplicationDbContext db,
-    ISubscriptionService subscriptionService) : Controller
+    ISubscriptionService subscriptionService, IEmailOtpService emailOtpService) : Controller
 {
     [AllowAnonymous, HttpGet("register")]
     public IActionResult Register() => User.Identity?.IsAuthenticated == true
@@ -32,7 +32,10 @@ public class AccountController(UserManager<ApplicationUser> users,
         // User creation and the fixed Member role are one transaction.
         var user = new ApplicationUser
         {
-            UserName = model.Email, Email = model.Email, DisplayName = model.DisplayName
+            UserName = model.Email,
+            Email = model.Email,
+            DisplayName = model.DisplayName,
+            EmailConfirmed = false
         };
         await using var transaction = await db.Database.BeginTransactionAsync();
         try
@@ -59,8 +62,16 @@ public class AccountController(UserManager<ApplicationUser> users,
             return View(model);
         }
 
-        await signIn.SignInAsync(user, isPersistent: false);
-        return RedirectToAction(nameof(Status));
+        var otp = await emailOtpService.SendRegistrationOtpAsync(user);
+        if (!otp.Success || otp.ChallengeId is null)
+        {
+            await users.DeleteAsync(user);
+            ModelState.AddModelError(string.Empty, otp.Message);
+            return View(model);
+        }
+
+        TempData["OtpInfo"] = "We sent a verification code to your email address.";
+        return RedirectToAction(nameof(EmailOtp), new { challengeId = otp.ChallengeId, purpose = EmailOtpPurpose.Registration });
     }
 
     [AllowAnonymous, HttpGet("login")]
@@ -73,17 +84,118 @@ public class AccountController(UserManager<ApplicationUser> users,
         if (!ModelState.IsValid)
             return View(model);
 
-        // Identity handles password hashes and lockout; no account-existence details leak.
-        var result = await signIn.PasswordSignInAsync(model.Email, model.Password,
-            model.RememberMe, lockoutOnFailure: true);
-        if (result.Succeeded)
+        var user = await users.FindByEmailAsync(model.Email);
+        if (user is null || await users.IsLockedOutAsync(user))
         {
-            var user = await users.FindByEmailAsync(model.Email);
+            ModelState.AddModelError(string.Empty, "Unable to sign in. Check your details or try again later.");
+            return View(model);
+        }
+
+        if (!await users.CheckPasswordAsync(user, model.Password))
+        {
+            await users.AccessFailedAsync(user);
+            ModelState.AddModelError(string.Empty, "Unable to sign in. Check your details or try again later.");
+            return View(model);
+        }
+
+        await users.ResetAccessFailedCountAsync(user);
+
+        if (user.IsDemoAdminOtpBypass && await users.IsInRoleAsync(user, AppRoles.Admin))
+        {
+            await signIn.SignInAsync(user, model.RememberMe);
             return await RedirectAfterLoginAsync(model.ReturnUrl, user);
         }
 
-        ModelState.AddModelError(string.Empty, "Unable to sign in. Check your details or try again later.");
-        return View(model);
+        if (!user.EmailConfirmed)
+        {
+            var registrationOtp = await emailOtpService.SendRegistrationOtpAsync(user);
+            if (!registrationOtp.Success || registrationOtp.ChallengeId is null)
+            {
+                ModelState.AddModelError(string.Empty, registrationOtp.Message);
+                return View(model);
+            }
+
+            TempData["OtpInfo"] = "Verify your email before signing in.";
+            return RedirectToAction(nameof(EmailOtp), new { challengeId = registrationOtp.ChallengeId, purpose = EmailOtpPurpose.Registration });
+        }
+
+        var otp = await emailOtpService.SendLoginOtpAsync(user, SafeLocalReturnUrl(model.ReturnUrl), model.RememberMe);
+        if (!otp.Success || otp.ChallengeId is null)
+        {
+            ModelState.AddModelError(string.Empty, otp.Message);
+            return View(model);
+        }
+
+        TempData["OtpInfo"] = "We sent a sign-in code to your email address.";
+        return RedirectToAction(nameof(EmailOtp), new { challengeId = otp.ChallengeId, purpose = EmailOtpPurpose.Login });
+    }
+
+    [AllowAnonymous, HttpGet("otp/email")]
+    public async Task<IActionResult> EmailOtp(int challengeId, EmailOtpPurpose purpose)
+    {
+        var challenge = await db.EmailOtpChallenges.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == challengeId && x.Purpose == purpose);
+        if (challenge is null || challenge.ConsumedAtUtc.HasValue)
+        {
+            TempData["ErrorMessage"] = "Verification session was not found. Please start again.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        return View(new EmailOtpViewModel
+        {
+            ChallengeId = challenge.Id,
+            Purpose = purpose,
+            MaskedEmail = EmailOtpService.MaskEmail(challenge.Email),
+            ReturnUrl = challenge.ReturnUrl
+        });
+    }
+
+    [AllowAnonymous, HttpPost("otp/email")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EmailOtp(EmailOtpViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var result = await emailOtpService.VerifyAsync(model.ChallengeId, model.Purpose, model.Code);
+        if (!result.Success || string.IsNullOrWhiteSpace(result.UserId))
+        {
+            ModelState.AddModelError(nameof(model.Code), result.Message);
+            return View(model);
+        }
+
+        var user = await users.FindByIdAsync(result.UserId);
+        if (user is null)
+        {
+            ModelState.AddModelError(string.Empty, "Account was not found. Please start again.");
+            return View(model);
+        }
+
+        if (model.Purpose == EmailOtpPurpose.Registration && !user.EmailConfirmed)
+        {
+            user.EmailConfirmed = true;
+            var update = await users.UpdateAsync(user);
+            if (!update.Succeeded)
+            {
+                ModelState.AddModelError(string.Empty, "Unable to confirm your email. Please try again.");
+                return View(model);
+            }
+        }
+
+        await signIn.SignInAsync(user, result.RememberMe);
+        TempData["SuccessMessage"] = model.Purpose == EmailOtpPurpose.Registration
+            ? "Your email is verified and your account is ready."
+            : "You are signed in securely.";
+        return await RedirectAfterLoginAsync(result.ReturnUrl, user);
+    }
+
+    [AllowAnonymous, HttpPost("otp/email/resend")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResendEmailOtp(int challengeId, EmailOtpPurpose purpose)
+    {
+        var result = await emailOtpService.ResendAsync(challengeId, purpose);
+        TempData[result.Success ? "OtpInfo" : "ErrorMessage"] = result.Message;
+        return RedirectToAction(nameof(EmailOtp), new { challengeId, purpose });
     }
 
     [Authorize, HttpPost("logout")]

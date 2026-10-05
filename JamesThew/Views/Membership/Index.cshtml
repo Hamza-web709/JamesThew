@@ -35,7 +35,7 @@
             <div class="d-flex align-items-start gap-3">
                 <span class="jt-badge-demo-pill">&#9888; Academic Demo Notice</span>
                 <p class="mb-0 small text-light-muted">
-                    All subscription plans are simulated for demonstration purposes. No real monetary transactions, credit card numbers, or external payment gateways are used. Plan requests are reviewed and approved manually by the site administrator.
+                    Demo Payment / Academic Simulation only. No real gateway is contacted and no real charges are made. The checkout accepts realistic demo card details, then activates membership after a separate four-digit demo payment OTP.
                 </p>
             </div>
         </div>
@@ -100,7 +100,7 @@
                             <span class="fw-bold text-warning">@Model.CurrentPlan Plan ($@(Model.CurrentAmount?.ToString("F2") ?? "0.00"))</span>
                         </div>
                         <p class="small text-light-muted mb-2">
-                            Your demo subscription request was received on @Model.LatestRequestedAtUtc?.ToLocalTime().ToString("f") and is currently in the administrator moderation queue.
+                            This is a legacy pending request from the previous admin-review workflow. New memberships activate through Demo Payment checkout.
                         </p>
                         @if (!string.IsNullOrEmpty(Model.LatestMemberNotes))
                         {
@@ -109,7 +109,7 @@
                             </p>
                         }
                         <p class="small text-light-muted mb-0">
-                            Once the administrator verifies your demo request, your account will instantly unlock all protected masterclasses.
+                            You may also start the new demo checkout below to activate immediately in this academic simulation.
                         </p>
                     </div>
                 }
@@ -127,7 +127,7 @@
                             </p>
                         }
                         <p class="small text-light-muted mb-0">
-                            You may select a plan below to submit a new subscription request for administrator review.
+                            You may select a plan below and complete the Demo Payment / Academic Simulation checkout.
                         </p>
                     </div>
                 }
@@ -183,6 +183,12 @@
                             Sign In to Choose Plan
                         </a>
                     }
+                    else if (!Model.HasActiveSubscription)
+                    {
+                        <a asp-action="Checkout" asp-route-plan="@SubscriptionPlan.Monthly" class="jt-btn-editorial jt-btn-outline-light w-100 text-center">
+                            Choose Monthly Plan
+                        </a>
+                    }
                 </div>
             </div>
 
@@ -228,61 +234,49 @@
                             Sign In to Choose Plan
                         </a>
                     }
+                    else if (!Model.HasActiveSubscription)
+                    {
+                        <a asp-action="Checkout" asp-route-plan="@SubscriptionPlan.Yearly" class="jt-btn-editorial jt-btn-gold w-100 text-center">
+                            Choose Yearly Plan
+                        </a>
+                    }
                 </div>
             </div>
         </div>
 
-        <!-- Request Form for Logged-In Members without an Active/Pending Request -->
-        @if (Model.IsAuthenticated && !Model.HasActiveSubscription && Model.CurrentStatus != SubscriptionStatus.Pending)
+        <!-- Demo Checkout Prompt for Logged-In Members without Active Premium Access -->
+        @if (Model.IsAuthenticated && !Model.HasActiveSubscription)
         {
             <div class="jt-glass-panel mb-5">
-                <h2 class="h4 jt-serif mb-2 text-light">Submit Demo Subscription Request</h2>
+                <h2 class="h4 jt-serif mb-2 text-light">Choose Plan, Demo Checkout, Activate</h2>
                 <p class="text-light-secondary small mb-4">
-                    Select your preferred tier below. Your request will be queued for manual administrative review.
+                    Select a server-known plan price, enter realistic demo card details, then confirm any syntactically valid four-digit demo payment OTP. No full card number or CVV is stored.
                 </p>
 
-                <form asp-action="Subscribe" method="post">
-                    @Html.AntiForgeryToken()
-                    <div class="mb-4">
-                        <label class="form-label fw-bold small text-uppercase text-light-muted d-block mb-3">Select Subscription Tier</label>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="jt-plan-radio-label">
-                                    <input type="radio" asp-for="Plan" value="@SubscriptionPlan.Monthly" checked="checked" class="jt-radio-input" />
-                                    <div>
-                                        <div class="fw-bold text-light">Monthly Plan</div>
-                                        <div class="small text-light-muted">$10.00 / month (30-day demo)</div>
-                                    </div>
-                                </label>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="jt-plan-radio-label h-100">
+                            <div>
+                                <div class="fw-bold text-light">Monthly Masterclass</div>
+                                <div class="small text-light-muted">$10.00 / month (30-day demo access)</div>
                             </div>
-                            <div class="col-md-6">
-                                <label class="jt-plan-radio-label">
-                                    <input type="radio" asp-for="Plan" value="@SubscriptionPlan.Yearly" class="jt-radio-input" />
-                                    <div>
-                                        <div class="fw-bold text-light">Yearly Plan</div>
-                                        <div class="small text-light-muted">$100.00 / year (365-day demo)</div>
-                                    </div>
-                                </label>
-                            </div>
+                            <a asp-action="Checkout" asp-route-plan="@SubscriptionPlan.Monthly" class="jt-btn-editorial jt-btn-outline-light mt-3">
+                                Start Monthly Checkout
+                            </a>
                         </div>
-                        <span asp-validation-for="Plan" class="text-danger small"></span>
                     </div>
-
-                    <div class="mb-4">
-                        <label asp-for="Notes" class="jt-form-label">Demo Notes or Reference (Optional)</label>
-                        <textarea asp-for="Notes" class="jt-form-input" rows="3" placeholder="e.g. Academic evaluation request, demo voucher #4521..."></textarea>
-                        <span asp-validation-for="Notes" class="text-danger small"></span>
-                        <div class="form-text text-light-muted small mt-1">Please do not enter real credit card numbers or banking secrets.</div>
+                    <div class="col-md-6">
+                        <div class="jt-plan-radio-label h-100">
+                            <div>
+                                <div class="fw-bold text-light">Yearly Connoisseur</div>
+                                <div class="small text-light-muted">$100.00 / year (365-day demo access)</div>
+                            </div>
+                            <a asp-action="Checkout" asp-route-plan="@SubscriptionPlan.Yearly" class="jt-btn-editorial jt-btn-gold mt-3">
+                                Start Yearly Checkout
+                            </a>
+                        </div>
                     </div>
-
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 pt-2">
-                        <button type="submit" class="jt-btn-editorial jt-btn-gold">
-                            <span>Submit Demo Request</span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                        </button>
-                        <span class="small text-light-muted">&#128274; Safe Academic Demo Environment</span>
-                    </div>
-                </form>
+                </div>
             </div>
         }
 

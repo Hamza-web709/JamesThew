@@ -1,0 +1,79 @@
+@model JamesThew.ViewModels.EmailOtpViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-account.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
+</div>
+
+<div class="jt-inner-shell">
+    <div class="jt-inner-container-sm">
+        <div class="jt-page-hero">
+            <span class="jt-page-eyebrow">
+                <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                Email Verification
+            </span>
+            <h1 class="jt-page-title">@Model.Title</h1>
+            <p class="jt-page-lead">
+                Enter the six-digit code sent to @Model.MaskedEmail. Codes expire after five minutes and can be used once.
+            </p>
+        </div>
+
+        <div class="jt-glass-panel jt-glass-panel-pinnacle jt-form-card jt-card-interactive-utility position-relative">
+            <div class="jt-card-spotlight" aria-hidden="true"></div>
+
+            @if (TempData["OtpInfo"] != null)
+            {
+                <div class="alert alert-info jt-glass-alert mb-4" role="alert">@TempData["OtpInfo"]</div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger jt-glass-alert mb-4" role="alert">@TempData["ErrorMessage"]</div>
+            }
+
+            <form asp-action="EmailOtp" method="post" class="jt-otp-form" data-otp-length="6" novalidate>
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="jt-validation-summary" role="alert"></div>
+                <input asp-for="ChallengeId" type="hidden" />
+                <input asp-for="Purpose" type="hidden" />
+                <input asp-for="MaskedEmail" type="hidden" />
+                <input asp-for="ReturnUrl" type="hidden" />
+                <input asp-for="Code" type="hidden" class="jt-otp-hidden" />
+
+                <label class="jt-form-label d-block text-center mb-3">Verification Code</label>
+                <div class="jt-otp-boxes" role="group" aria-label="Six digit email verification code">
+                    @for (var i = 0; i < 6; i++)
+                    {
+                        <input class="jt-otp-box" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Digit @(i + 1)" />
+                    }
+                </div>
+                <span asp-validation-for="Code" class="text-danger d-block text-center mt-2"></span>
+
+                <button type="submit" class="jt-btn-editorial jt-btn-gold w-100 mt-4">
+                    <span>Verify Code</span>
+                </button>
+            </form>
+
+            <form asp-action="ResendEmailOtp" method="post" class="mt-3 text-center jt-resend-form" data-cooldown="@Model.ResendCooldownSeconds">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="challengeId" value="@Model.ChallengeId" />
+                <input type="hidden" name="purpose" value="@Model.Purpose" />
+                <button type="submit" class="jt-link-button jt-resend-button">
+                    Resend code <span class="jt-resend-countdown"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
+}

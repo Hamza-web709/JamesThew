@@ -1,0 +1,64 @@
+@model JamesThew.ViewModels.DemoPaymentOtpViewModel
+@{
+    ViewData["Title"] = "Demo Payment OTP";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-membership.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
+</div>
+
+<div class="jt-inner-shell">
+    <div class="jt-inner-container-sm">
+        <div class="jt-page-hero">
+            <span class="jt-page-eyebrow">
+                <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                Demo Payment OTP
+            </span>
+            <h1 class="jt-page-title">Confirm Demo <span class="jt-serif-italic">Payment</span></h1>
+            <p class="jt-page-lead">
+                Enter any syntactically valid four-digit demo payment OTP to activate @Model.PlanName for $@Model.Amount.ToString("F2").
+            </p>
+        </div>
+
+        <div class="jt-glass-panel jt-glass-panel-pinnacle jt-form-card position-relative">
+            <div class="jt-card-spotlight" aria-hidden="true"></div>
+            <div class="jt-payment-context mb-4">
+                <span>Academic Simulation</span>
+                <strong>@Model.Network ending @Model.LastFour</strong>
+            </div>
+
+            <form asp-action="PaymentOtp" method="post" class="jt-otp-form" data-otp-length="4" novalidate>
+                @Html.AntiForgeryToken()
+                <input asp-for="Plan" type="hidden" />
+                <input asp-for="Network" type="hidden" />
+                <input asp-for="LastFour" type="hidden" />
+                <input asp-for="DemoPaymentOtp" type="hidden" class="jt-otp-hidden" />
+                <div asp-validation-summary="All" class="jt-validation-summary" role="alert"></div>
+
+                <label class="jt-form-label d-block text-center mb-3">Demo Payment OTP</label>
+                <div class="jt-otp-boxes jt-otp-boxes-compact" role="group" aria-label="Four digit demo payment OTP">
+                    @for (var i = 0; i < 4; i++)
+                    {
+                        <input class="jt-otp-box" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Digit @(i + 1)" />
+                    }
+                </div>
+                <span asp-validation-for="DemoPaymentOtp" class="text-danger d-block text-center mt-2"></span>
+
+                <button type="submit" class="jt-btn-editorial jt-btn-gold w-100 mt-4">
+                    Activate Membership
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
+}

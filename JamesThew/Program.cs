@@ -72,6 +72,15 @@ public partial class Program
         // Add services to the container.
         builder.Services.AddScoped<IContentService, ContentService>();
         builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+        builder.Services.AddScoped<IEmailOtpService, EmailOtpService>();
+        if (builder.Environment.IsDevelopment() && builder.Configuration.GetValue<bool>("Email:UseDevelopmentTestSink"))
+        {
+            builder.Services.AddSingleton<IEmailSender, DevelopmentEmailSender>();
+        }
+        else
+        {
+            builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+        }
         builder.Services.AddScoped<IFeedbackService, FeedbackService>();
         builder.Services.AddScoped<IContributionService, ContributionService>();
         builder.Services.AddScoped<IAdminContentService, AdminContentService>();

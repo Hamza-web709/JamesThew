@@ -28,6 +28,11 @@ public interface ISubscriptionService
     Task<SubscriptionRequestResult> SubmitRequestAsync(string userId, SubscriptionPlan plan, string? notes);
 
     /// <summary>
+    /// Activates a subscription after successful simulated demo checkout.
+    /// </summary>
+    Task<SubscriptionRequestResult> ActivateDemoCheckoutAsync(string userId, SubscriptionPlan plan, string? safePaymentSummary = null);
+
+    /// <summary>
     /// Gets all subscription requests for administrative review.
     /// </summary>
     Task<List<SubscriptionAdminListItemDto>> GetAllRequestsAsync(SubscriptionStatus? statusFilter = null);

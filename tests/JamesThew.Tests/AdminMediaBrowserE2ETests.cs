@@ -64,7 +64,8 @@ public class AdminMediaBrowserE2ETests
             // Scenario 1: Guest cannot access Admin Media Library
             // -------------------------------------------------------------
             await guestPage.GotoAsync("/admin/media");
-            await guestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await guestPage.WaitForURLAsync("**/account/login**");
+            await guestPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             Assert.Contains("/account/login", guestPage.Url);
 
             // -------------------------------------------------------------
@@ -80,16 +81,12 @@ public class AdminMediaBrowserE2ETests
             var memberEmail = $"member_{runId}@jamesthew.test";
             var memberPass = "MemberTestPass1234!";
 
-            await memberPage.GotoAsync("/account/register");
-            await memberPage.FillAsync("input[name='DisplayName']", "Test Member " + runId);
-            await memberPage.FillAsync("input[name='Email']", memberEmail);
-            await memberPage.FillAsync("input[name='Password']", memberPass);
-            await memberPage.FillAsync("input[name='ConfirmPassword']", memberPass);
-            await memberPage.ClickAsync("form[action*='/account/register'] button[type='submit']");
-            await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await TestAuth.RegisterBrowserMemberAsync(memberPage, "Test Member " + runId, memberEmail, memberPass);
+            await memberPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             await memberPage.GotoAsync("/admin/media");
-            await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await memberPage.WaitForURLAsync("**/account/access-denied**");
+            await memberPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             Assert.Contains("/account/access-denied", memberPage.Url);
 
             // -------------------------------------------------------------
@@ -99,13 +96,14 @@ public class AdminMediaBrowserE2ETests
             await adminPage.FillAsync("input[name='Email']", "admin@jamesthew.com");
             await adminPage.FillAsync("input[name='Password']", "Admin@Pass1234!");
             await adminPage.ClickAsync("form[action*='/account/login'] button[type='submit']");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForURLAsync("**/admin**");
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             var adminNav = await adminPage.Locator("a:has-text('Admin')").CountAsync();
             Assert.True(adminNav > 0, "Admin link should appear in nav after login.");
 
             await adminPage.GotoAsync("/admin/media");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             var mediaTitle = await adminPage.Locator("h1").InnerTextAsync();
             Assert.Contains("Editorial Media Library", mediaTitle);
 
@@ -118,7 +116,7 @@ public class AdminMediaBrowserE2ETests
 
             await adminPage.SetInputFilesAsync("#uploadMediaModal input[type='file']", tempImagePath);
             await adminPage.ClickAsync("#uploadMediaModal button[type='submit']");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             // Verify upload success banner
             var alertText = await adminPage.Locator(".alert-success").InnerTextAsync();
@@ -155,7 +153,7 @@ public class AdminMediaBrowserE2ETests
             // Scenario 6: Recipe creation using Media Picker Modal
             // -------------------------------------------------------------
             await adminPage.GotoAsync("/admin/content/recipes/new");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             // Open media picker modal
             await adminPage.ClickAsync("button:has-text('Select from Media Library')");
@@ -185,13 +183,13 @@ public class AdminMediaBrowserE2ETests
             await adminPage.CheckAsync("input#visibilityFree");
             await adminPage.CheckAsync("input#statusPublished");
             await adminPage.ClickAsync("form[action*='/admin/content/recipes/new'] button[type='submit']");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             // -------------------------------------------------------------
             // Scenario 7: Tip creation using Media Picker Modal
             // -------------------------------------------------------------
             await adminPage.GotoAsync("/admin/content/tips/new");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             await adminPage.ClickAsync("button:has-text('Select from Media Library')");
             await adminPage.WaitForSelectorAsync("#mediaPickerModal.show", new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible });
@@ -210,14 +208,14 @@ public class AdminMediaBrowserE2ETests
             await adminPage.CheckAsync("input#tipVisibilityFree");
             await adminPage.CheckAsync("input#tipStatusPublished");
             await adminPage.ClickAsync("form[action*='/admin/content/tips/new'] button[type='submit']");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             // -------------------------------------------------------------
             // Scenario 8: Public page renders image correctly (HTTP 200 & naturalWidth > 0)
             // -------------------------------------------------------------
             // Public recipe detail
             await guestPage.GotoAsync($"/recipes/{recipeSlug}");
-            await guestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await guestPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             Assert.Contains(recipeTitle, await guestPage.Locator("h1").InnerTextAsync());
 
             var recipeImg = guestPage.Locator($"img[src='{imgSrc}']");
@@ -235,7 +233,7 @@ public class AdminMediaBrowserE2ETests
 
             // Public tip detail
             await guestPage.GotoAsync($"/tips/{tipSlug}");
-            await guestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await guestPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             Assert.Contains(tipTitle, await guestPage.Locator("h1").InnerTextAsync());
 
             var tipImg = guestPage.Locator($"img[src='{imgSrc}']");
@@ -255,12 +253,12 @@ public class AdminMediaBrowserE2ETests
             // Scenario 9: Image Unlink flow on recipe edit
             // -------------------------------------------------------------
             await adminPage.GotoAsync("/admin/content");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             // Find recipe and edit
             var editRecipeLink = adminPage.Locator($"tr:has-text('{recipeTitle}') a:has-text('Edit')").First;
             await editRecipeLink.ClickAsync();
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             // Click "Remove Image" button
             await adminPage.ClickAsync("#btnClearImage");
@@ -272,11 +270,11 @@ public class AdminMediaBrowserE2ETests
 
             // Save changes
             await adminPage.ClickAsync("button[type='submit']:has-text('Save Changes')");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             // Public recipe now renders without image tag
             await guestPage.GotoAsync($"/recipes/{recipeSlug}");
-            await guestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await guestPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             var remainingImgCount = await guestPage.Locator($"img[src='{imgSrc}']").CountAsync();
             Assert.Equal(0, remainingImgCount);
 
@@ -285,7 +283,7 @@ public class AdminMediaBrowserE2ETests
             // -------------------------------------------------------------
             // Image is still referenced by the cooking tip!
             await adminPage.GotoAsync("/admin/media");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             // In Use badge should show In Use (1)
             var mediaCard = adminPage.Locator($".card:has-text('qa-dish-{runId}')");
@@ -304,7 +302,7 @@ public class AdminMediaBrowserE2ETests
 
             // Confirm delete
             await adminPage.ClickAsync($"{modalId} button:has-text('Confirm Delete')");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             var deleteSuccessMsg = await adminPage.Locator(".alert-success").InnerTextAsync();
             Assert.Contains("safely removed", deleteSuccessMsg);
@@ -312,7 +310,7 @@ public class AdminMediaBrowserE2ETests
 
             // Verify public tip still returns 200 OK without broken image tag
             await guestPage.GotoAsync($"/tips/{tipSlug}");
-            await guestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await guestPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             Assert.Contains(tipTitle, await guestPage.Locator("h1").InnerTextAsync());
             var tipImgAfterDelete = await guestPage.Locator($"img[src='{imgSrc}']").CountAsync();
             Assert.Equal(0, tipImgAfterDelete);

@@ -1915,6 +1915,112 @@ details.jt-faq-item.jt-card-interactive-utility:hover {
   .jt-member-page .d-flex.gap-2 { flex-wrap: wrap; }
 }
 
+/* Phase 8A: OTP and demo payment membership flow */
+.jt-otp-boxes {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(42px, 1fr));
+  gap: .65rem;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.jt-otp-boxes-compact {
+  grid-template-columns: repeat(4, minmax(48px, 1fr));
+  max-width: 320px;
+}
+
+.jt-otp-box {
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 52px;
+  border: 1px solid rgba(243, 198, 105, .28);
+  border-radius: .85rem;
+  background: rgba(255, 255, 255, .07);
+  color: #fff;
+  font: 700 1.45rem var(--jt-font-body);
+  text-align: center;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.jt-otp-box:focus {
+  outline: none;
+  border-color: var(--jt-gold-primary);
+  background: rgba(255, 255, 255, .11);
+  box-shadow: 0 0 0 3px rgba(243, 198, 105, .22);
+}
+
+.jt-link-button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--jt-gold-primary);
+  font: 600 .9rem var(--jt-font-body);
+  text-decoration: underline;
+  text-underline-offset: .2rem;
+  cursor: pointer;
+}
+
+.jt-link-button:disabled {
+  color: var(--jt-text-light-muted);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.jt-checkout-summary,
+.jt-payment-context {
+  border: 1px solid rgba(243, 198, 105, .18);
+  background: rgba(17, 22, 28, .82);
+}
+
+.jt-checkout-price {
+  color: var(--jt-gold-primary);
+  font: 700 clamp(2.2rem, 6vw, 3.7rem) var(--jt-font-display);
+  line-height: 1;
+  margin: .75rem 0 1rem;
+}
+
+.jt-checkout-price span {
+  color: var(--jt-text-light-muted);
+  font: 500 .95rem var(--jt-font-body);
+}
+
+.jt-card-network,
+.jt-payment-context {
+  color: var(--jt-text-light-muted);
+  font-size: .84rem;
+  margin-top: .45rem;
+}
+
+.jt-card-network span,
+.jt-payment-context strong {
+  color: var(--jt-gold-primary);
+}
+
+.jt-payment-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: .85rem;
+  padding: .85rem 1rem;
+}
+
+@media (max-width: 575px) {
+  .jt-otp-boxes {
+    gap: .45rem;
+  }
+  .jt-otp-box {
+    min-height: 46px;
+    border-radius: .7rem;
+    font-size: 1.2rem;
+  }
+  .jt-payment-context {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .25rem;
+  }
+}
+
 /* --------------------------------------------------------------------------
    MOBILE & TOUCH ACCESSIBILITY (hover: none, pointer: coarse)
    -------------------------------------------------------------------------- */

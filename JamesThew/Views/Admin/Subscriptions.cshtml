@@ -1,19 +1,19 @@
 @model JamesThew.ViewModels.SubscriptionAdminListViewModel
 @using JamesThew.Models
 @{
-    ViewData["Title"] = "Admin - Subscription Approvals";
+    ViewData["Title"] = "Admin - Membership Records";
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <div>
         <a asp-action="Index" class="small text-muted text-decoration-none">&larr; Back to Admin Portal</a>
-        <h1 class="h3 jt-serif mb-1 mt-1">Membership Subscription Requests</h1>
-        <p class="text-muted small mb-0">Review demo subscription requests, approve masterclass access, or reject with feedback.</p>
+        <h1 class="h3 jt-serif mb-1 mt-1">Membership Records</h1>
+        <p class="text-muted small mb-0">Monitor demo payment activations and handle any legacy pending requests from the previous review workflow.</p>
     </div>
 
     <div>
         <span class="jt-badge @(Model.TotalPendingCount > 0 ? "jt-badge-paid" : "jt-badge-free")">
-            @(Model.TotalPendingCount > 0 ? $"{Model.TotalPendingCount} Pending Action" : "All Requests Handled")
+            @(Model.TotalPendingCount > 0 ? $"{Model.TotalPendingCount} Legacy Pending Action" : "No Legacy Pending Actions")
         </span>
     </div>
 </div>
@@ -38,10 +38,10 @@
 <div class="p-3 bg-white rounded-4 border shadow-sm mb-4">
     <div class="d-flex flex-wrap gap-2">
         <a asp-action="Subscriptions" class="jt-btn jt-btn-sm @(Model.StatusFilter == null ? "jt-btn-primary" : "jt-btn-secondary")">
-            All Requests (@Model.Requests.Count)
+            All Records (@Model.Requests.Count)
         </a>
         <a asp-action="Subscriptions" asp-route-status="@SubscriptionStatus.Pending" class="jt-btn jt-btn-sm @(Model.StatusFilter == SubscriptionStatus.Pending ? "jt-btn-primary" : "jt-btn-secondary")">
-            Pending Only
+            Legacy Pending Only
         </a>
         <a asp-action="Subscriptions" asp-route-status="@SubscriptionStatus.Approved" class="jt-btn jt-btn-sm @(Model.StatusFilter == SubscriptionStatus.Approved ? "jt-btn-primary" : "jt-btn-secondary")">
             Approved Only
@@ -58,7 +58,7 @@
     {
         <div class="text-center py-5 text-muted">
             <div class="fs-1 mb-2">&#128237;</div>
-            <p class="mb-0">No subscription requests match the selected filter.</p>
+            <p class="mb-0">No membership records match the selected filter.</p>
         </div>
     }
     else
@@ -72,7 +72,7 @@
                         <th>Plan &amp; Amount</th>
                         <th>Status</th>
                         <th>Submitted</th>
-                        <th>Member Notes</th>
+                        <th>Record Notes</th>
                         <th>Actions / Review</th>
                     </tr>
                 </thead>
@@ -92,7 +92,11 @@
                             <td>
                                 @if (item.Status == SubscriptionStatus.Approved)
                                 {
-                                    <span class="badge bg-success">Approved</span>
+                                    <span class="badge bg-success">Active / Approved</span>
+                                    @if (item.ReviewedByAdminId == "DemoPaymentCheckout")
+                                    {
+                                        <div class="small text-muted">Demo Payment / Academic Simulation</div>
+                                    }
                                     @if (item.ExpiresAtUtc.HasValue)
                                     {
                                         <div class="small text-muted">Expires: @item.ExpiresAtUtc.Value.ToLocalTime().ToString("d")</div>
@@ -100,7 +104,7 @@
                                 }
                                 else if (item.Status == SubscriptionStatus.Pending)
                                 {
-                                    <span class="badge bg-warning text-dark">Pending</span>
+                                    <span class="badge bg-warning text-dark">Legacy Pending</span>
                                 }
                                 else
                                 {
@@ -152,7 +156,7 @@
                                 }
                                 else
                                 {
-                                    <span class="small text-muted">Reviewed on @item.ReviewedAtUtc?.ToLocalTime().ToString("d")</span>
+                                    <span class="small text-muted">Recorded on @item.ReviewedAtUtc?.ToLocalTime().ToString("d")</span>
                                 }
                             </td>
                         </tr>

@@ -51,7 +51,14 @@ public static class IdentitySeeder
         var db = services.GetRequiredService<ApplicationDbContext>();
         await using var transaction = await db.Database.BeginTransactionAsync();
         await SeedRolesAsync(services);
-        var admin = new ApplicationUser { UserName = email, Email = email, DisplayName = "Local administrator" };
+        var admin = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            DisplayName = "Local administrator",
+            EmailConfirmed = true,
+            IsDemoAdminOtpBypass = true
+        };
         var created = await users.CreateAsync(admin, password);
         if (!created.Succeeded)
             throw new InvalidOperationException("Local admin creation failed. Check the email and configured password policy.");

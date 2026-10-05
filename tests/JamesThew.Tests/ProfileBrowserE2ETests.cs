@@ -32,12 +32,7 @@ public class ProfileBrowserE2ETests
             var memberPass = "ProfileTestPass1234!";
 
             // Step 1: Register new member
-            await memberPage.GotoAsync("/account/register");
-            await memberPage.FillAsync("input[name='DisplayName']", "Original Browser Chef");
-            await memberPage.FillAsync("input[name='Email']", memberEmail);
-            await memberPage.FillAsync("input[name='Password']", memberPass);
-            await memberPage.FillAsync("input[name='ConfirmPassword']", memberPass);
-            await memberPage.ClickAsync("button[type='submit']");
+            await TestAuth.RegisterBrowserMemberAsync(memberPage, "Original Browser Chef", memberEmail, memberPass);
             await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
             // Step 2: Landed on /account/status or /account/profile

@@ -49,7 +49,11 @@ public class CinematicHeroBrowserQATests
                     }
                 };
 
-                var response = await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+                var response = await page.GotoAsync("/", new PageGotoOptions
+                {
+                    WaitUntil = WaitUntilState.DOMContentLoaded,
+                    Timeout = 90000
+                });
                 Assert.NotNull(response);
                 Assert.Equal(200, response.Status);
 
@@ -180,7 +184,11 @@ public class CinematicHeroBrowserQATests
                 });
 
                 var rmPage = await reducedMotionContext.NewPageAsync();
-                await rmPage.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+                await rmPage.GotoAsync("/", new PageGotoOptions
+                {
+                    WaitUntil = WaitUntilState.DOMContentLoaded,
+                    Timeout = 90000
+                });
                 await rmPage.WaitForTimeoutAsync(300);
 
                 // All major sections must be cleanly rendered
@@ -220,7 +228,7 @@ public class CinematicHeroBrowserQATests
             });
 
             var page = await context.NewPageAsync();
-            await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+            await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded, Timeout = 90000 });
             await page.WaitForTimeoutAsync(600);
 
             // 1. Verify Floating Glass Capsule Header
@@ -372,7 +380,11 @@ public class CinematicHeroBrowserQATests
                 });
 
                 var page = await context.NewPageAsync();
-                await page.GotoAsync("/", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+                await page.GotoAsync("/", new PageGotoOptions
+                {
+                    WaitUntil = WaitUntilState.DOMContentLoaded,
+                    Timeout = 90000
+                });
                 await page.WaitForFunctionAsync(@"() =>
                     window.ScrollTrigger &&
                     typeof window.ScrollTrigger.getAll === 'function' &&

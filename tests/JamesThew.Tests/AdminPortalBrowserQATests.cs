@@ -21,8 +21,13 @@ public class AdminPortalBrowserQATests
                 ViewportSize = new ViewportSize { Width = 1440, Height = 900 }
             });
             var page = await context.NewPageAsync();
+            var domReadyNavigation = new PageGotoOptions
+            {
+                WaitUntil = WaitUntilState.DOMContentLoaded,
+                Timeout = 90000
+            };
 
-            await page.GotoAsync("/account/login");
+            await page.GotoAsync("/account/login", domReadyNavigation);
             await page.FillAsync("input[name='Email']", "admin@jamesthew.com");
             await page.FillAsync("input[name='Password']", "Admin@Pass1234!");
             await page.ClickAsync("form[action*='/account/login'] button[type='submit']");
@@ -69,7 +74,7 @@ public class AdminPortalBrowserQATests
                 await page.SetViewportSizeAsync(viewport.Width, viewport.Height);
                 foreach (var route in adminRoutes)
                 {
-                    var response = await page.GotoAsync(route);
+                    var response = await page.GotoAsync(route, domReadyNavigation);
                     Assert.Equal(200, response?.Status);
                     Assert.Equal(1, await page.Locator(".jt-admin-shell").CountAsync());
                     Assert.Equal(0, await page.Locator("header.jt-header").CountAsync());
@@ -113,7 +118,7 @@ public class AdminPortalBrowserQATests
             }
 
             await page.SetViewportSizeAsync(1440, 900);
-            await page.GotoAsync("/");
+            await page.GotoAsync("/", domReadyNavigation);
             Assert.Equal(1, await page.Locator("header.jt-header").CountAsync());
             Assert.True(await page.Locator(".jt-nav-auth a:has-text('Admin Console')").IsVisibleAsync());
             Assert.Equal(0, await page.Locator(".jt-nav-auth a:has-text('Contribute')").CountAsync());
@@ -122,7 +127,7 @@ public class AdminPortalBrowserQATests
             foreach (var viewport in viewports)
             {
                 await page.SetViewportSizeAsync(viewport.Width, viewport.Height);
-                await page.GotoAsync("/");
+                await page.GotoAsync("/", domReadyNavigation);
                 if (viewport.Width <= 1100)
                 {
                     await page.ClickAsync("#navbarToggleBtn");
@@ -150,7 +155,7 @@ public class AdminPortalBrowserQATests
             }
 
             await page.SetViewportSizeAsync(1440, 900);
-            Assert.Equal(200, (await page.GotoAsync("/contributions"))?.Status);
+            Assert.Equal(200, (await page.GotoAsync("/contributions", domReadyNavigation))?.Status);
 
             var publicViewIssues = await page.EvaluateAsync<string[]>(@"() => {
                 const viewport = document.documentElement.clientWidth;
@@ -167,7 +172,7 @@ public class AdminPortalBrowserQATests
             }");
             Assert.Empty(publicViewIssues);
 
-            await page.GotoAsync("/feedback");
+            await page.GotoAsync("/feedback", domReadyNavigation);
             var ratingValues = await page.Locator("select[name='Form.Rating'] option").EvaluateAllAsync<string[]>(
                 "options => options.map(option => option.value || '')");
             Assert.Equal(new[] { "", "5", "4", "3", "2", "1" }, ratingValues);
@@ -185,10 +190,7 @@ public class AdminPortalBrowserQATests
             Assert.True(await page.Locator(".jt-nav-auth a:has-text('Register')").IsVisibleAsync());
             Assert.True(await page.Locator(".jt-nav-auth a:has-text('Sign In')").IsVisibleAsync());
 
-            await page.GotoAsync("/account/login");
-            await page.FillAsync("input[name='Email']", "member@jamesthew.com");
-            await page.FillAsync("input[name='Password']", "Member@Pass1234!");
-            await page.ClickAsync("form[action*='/account/login'] button[type='submit']");
+            await TestAuth.LoginBrowserMemberAsync(page, server.MemberEmail, "Member@Pass1234!");
             await page.WaitForURLAsync("**/account/status");
             Assert.True(await page.Locator(".jt-nav-auth a:has-text('Contribute')").IsVisibleAsync());
             Assert.True(await page.Locator(".jt-nav-auth a:has-text('My Entries')").IsVisibleAsync());

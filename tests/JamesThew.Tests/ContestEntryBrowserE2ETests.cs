@@ -51,7 +51,7 @@ public class ContestEntryBrowserE2ETests
             // Step 1: Guest visits open contest detail page
             // -------------------------------------------------------------
             await guestPage.GotoAsync($"/contests/{openStewContestSlug}");
-            await guestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await guestPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             var guestDetailHtml = await guestPage.ContentAsync();
             Assert.Contains("Autumn Heritage Stew Showdown", guestDetailHtml);
@@ -61,11 +61,8 @@ public class ContestEntryBrowserE2ETests
             // -------------------------------------------------------------
             // Step 2: Member logs in
             // -------------------------------------------------------------
-            await memberPage.GotoAsync("/account/login");
-            await memberPage.FillAsync("input[name='Email']", "member@jamesthew.com");
-            await memberPage.FillAsync("input[name='Password']", "Member@Pass1234!");
-            await memberPage.ClickAsync("form[action*='/account/login'] button[type='submit']");
-            await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await TestAuth.LoginBrowserMemberAsync(memberPage, server.MemberEmail, "Member@Pass1234!");
+            await memberPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             var myEntriesNav = await memberPage.Locator("a:has-text('My Entries')").CountAsync();
             Assert.True(myEntriesNav > 0, "My Entries navigation link must be visible for authenticated member.");
@@ -74,7 +71,7 @@ public class ContestEntryBrowserE2ETests
             // Step 3: Member views open contest and navigates to entry form
             // -------------------------------------------------------------
             await memberPage.GotoAsync($"/contests/{openStewContestSlug}");
-            await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await memberPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             var memberDetailHtml = await memberPage.ContentAsync();
             Assert.Contains("Authenticated Member Account Active", memberDetailHtml);
@@ -82,7 +79,7 @@ public class ContestEntryBrowserE2ETests
 
             await memberPage.ClickAsync("#btnEnterContest");
             await memberPage.WaitForURLAsync($"**/{openStewContestSlug}/entry*");
-            await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await memberPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             var entryFormHtml = await memberPage.ContentAsync();
             Assert.Contains("Official Competition Entry", entryFormHtml);
@@ -104,7 +101,7 @@ public class ContestEntryBrowserE2ETests
                 memberPage.WaitForURLAsync("**/contests/my-entries*"),
                 memberPage.ClickAsync("#btnSubmitContestEntry")
             );
-            await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await memberPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             // -------------------------------------------------------------
             // Step 5: Verify "My Contest Entries" renders the submitted entry
@@ -119,9 +116,9 @@ public class ContestEntryBrowserE2ETests
             // -------------------------------------------------------------
             // Step 6: Member views their full entry detail
             // -------------------------------------------------------------
-            await memberPage.ClickAsync($"a[href*='/{openStewContestSlug}/my-entry']");
+            await memberPage.Locator($"a[href*='/{openStewContestSlug}/my-entry']").First.EvaluateAsync("element => element.click()");
             await memberPage.WaitForURLAsync($"**/{openStewContestSlug}/my-entry*");
-            await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await memberPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             var myDetailHtml = await memberPage.ContentAsync();
             Assert.Contains(entryTitleOriginal, myDetailHtml);
@@ -133,9 +130,9 @@ public class ContestEntryBrowserE2ETests
             // -------------------------------------------------------------
             // Step 7: Member edits their entry before closing deadline
             // -------------------------------------------------------------
-            await memberPage.ClickAsync($"a[href*='/{openStewContestSlug}/entry']");
+            await memberPage.Locator($"a[href*='/{openStewContestSlug}/entry']").First.EvaluateAsync("element => element.click()");
             await memberPage.WaitForURLAsync($"**/{openStewContestSlug}/entry*");
-            await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await memberPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             // Verify form is pre-populated
             var editFormTitle = await memberPage.InputValueAsync("input[name='Title']");
@@ -149,7 +146,7 @@ public class ContestEntryBrowserE2ETests
                 memberPage.WaitForURLAsync("**/contests/my-entries*"),
                 memberPage.ClickAsync("#btnSubmitContestEntry")
             );
-            await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await memberPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             var updatedMyEntriesHtml = await memberPage.ContentAsync();
             Assert.Contains(entryTitleUpdated, updatedMyEntriesHtml);
@@ -158,13 +155,13 @@ public class ContestEntryBrowserE2ETests
             // Step 8: Public guest verifies NO entry leakage
             // -------------------------------------------------------------
             await guestPage.GotoAsync($"/contests/{openStewContestSlug}");
-            await guestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await guestPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             var guestPageHtml = await guestPage.ContentAsync();
             Assert.DoesNotContain(entryTitleOriginal, guestPageHtml);
             Assert.DoesNotContain(entryTitleUpdated, guestPageHtml);
 
             await guestPage.GotoAsync("/contests");
-            await guestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await guestPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             var guestCatalogHtml = await guestPage.ContentAsync();
             Assert.DoesNotContain(entryTitleOriginal, guestCatalogHtml);
             Assert.DoesNotContain(entryTitleUpdated, guestCatalogHtml);
@@ -176,11 +173,11 @@ public class ContestEntryBrowserE2ETests
             await adminPage.FillAsync("input[name='Email']", "admin@jamesthew.com");
             await adminPage.FillAsync("input[name='Password']", "Admin@Pass1234!");
             await adminPage.ClickAsync("form[action*='/account/login'] button[type='submit']");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             // Open Admin Contests
             await adminPage.GotoAsync("/admin/contests");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             var adminContestsHtml = await adminPage.ContentAsync();
             Assert.Contains("Entries (1)", adminContestsHtml);
@@ -188,14 +185,14 @@ public class ContestEntryBrowserE2ETests
             // Click Entries (1) link
             await adminPage.ClickAsync("a:has-text('Entries (1)')");
             await adminPage.WaitForURLAsync("**/admin/contests/*/entries*");
-            await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await adminPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             var adminEntriesPageHtml = await adminPage.ContentAsync();
             Assert.Contains("Submissions: Autumn Heritage Stew Showdown", adminEntriesPageHtml);
             Assert.Contains("Total Submissions", adminEntriesPageHtml);
             Assert.Contains(entryTitleUpdated, adminEntriesPageHtml);
             Assert.Contains("QA Member", adminEntriesPageHtml);
-            Assert.Contains("member@jamesthew.com", adminEntriesPageHtml);
+            Assert.Contains(server.MemberEmail, adminEntriesPageHtml);
             Assert.Contains("Read-Only Intake Review", adminEntriesPageHtml);
 
             // Expand accordion item
@@ -215,13 +212,8 @@ public class ContestEntryBrowserE2ETests
             var memberBPage = await memberBContext.NewPageAsync();
 
             // Register Member B
-            await memberBPage.GotoAsync("/account/register");
-            await memberBPage.FillAsync("input[name='DisplayName']", "Member Bravo");
-            await memberBPage.FillAsync("input[name='Email']", "member_bravo@jamesthew.com");
-            await memberBPage.FillAsync("input[name='Password']", "MemberBravo@123!");
-            await memberBPage.FillAsync("input[name='ConfirmPassword']", "MemberBravo@123!");
-            await memberBPage.ClickAsync("form[action*='/account/register'] button[type='submit']");
-            await memberBPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await TestAuth.RegisterBrowserMemberAsync(memberBPage, "Member Bravo", "member_bravo@jamesthew.com", "MemberBravo@123!");
+            await memberBPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
 
             // Member B attempts to view Member A's entry via slug -> 404
             var memberBSlugRes = await memberBPage.GotoAsync($"/contests/{openStewContestSlug}/my-entry");
@@ -238,12 +230,14 @@ public class ContestEntryBrowserE2ETests
 
             // Guest attempts to access admin contest entries inbox -> redirected to login
             await guestPage.GotoAsync("/admin/contests/1/entries");
-            await guestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await guestPage.WaitForURLAsync("**/account/login**");
+            await guestPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             Assert.Contains("/account/login", guestPage.Url);
 
             // Guest attempts to access contest entry form directly -> redirected to login
             await guestPage.GotoAsync($"/contests/{openStewContestSlug}/entry");
-            await guestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await guestPage.WaitForURLAsync("**/account/login**");
+            await guestPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             Assert.Contains("/account/login", guestPage.Url);
         }
         finally

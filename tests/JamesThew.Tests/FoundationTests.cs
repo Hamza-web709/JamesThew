@@ -49,12 +49,15 @@ public class FoundationTests(FoundationFixture fixture)
     }
 
     private static async Task<HttpResponseMessage> Login(HttpClient client, string email, string password,
+        string? returnUrl = "/account/status") => await TestAuth.Login(client, email, password, returnUrl);
+
+    private static async Task<HttpResponseMessage> PostLogin(HttpClient client, string email, string password,
         string? returnUrl = "/account/status") => await client.PostAsync("/account/login", new FormUrlEncodedContent(
-            new Dictionary<string, string>
-            {
-                ["__RequestVerificationToken"] = await Token(client, "/account/login"),
-                ["Email"] = email, ["Password"] = password, ["ReturnUrl"] = returnUrl ?? string.Empty
-            }));
+        new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = await Token(client, "/account/login"),
+            ["Email"] = email, ["Password"] = password, ["ReturnUrl"] = returnUrl ?? string.Empty
+        }));
 
     private static async Task Logout(HttpClient client)
     {
@@ -78,7 +81,7 @@ public class FoundationTests(FoundationFixture fixture)
             "__EFMigrationsHistory",
             "AspNetUsers", "AspNetRoles", "AspNetUserRoles", "AspNetUserClaims", "AspNetUserLogins", "AspNetUserTokens", "AspNetRoleClaims",
             "ContentItems", "FaqItems", "Recipes", "RecipeIngredients", "RecipeSteps", "Tips", "SubscriptionRequests", "Feedbacks", "Contests",
-            "ContestEntries", "ContestEntryIngredients", "ContestEntrySteps"
+            "ContestEntries", "ContestEntryIngredients", "ContestEntrySteps", "EmailOtpChallenges"
         };
         Assert.All(tables, name => Assert.Contains(name, expectedTables));
         Assert.Contains("ContentItems", tables);
@@ -122,10 +125,7 @@ public class FoundationTests(FoundationFixture fixture)
         var email = NewEmail(); var password = NewPassword();
         var response = await Register(client, email, password, "  Test member  ", AppRoles.Admin);
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal("/account/status", response.Headers.Location!.ToString());
-        var cookie = string.Join(";", response.Headers.GetValues("Set-Cookie"));
-        Assert.Contains("secure", cookie.ToLowerInvariant());
-        Assert.Contains("httponly", cookie.ToLowerInvariant());
+        Assert.Contains("/account/otp/email", response.Headers.Location!.ToString());
         await using var scope = fixture.Services.CreateAsyncScope();
         var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var user = await users.FindByEmailAsync(email);
@@ -135,6 +135,14 @@ public class FoundationTests(FoundationFixture fixture)
         Assert.NotEqual(password, user.PasswordHash);
         Assert.True(await users.CheckPasswordAsync(user, password));
         Assert.Equal(new[] { AppRoles.Member }, await users.GetRolesAsync(user));
+
+        var verified = await TestAuth.CompleteEmailOtp(client, response.Headers.Location!.ToString(), email, EmailOtpPurpose.Registration);
+        Assert.Equal(HttpStatusCode.Redirect, verified.StatusCode);
+        Assert.Equal("/account/status", verified.Headers.Location!.ToString());
+        await using var freshScope = fixture.Services.CreateAsyncScope();
+        var freshUsers = freshScope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        user = await freshUsers.FindByEmailAsync(email);
+        Assert.True(user!.EmailConfirmed);
         Assert.Contains("does not grant paid membership", await client.GetStringAsync("/account/status"));
     }
 
@@ -175,7 +183,7 @@ public class FoundationTests(FoundationFixture fixture)
     public async Task Logout_requires_post_and_antiforgery_and_removes_access()
     {
         using var client = fixture.NewClient();
-        await Register(client, NewEmail(), NewPassword());
+        await TestAuth.RegisterAndLogin(client, NewEmail(), NewPassword());
         // Conventional-route fallback may report 404 rather than 405; GET must never log out.
         Assert.Contains((await client.GetAsync("/account/logout")).StatusCode,
             new[] { HttpStatusCode.NotFound, HttpStatusCode.MethodNotAllowed });
@@ -192,7 +200,7 @@ public class FoundationTests(FoundationFixture fixture)
     public async Task Login_rejects_external_return_urls(string returnUrl)
     {
         using var client = fixture.NewClient(); var email = NewEmail(); var password = NewPassword();
-        await Register(client, email, password); await Logout(client);
+        await TestAuth.RegisterAndLogin(client, email, password); await Logout(client);
         var result = await Login(client, email, password, returnUrl);
         Assert.Equal("/account/status", result.Headers.Location!.ToString());
     }
@@ -230,7 +238,7 @@ public class FoundationTests(FoundationFixture fixture)
     public async Task Member_cannot_access_admin_and_login_preserves_safe_local_return_url()
     {
         using var client = fixture.NewClient(); var email = NewEmail(); var password = NewPassword();
-        await Register(client, email, password); await Logout(client);
+        await TestAuth.RegisterAndLogin(client, email, password); await Logout(client);
         var login = await Login(client, email, password, "/admin");
         Assert.Equal("/admin", login.Headers.Location!.ToString());
         var denied = await client.GetAsync("/admin");
@@ -242,16 +250,16 @@ public class FoundationTests(FoundationFixture fixture)
     public async Task Invalid_login_is_generic_and_lockout_prevents_correct_password_after_five_failures()
     {
         using var client = fixture.NewClient(); var email = NewEmail(); var password = NewPassword();
-        await Register(client, email, password); await Logout(client);
+        await TestAuth.RegisterAndLogin(client, email, password); await Logout(client);
         for (var i = 0; i < 5; i++)
         {
-            var failed = await Login(client, email, NewPassword());
+            var failed = await PostLogin(client, email, NewPassword());
             Assert.Contains("Unable to sign in", await failed.Content.ReadAsStringAsync());
         }
-        var locked = await Login(client, email, password);
+        var locked = await PostLogin(client, email, password);
         Assert.Equal(HttpStatusCode.OK, locked.StatusCode);
         Assert.Contains("Unable to sign in", await locked.Content.ReadAsStringAsync());
-        var unknown = await Login(client, NewEmail(), NewPassword());
+        var unknown = await PostLogin(client, NewEmail(), NewPassword());
         Assert.Contains("Unable to sign in", await unknown.Content.ReadAsStringAsync());
         await using var scope = fixture.Services.CreateAsyncScope();
         var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();

@@ -1,0 +1,96 @@
+@model JamesThew.ViewModels.DemoCheckoutViewModel
+@{
+    ViewData["Title"] = "Demo Payment Checkout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/public-pages.css" asp-append-version="true" />
+}
+
+<div class="jt-page-backdrop" aria-hidden="true">
+    <div class="jt-page-bg-img" style="background-image: url('@Url.Content("~/assets/inner-pages/backgrounds/bg-membership.webp")');"></div>
+    <div class="jt-page-overlay"></div>
+    <div class="jt-page-vignette"></div>
+</div>
+
+<div class="jt-inner-shell">
+    <div class="jt-inner-container-md">
+        <div class="jt-page-hero">
+            <span class="jt-page-eyebrow">
+                <span class="jt-eyebrow-line" aria-hidden="true"></span>
+                Demo Payment / Academic Simulation
+            </span>
+            <h1 class="jt-page-title">Secure Demo <span class="jt-serif-italic">Checkout</span></h1>
+            <p class="jt-page-lead">
+                This checkout validates realistic demo card details for academic review only. No real payment gateway is contacted.
+            </p>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <div class="col-lg-5">
+                <div class="jt-glass-panel jt-checkout-summary">
+                    <span class="jt-badge-demo-pill">Academic Simulation</span>
+                    <h2 class="h4 jt-serif text-light mt-3 mb-2">@Model.PlanName</h2>
+                    <div class="jt-checkout-price">$@Model.Amount.ToString("F2") <span>/ @Model.Interval</span></div>
+                    <p class="small text-light-secondary mb-0">
+                        Membership activates only after the separate four-digit Demo Payment OTP screen. The plan and price are set server-side.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="jt-glass-panel jt-glass-panel-pinnacle jt-form-card position-relative">
+                    <div class="jt-card-spotlight" aria-hidden="true"></div>
+                    <form asp-action="Checkout" method="post" class="jt-demo-card-form" novalidate>
+                        @Html.AntiForgeryToken()
+                        <input asp-for="Plan" type="hidden" />
+                        <div asp-validation-summary="All" class="jt-validation-summary" role="alert"></div>
+
+                        <div class="jt-form-group">
+                            <label asp-for="CardholderName" class="jt-form-label">Cardholder Name</label>
+                            <input asp-for="CardholderName" class="jt-form-input" autocomplete="cc-name" />
+                            <span asp-validation-for="CardholderName" class="text-danger"></span>
+                        </div>
+
+                        <div class="jt-form-group">
+                            <label asp-for="CardNumber" class="jt-form-label">Card Number</label>
+                            <input asp-for="CardNumber" class="jt-form-input jt-card-number-input" autocomplete="cc-number" inputmode="numeric" placeholder="4242 4242 4242 4242" />
+                            <div class="jt-card-network" aria-live="polite">Detected network: <span>@(Model.DetectedNetwork ?? "Unknown Card")</span></div>
+                            <span asp-validation-for="CardNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="jt-form-group">
+                                    <label asp-for="Expiry" class="jt-form-label">Expiry MM/YY</label>
+                                    <input asp-for="Expiry" class="jt-form-input jt-expiry-input" autocomplete="cc-exp" inputmode="numeric" placeholder="12/30" />
+                                    <span asp-validation-for="Expiry" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="jt-form-group">
+                                    <label asp-for="Cvv" class="jt-form-label">CVV</label>
+                                    <input asp-for="Cvv" class="jt-form-input jt-cvv-input" autocomplete="cc-csc" inputmode="numeric" maxlength="3" />
+                                    <span asp-validation-for="Cvv" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="small text-light-muted mt-2 mb-4">
+                            Full card number and CVV are validated in this request only and are not stored.
+                        </p>
+
+                        <button type="submit" class="jt-btn-editorial jt-btn-gold w-100">
+                            Continue to Demo Payment OTP
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/public-pages.js" asp-append-version="true"></script>
+}

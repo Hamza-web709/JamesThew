@@ -50,10 +50,7 @@ public class ContestJudgingBrowserE2ETests
             // -------------------------------------------------------------
             // Step 1: Member logs in and submits a recipe entry
             // -------------------------------------------------------------
-            await memberPage.GotoAsync("/account/login");
-            await memberPage.FillAsync("input[name='Email']", "member@jamesthew.com");
-            await memberPage.FillAsync("input[name='Password']", "Member@Pass1234!");
-            await memberPage.ClickAsync("form[action*='/account/login'] button[type='submit']");
+            await TestAuth.LoginBrowserMemberAsync(memberPage, server.MemberEmail, "Member@Pass1234!");
             await memberPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
             await memberPage.GotoAsync($"/contests/{openStewContestSlug}/entry");
@@ -137,7 +134,8 @@ public class ContestJudgingBrowserE2ETests
             await adminPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
             // Close the contest via Close button in the contest row
-            await adminPage.ClickAsync("tr:has-text('Autumn Heritage Stew Showdown') button:has-text('Close')");
+            await adminPage.Locator("tr:has-text('Autumn Heritage Stew Showdown') button:has-text('Close')")
+                .EvaluateAsync("element => element.click()");
             await adminPage.Locator(".alert-success").WaitForAsync();
 
             var closedContestsHtml = await adminPage.ContentAsync();
@@ -206,7 +204,7 @@ public class ContestJudgingBrowserE2ETests
             Assert.DoesNotContain("Pinot Noir", guestAnnouncementsHtml);
             Assert.DoesNotContain("Simmer covered for three hours", guestAnnouncementsHtml);
             Assert.DoesNotContain("Exceptional sauce reduction", guestAnnouncementsHtml);
-            Assert.DoesNotContain("member@jamesthew.com", guestAnnouncementsHtml);
+            Assert.DoesNotContain(server.MemberEmail, guestAnnouncementsHtml);
 
             // -------------------------------------------------------------
             // Step 10: Guest visits contest detail and sees golden Winner Banner
@@ -220,7 +218,7 @@ public class ContestJudgingBrowserE2ETests
             Assert.Contains(entryTitle, guestDetailHtml);
             Assert.Contains("QA Member", guestDetailHtml);
             Assert.DoesNotContain("Exceptional sauce reduction", guestDetailHtml);
-            Assert.DoesNotContain("member@jamesthew.com", guestDetailHtml);
+            Assert.DoesNotContain(server.MemberEmail, guestDetailHtml);
 
             // -------------------------------------------------------------
             // Step 11: Member checks My Entries & My Entry Detail

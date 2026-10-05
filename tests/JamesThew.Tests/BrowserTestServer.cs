@@ -17,6 +17,7 @@ public class BrowserTestServer : IAsyncLifetime
     public string RunId { get; } = Guid.NewGuid().ToString("N")[..8];
     public string DatabaseName => $"JamesThew_BrowserQA_{RunId}";
     public string ConnectionString => $@"Server=(localdb)\MSSQLLocalDB;Database={DatabaseName};Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+    public string MemberEmail => $"member_{RunId}@jamesthew.test";
     public string TestUploadDir { get; }
     public string ServerAddress { get; private set; } = string.Empty;
 
@@ -66,6 +67,7 @@ public class BrowserTestServer : IAsyncLifetime
             "--contentRoot", projectDir,
             "--ConnectionStrings:DefaultConnection", ConnectionString,
             "--Media:UploadPath", TestUploadDir,
+            "--Email:UseDevelopmentTestSink", "true",
             "--DisableHttpsRedirection", "true",
             "--skip-startup-seed"
         };
@@ -88,19 +90,20 @@ public class BrowserTestServer : IAsyncLifetime
                     UserName = "admin@jamesthew.com",
                     Email = "admin@jamesthew.com",
                     DisplayName = "QA Admin",
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    IsDemoAdminOtpBypass = true
                 };
                 await userManager.CreateAsync(adminUser, "Admin@Pass1234!");
                 await userManager.AddToRoleAsync(adminUser, AppRoles.Admin);
             }
 
-            var memberUser = await userManager.FindByEmailAsync("member@jamesthew.com");
+            var memberUser = await userManager.FindByEmailAsync(MemberEmail);
             if (memberUser == null)
             {
                 memberUser = new ApplicationUser
                 {
-                    UserName = "member@jamesthew.com",
-                    Email = "member@jamesthew.com",
+                    UserName = MemberEmail,
+                    Email = MemberEmail,
                     DisplayName = "QA Member",
                     EmailConfirmed = true
                 };

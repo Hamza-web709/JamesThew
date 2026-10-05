@@ -95,7 +95,8 @@ public class ContestBrowserE2ETests
             // Step 4: Public Guest browsing at /contests
             // -------------------------------------------------------------
             await guestPage.GotoAsync("/contests");
-            await guestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await guestPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            await guestPage.Locator($"text={recipeContestTitle}").First.WaitForAsync();
 
             var guestListingHtml = await guestPage.ContentAsync();
             Assert.Contains(recipeContestTitle, guestListingHtml);
@@ -105,7 +106,8 @@ public class ContestBrowserE2ETests
             // Step 5: Guest opens detail view /contests/{slug}
             // -------------------------------------------------------------
             await guestPage.GotoAsync($"/contests/{expectedRecipeSlug}");
-            await guestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await guestPage.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            await guestPage.Locator($"text={recipeContestTitle}").First.WaitForAsync();
 
             var detailHtml = await guestPage.ContentAsync();
             Assert.Contains(recipeContestTitle, detailHtml);

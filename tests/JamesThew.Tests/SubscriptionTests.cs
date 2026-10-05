@@ -27,33 +27,11 @@ public class SubscriptionTests(FoundationFixture fixture)
         return WebUtility.HtmlDecode(match.Groups[1].Value);
     }
 
-    private static async Task<HttpResponseMessage> RegisterAndLogin(HttpClient client, string email, string password, string displayName = "Test Member")
-    {
-        var values = new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = await Token(client, "/account/register"),
-            ["DisplayName"] = displayName,
-            ["Email"] = email,
-            ["Password"] = password,
-            ["ConfirmPassword"] = password
-        };
-        var registerResponse = await client.PostAsync("/account/register", new FormUrlEncodedContent(values));
-        Assert.Equal(HttpStatusCode.Redirect, registerResponse.StatusCode);
-        return registerResponse;
-    }
+    private static async Task<HttpResponseMessage> RegisterAndLogin(HttpClient client, string email, string password, string displayName = "Test Member") =>
+        await TestAuth.RegisterAndLogin(client, email, password, displayName);
 
-    private static async Task Login(HttpClient client, string email, string password)
-    {
-        var values = new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = await Token(client, "/account/login"),
-            ["Email"] = email,
-            ["Password"] = password,
-            ["ReturnUrl"] = "/"
-        };
-        var response = await client.PostAsync("/account/login", new FormUrlEncodedContent(values));
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-    }
+    private static async Task Login(HttpClient client, string email, string password) =>
+        await TestAuth.Login(client, email, password);
 
     private static IConfiguration SeedConfig(string email, string password) => new ConfigurationBuilder()
         .AddInMemoryCollection(new Dictionary<string, string?>
@@ -92,7 +70,7 @@ public class SubscriptionTests(FoundationFixture fixture)
     }
 
     [Fact]
-    public async Task Logged_in_member_can_submit_subscription_request_and_is_marked_pending()
+    public async Task Logged_in_member_can_complete_demo_checkout_and_is_marked_active()
     {
         using var client = fixture.NewClient();
         var email = NewEmail();
@@ -100,34 +78,48 @@ public class SubscriptionTests(FoundationFixture fixture)
 
         await RegisterAndLogin(client, email, password, "Culinary Subscriber");
 
-        // Submit monthly request
-        var token = await Token(client, "/membership");
-        var form = new Dictionary<string, string>
+        var checkoutToken = await Token(client, "/membership/checkout?plan=Monthly");
+        var checkoutForm = new Dictionary<string, string>
         {
-            ["__RequestVerificationToken"] = token,
+            ["__RequestVerificationToken"] = checkoutToken,
             ["Plan"] = "Monthly",
-            ["Notes"] = "Demo reference voucher #1001"
+            ["CardholderName"] = "Culinary Subscriber",
+            ["CardNumber"] = "4242 4242 4242 4242",
+            ["Expiry"] = "12/30",
+            ["Cvv"] = "123"
         };
 
-        var response = await client.PostAsync("/membership/subscribe", new FormUrlEncodedContent(form));
+        var response = await client.PostAsync("/membership/checkout", new FormUrlEncodedContent(checkoutForm));
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/membership/payment-otp", response.Headers.Location?.OriginalString);
+
+        var otpToken = await Token(client, "/membership/payment-otp");
+        var otpForm = new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = otpToken,
+            ["DemoPaymentOtp"] = "1234"
+        };
+        response = await client.PostAsync("/membership/payment-otp", new FormUrlEncodedContent(otpForm));
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Equal("/membership", response.Headers.Location?.OriginalString);
 
-        // Follow redirect to verify pending state in view
         var membershipHtml = await client.GetStringAsync("/membership");
-        Assert.Contains("Pending Approval", membershipHtml);
+        Assert.Contains("Active Premium Access", membershipHtml);
         Assert.Contains("Monthly", membershipHtml);
-        Assert.Contains("Demo reference voucher #1001", membershipHtml);
+        Assert.Contains("Demo Payment / Academic Simulation", membershipHtml);
 
-        // Verify in database
         using var scope = fixture.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var user = await db.Users.FirstAsync(u => u.Email == email);
         var sub = await db.SubscriptionRequests.FirstOrDefaultAsync(s => s.UserId == user.Id);
         Assert.NotNull(sub);
-        Assert.Equal(SubscriptionStatus.Pending, sub.Status);
+        Assert.Equal(SubscriptionStatus.Approved, sub.Status);
         Assert.Equal(SubscriptionPlan.Monthly, sub.Plan);
         Assert.Equal(10.00m, sub.Amount);
+        Assert.Equal("DemoPaymentCheckout", sub.ReviewedByAdminId);
+        Assert.Contains("ending 4242", sub.AdminNotes ?? string.Empty);
+        Assert.DoesNotContain("4242 4242 4242 4242", sub.AdminNotes ?? string.Empty);
+        Assert.DoesNotContain("CVV", sub.AdminNotes ?? string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -139,15 +131,21 @@ public class SubscriptionTests(FoundationFixture fixture)
 
         await RegisterAndLogin(client, email, password, "Pending Reader");
 
-        // Submit yearly request
-        var token = await Token(client, "/membership");
-        var form = new Dictionary<string, string>
+        using (var scope = fixture.Services.CreateScope())
         {
-            ["__RequestVerificationToken"] = token,
-            ["Plan"] = "Yearly",
-            ["Notes"] = "Annual demo check"
-        };
-        await client.PostAsync("/membership/subscribe", new FormUrlEncodedContent(form));
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var user = await db.Users.FirstAsync(u => u.Email == email);
+            db.SubscriptionRequests.Add(new SubscriptionRequest
+            {
+                UserId = user.Id,
+                Plan = SubscriptionPlan.Yearly,
+                Amount = 100.00m,
+                Status = SubscriptionStatus.Pending,
+                Notes = "Legacy annual demo check",
+                CreatedAtUtc = DateTime.UtcNow
+            });
+            await db.SaveChangesAsync();
+        }
 
         // Attempt to view paid Beef Wellington recipe
         var recipeResponse = await client.GetAsync("/recipes/jamess-masterclass-beef-wellington");
@@ -185,22 +183,22 @@ public class SubscriptionTests(FoundationFixture fixture)
         var memberPassword = NewPassword();
         await RegisterAndLogin(memberClient, memberEmail, memberPassword, "Masterclass Aspirant");
 
-        var memToken = await Token(memberClient, "/membership");
-        var subForm = new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = memToken,
-            ["Plan"] = "Monthly",
-            ["Notes"] = "Please approve for weekend cooking"
-        };
-        await memberClient.PostAsync("/membership/subscribe", new FormUrlEncodedContent(subForm));
-
-        // Get the subscription request ID
         int requestId;
         using (var scope = fixture.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var memberUser = await db.Users.FirstAsync(u => u.Email == memberEmail);
-            var sub = await db.SubscriptionRequests.FirstAsync(s => s.UserId == memberUser.Id && s.Status == SubscriptionStatus.Pending);
+            var sub = new SubscriptionRequest
+            {
+                UserId = memberUser.Id,
+                Plan = SubscriptionPlan.Monthly,
+                Amount = 10.00m,
+                Status = SubscriptionStatus.Pending,
+                Notes = "Legacy pending weekend cooking request",
+                CreatedAtUtc = DateTime.UtcNow
+            };
+            db.SubscriptionRequests.Add(sub);
+            await db.SaveChangesAsync();
             requestId = sub.Id;
         }
 
@@ -256,21 +254,22 @@ public class SubscriptionTests(FoundationFixture fixture)
         var memberPassword = NewPassword();
         await RegisterAndLogin(memberClient, memberEmail, memberPassword, "Reject Test Member");
 
-        var memToken = await Token(memberClient, "/membership");
-        var subForm = new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = memToken,
-            ["Plan"] = "Monthly",
-            ["Notes"] = "Testing rejection path"
-        };
-        await memberClient.PostAsync("/membership/subscribe", new FormUrlEncodedContent(subForm));
-
         int requestId;
         using (var scope = fixture.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var memberUser = await db.Users.FirstAsync(u => u.Email == memberEmail);
-            var sub = await db.SubscriptionRequests.FirstAsync(s => s.UserId == memberUser.Id && s.Status == SubscriptionStatus.Pending);
+            var sub = new SubscriptionRequest
+            {
+                UserId = memberUser.Id,
+                Plan = SubscriptionPlan.Monthly,
+                Amount = 10.00m,
+                Status = SubscriptionStatus.Pending,
+                Notes = "Legacy pending rejection path",
+                CreatedAtUtc = DateTime.UtcNow
+            };
+            db.SubscriptionRequests.Add(sub);
+            await db.SaveChangesAsync();
             requestId = sub.Id;
         }
 

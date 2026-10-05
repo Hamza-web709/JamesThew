@@ -26,32 +26,11 @@ public class ContributionAndFeedbackTests(FoundationFixture fixture)
         return WebUtility.HtmlDecode(match.Groups[1].Value);
     }
 
-    private static async Task RegisterAndLogin(HttpClient client, string email, string password, string displayName = "Test Member")
-    {
-        var values = new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = await Token(client, "/account/register"),
-            ["DisplayName"] = displayName,
-            ["Email"] = email,
-            ["Password"] = password,
-            ["ConfirmPassword"] = password
-        };
-        var registerResponse = await client.PostAsync("/account/register", new FormUrlEncodedContent(values));
-        Assert.Equal(HttpStatusCode.Redirect, registerResponse.StatusCode);
-    }
+    private static async Task RegisterAndLogin(HttpClient client, string email, string password, string displayName = "Test Member") =>
+        await TestAuth.RegisterAndLogin(client, email, password, displayName);
 
-    private static async Task Login(HttpClient client, string email, string password)
-    {
-        var values = new Dictionary<string, string>
-        {
-            ["__RequestVerificationToken"] = await Token(client, "/account/login"),
-            ["Email"] = email,
-            ["Password"] = password,
-            ["ReturnUrl"] = "/"
-        };
-        var response = await client.PostAsync("/account/login", new FormUrlEncodedContent(values));
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-    }
+    private static async Task Login(HttpClient client, string email, string password) =>
+        await TestAuth.Login(client, email, password);
 
     private static IConfiguration SeedConfig(string email, string password) => new ConfigurationBuilder()
         .AddInMemoryCollection(new Dictionary<string, string?>

@@ -149,6 +149,38 @@ public class SubscriptionService(ApplicationDbContext db) : ISubscriptionService
         };
     }
 
+    public async Task<SubscriptionRequestResult> ActivateDemoCheckoutAsync(string userId, SubscriptionPlan plan, string? safePaymentSummary = null)
+    {
+        var now = DateTime.UtcNow;
+        var amount = GetPlanPrice(plan);
+
+        var request = new SubscriptionRequest
+        {
+            UserId = userId,
+            Plan = plan,
+            Amount = amount,
+            Status = SubscriptionStatus.Approved,
+            Notes = "Activated through Demo Payment / Academic Simulation.",
+            AdminNotes = string.IsNullOrWhiteSpace(safePaymentSummary)
+                ? "Demo checkout completed; no real payment was processed."
+                : safePaymentSummary.Trim(),
+            ReviewedByAdminId = "DemoPaymentCheckout",
+            CreatedAtUtc = now,
+            ReviewedAtUtc = now,
+            ExpiresAtUtc = plan == SubscriptionPlan.Monthly ? now.AddDays(30) : now.AddDays(365)
+        };
+
+        db.SubscriptionRequests.Add(request);
+        await db.SaveChangesAsync();
+
+        return new SubscriptionRequestResult
+        {
+            Success = true,
+            Message = $"Your {plan} membership is active. Demo amount: ${amount:F2}.",
+            RequestId = request.Id
+        };
+    }
+
     public async Task<List<SubscriptionAdminListItemDto>> GetAllRequestsAsync(SubscriptionStatus? statusFilter = null)
     {
         var query = db.SubscriptionRequests
