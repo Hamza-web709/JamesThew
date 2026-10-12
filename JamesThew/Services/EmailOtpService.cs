@@ -139,6 +139,7 @@ public class EmailOtpService(ApplicationDbContext db, IEmailSender emailSender, 
               <p>{intro}</p>
               <p style="font-size:28px;letter-spacing:8px;font-weight:700">{code}</p>
               <p>This code expires in 5 minutes and can be used once.</p>
+              <p>If you did not request this code, ignore this email. Never share this code with anyone.</p>
             </div>
             """;
 
