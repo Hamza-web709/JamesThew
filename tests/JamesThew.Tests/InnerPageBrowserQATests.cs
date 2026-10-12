@@ -347,6 +347,184 @@ public class InnerPageBrowserQATests
         }
     }
 
+    [Fact]
+    public async Task PublicPages_CardGrid_TitleStyling_And_HeaderOverflow_Audit()
+    {
+        var server = new BrowserTestServer();
+        await server.InitializeAsync();
+
+        try
+        {
+            using var playwright = await Playwright.CreateAsync();
+            await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+            {
+                Headless = true
+            });
+
+            // 1. Title Styling and Archive Grid Audit on /recipes and /tips at 1440x900
+            {
+                var context = await browser.NewContextAsync(new BrowserNewContextOptions
+                {
+                    IgnoreHTTPSErrors = true,
+                    BaseURL = server.ServerAddress,
+                    ViewportSize = new ViewportSize { Width = 1440, Height = 900 }
+                });
+                var page = await context.NewPageAsync();
+
+                foreach (var path in new[] { "/recipes", "/tips" })
+                {
+                    await page.GotoAsync(path, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+                    await page.WaitForTimeoutAsync(400);
+
+                    // A. Title Styling: must not be browser-default blue link (#0000ee / rgb(13, 110, 253)) and must have no underline at rest
+                    var titlesAudit = await page.EvaluateAsync<string>(@"() => {
+                        const links = Array.from(document.querySelectorAll('.jt-deck-card-title a, .jt-card-title-link'));
+                        const bad = [];
+                        for (const a of links) {
+                            const cs = window.getComputedStyle(a);
+                            const col = cs.color;
+                            const decor = cs.textDecorationLine || cs.textDecoration;
+                            if (col.includes('13, 110, 253') || col.includes('0, 0, 238') || decor.includes('underline')) {
+                                bad.push({ text: a.innerText.trim(), color: col, decoration: decor });
+                            }
+                        }
+                        return JSON.stringify({ totalChecked: links.length, bad });
+                    }");
+
+                    using var doc = System.Text.Json.JsonDocument.Parse(titlesAudit);
+                    var root = doc.RootElement;
+                    Assert.True(root.GetProperty("totalChecked").GetInt32() > 0, $"{path}: expected title links to be present");
+                    Assert.Equal(0, root.GetProperty("bad").GetArrayLength());
+
+                    // B. Archive Grid Audit: must use CSS Grid with 3 columns on desktop and no overlapping cards
+                    var gridAudit = await page.EvaluateAsync<string>(@"() => {
+                        const grid = document.querySelector('.jt-archive-grid');
+                        if (!grid) return JSON.stringify({ hasGrid: false });
+                        const gridCs = window.getComputedStyle(grid);
+                        const cards = Array.from(grid.querySelectorAll('.jt-archive-card'));
+                        const rects = cards.map(c => {
+                            const r = c.getBoundingClientRect();
+                            return { left: Math.round(r.left), right: Math.round(r.right), top: Math.round(r.top), bottom: Math.round(r.bottom), width: Math.round(r.width), height: Math.round(r.height) };
+                        });
+                        const colTemplate = gridCs.gridTemplateColumns;
+                        const colCount = colTemplate.split(' ').length;
+                        return JSON.stringify({
+                            hasGrid: true,
+                            display: gridCs.display,
+                            colCount,
+                            cardsCount: cards.length,
+                            rects
+                        });
+                    }");
+
+                    using var gridDoc = System.Text.Json.JsonDocument.Parse(gridAudit);
+                    var gRoot = gridDoc.RootElement;
+                    Assert.True(gRoot.GetProperty("hasGrid").GetBoolean(), $"{path}: .jt-archive-grid must exist");
+                    Assert.Equal("grid", gRoot.GetProperty("display").GetString());
+                    Assert.True(gRoot.GetProperty("colCount").GetInt32() >= 3, $"{path}: desktop grid should have 3 columns");
+
+                    // Verify cards in same row have different left offsets and do not overlap
+                    var rects = gRoot.GetProperty("rects");
+                    if (rects.GetArrayLength() >= 2)
+                    {
+                        var c0 = rects[0];
+                        var c1 = rects[1];
+                        Assert.True(c1.GetProperty("left").GetInt32() > c0.GetProperty("left").GetInt32(),
+                            $"{path}: Second card must be placed horizontally to the right of first card in grid");
+                        Assert.True(c1.GetProperty("left").GetInt32() >= c0.GetProperty("right").GetInt32() - 5,
+                            $"{path}: Grid cards must not overlap horizontally");
+                    }
+                }
+                await context.CloseAsync();
+            }
+
+            // 2. Responsive Header Overflow Audit with Authenticated Member Navigation
+            {
+                var viewports = new[]
+                {
+                    new { Name = "Desktop-1440x900", Width = 1440, Height = 900, IsDesktop = true },
+                    new { Name = "Desktop-1366x768", Width = 1366, Height = 768, IsDesktop = true },
+                    new { Name = "Desktop-1280x720", Width = 1280, Height = 720, IsDesktop = true },
+                    new { Name = "Tablet-1024x768", Width = 1024, Height = 768, IsDesktop = false },
+                    new { Name = "Tablet-768x1024", Width = 768, Height = 1024, IsDesktop = false },
+                    new { Name = "Mobile-430x932", Width = 430, Height = 932, IsDesktop = false },
+                    new { Name = "Mobile-390x844", Width = 390, Height = 844, IsDesktop = false }
+                };
+
+                foreach (var vp in viewports)
+                {
+                    var context = await browser.NewContextAsync(new BrowserNewContextOptions
+                    {
+                        IgnoreHTTPSErrors = true,
+                        BaseURL = server.ServerAddress,
+                        ViewportSize = new ViewportSize { Width = vp.Width, Height = vp.Height }
+                    });
+                    var page = await context.NewPageAsync();
+
+                    await page.GotoAsync("/recipes", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+
+                    // Inject full authenticated member navigation links into header to test member overflow
+                    await page.EvaluateAsync(@"() => {
+                        const auth = document.querySelector('.jt-nav-auth');
+                        if (auth) {
+                            auth.innerHTML = `
+                                <a class=""jt-nav-link jt-nav-membership"" href=""/Membership"">Membership</a>
+                                <a class=""jt-nav-link"" href=""/Contributions"">Contribute</a>
+                                <a class=""jt-nav-link"" href=""/Contests/MyEntries"">My Entries</a>
+                                <a class=""jt-nav-link"" href=""/Account/Status"">Account</a>
+                                <form method=""post"" class=""d-inline"" action=""/Account/Logout"">
+                                    <button class=""jt-btn jt-btn-outline jt-btn-sm jt-capsule-logout-btn"" type=""submit"">Logout</button>
+                                </form>
+                            `;
+                        }
+                    }");
+                    await page.WaitForTimeoutAsync(100);
+
+                    var headerAudit = await page.EvaluateAsync<string>(@"() => {
+                        const header = document.querySelector('#jtHeader');
+                        const logoutBtn = document.querySelector('.jt-capsule-logout-btn');
+                        const hRect = header ? header.getBoundingClientRect() : null;
+                        const lRect = logoutBtn ? logoutBtn.getBoundingClientRect() : null;
+                        const isVisible = lRect && (lRect.width > 0 && lRect.height > 0);
+                        return JSON.stringify({
+                            headerWidth: hRect ? Math.round(hRect.width) : 0,
+                            headerRight: hRect ? Math.round(hRect.right) : 0,
+                            logoutRight: lRect ? Math.round(lRect.right) : 0,
+                            isLogoutVisible: isVisible,
+                            scrollWidth: document.documentElement.scrollWidth,
+                            windowWidth: window.innerWidth
+                        });
+                    }");
+
+                    using var hDoc = System.Text.Json.JsonDocument.Parse(headerAudit);
+                    var hRoot = hDoc.RootElement;
+                    var scrollWidth = hRoot.GetProperty("scrollWidth").GetInt32();
+                    var windowWidth = hRoot.GetProperty("windowWidth").GetInt32();
+
+                    // No horizontal page overflow
+                    Assert.True(scrollWidth <= windowWidth + 2,
+                        $"{vp.Name}: document scrollWidth ({scrollWidth}) must not exceed viewport width ({windowWidth})");
+
+                    if (vp.IsDesktop)
+                    {
+                        var headerRight = hRoot.GetProperty("headerRight").GetInt32();
+                        var logoutRight = hRoot.GetProperty("logoutRight").GetInt32();
+                        Assert.True(hRoot.GetProperty("isLogoutVisible").GetBoolean(),
+                            $"{vp.Name}: Logout button must be visible in desktop header");
+                        Assert.True(logoutRight <= headerRight,
+                            $"{vp.Name}: Logout button (right={logoutRight}) must remain completely inside capsule header (right={headerRight})");
+                    }
+
+                    await context.CloseAsync();
+                }
+            }
+        }
+        finally
+        {
+            await server.DisposeAsync();
+        }
+    }
+
     private class ImageCheckResult
     {
         public string Src { get; set; } = "";

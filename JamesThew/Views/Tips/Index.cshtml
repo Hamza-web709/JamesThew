@@ -158,7 +158,7 @@
                                         </div>
 
                                         <h3 class="jt-deck-card-title">
-                                            <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug">
+                                            <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug" class="jt-card-title-link">
                                                 @tip.Title
                                             </a>
                                         </h3>
@@ -189,11 +189,10 @@
                     <span class="small text-light-muted">Page @Model.Page of @Model.TotalPages</span>
                 </div>
 
-                <div class="row g-4 mb-5">
+                <div class="jt-archive-grid mb-5">
                     @foreach (var tip in Model.Tips)
                     {
-                        <div class="col-md-6 col-lg-4">
-                            <article class="jt-glass-panel jt-card-interactive-content jt-card-flip-wrap p-0 h-100 position-relative">
+                        <article class="jt-archive-card jt-glass-panel jt-card-interactive-content jt-card-flip-wrap p-0 h-100 position-relative">
                                 <div class="jt-card-spotlight" aria-hidden="true"></div>
                                 <div class="jt-card-flip-inner">
                                     <!-- Front Face: Image, Title, Metadata, CTA -->
@@ -233,7 +232,7 @@
                                                     </button>
                                                 </div>
                                                 <h4 class="h5 jt-serif mb-2">
-                                                    <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug" class="text-light text-decoration-none">
+                                                    <a asp-controller="Tips" asp-action="Detail" asp-route-slug="@tip.Slug" class="jt-card-title-link">
                                                         @tip.Title
                                                     </a>
                                                 </h4>
@@ -277,7 +276,6 @@
                                     </div>
                                 </div>
                             </article>
-                        </div>
                     }
                 </div>
 
@@ -306,8 +304,15 @@
 </div>
 
 @section Scripts {
-    <!-- GSAP CDN for Pinned Card Deck Choreography -->
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <!-- GSAP with deterministic local fallback for Pinned Card Deck Choreography -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"
+            asp-fallback-src="~/lib/gsap/gsap.min.js"
+            asp-fallback-test="window.gsap"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"
+            asp-fallback-src="~/lib/gsap/ScrollTrigger.min.js"
+            asp-fallback-test="window.ScrollTrigger"
+            crossorigin="anonymous"></script>
+    <script src="~/js/gsap-fallback.js" asp-append-version="true"></script>
     <script src="~/js/public-pages.js" asp-append-version="true"></script>
 }
