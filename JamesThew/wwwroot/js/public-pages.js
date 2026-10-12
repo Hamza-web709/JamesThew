@@ -3,18 +3,27 @@
  * Implements the card-animation.mp4 sequential stacked-card interaction for Recipes and Tips.
  */
 
-document.addEventListener('DOMContentLoaded', function () {
+(function () {
     'use strict';
 
-    // 1. Check GSAP availability
-    var hasGsap = typeof window.gsap !== 'undefined' && typeof window.ScrollTrigger !== 'undefined';
-    if (!hasGsap) {
-        return;
-    }
+    var initialized = false;
 
-    var gsap = window.gsap;
-    var ScrollTrigger = window.ScrollTrigger;
-    gsap.registerPlugin(ScrollTrigger);
+    function initPublicMotion() {
+        if (initialized) {
+            return;
+        }
+
+        // 1. Check GSAP availability
+        var hasGsap = typeof window.gsap !== 'undefined' && typeof window.ScrollTrigger !== 'undefined';
+        if (!hasGsap) {
+            return;
+        }
+
+        initialized = true;
+
+        var gsap = window.gsap;
+        var ScrollTrigger = window.ScrollTrigger;
+        gsap.registerPlugin(ScrollTrigger);
 
     var mm = gsap.matchMedia();
 
@@ -192,7 +201,18 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-});
+}
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPublicMotion);
+    } else {
+        initPublicMotion();
+    }
+
+    if (!initialized) {
+        window.addEventListener('load', initPublicMotion);
+    }
+})();
 
 // =========================================================================
 // PHASE 7C — PREMIUM CARD INTERACTION POLISH

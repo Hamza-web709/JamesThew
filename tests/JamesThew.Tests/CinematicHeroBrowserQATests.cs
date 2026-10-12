@@ -121,9 +121,27 @@ public class CinematicHeroBrowserQATests
                 var hasOverflow = await page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth > window.innerWidth");
                 Assert.False(hasOverflow, $"{vp.Name} has horizontal overflow. Offending elements: {overflowElements}");
 
-                // 5. Test Scroll Progression (on Desktop)
+                // 5. Test Scroll Progression & GSAP Runtime (on Desktop)
                 if (vp.Width >= 992)
                 {
+                    // Verify GSAP & ScrollTrigger runtime availability and registered triggers
+                    var gsapStateJson = await page.EvaluateAsync<string>(@"() => {
+                        return JSON.stringify({
+                            gsapType: typeof window.gsap,
+                            stType: typeof window.ScrollTrigger,
+                            triggerCount: (window.ScrollTrigger && typeof window.ScrollTrigger.getAll === 'function')
+                                ? window.ScrollTrigger.getAll().length : 0
+                        });
+                    }");
+                    using (var doc = JsonDocument.Parse(gsapStateJson))
+                    {
+                        var root = doc.RootElement;
+                        Assert.Equal("object", root.GetProperty("gsapType").GetString());
+                        Assert.Equal("function", root.GetProperty("stType").GetString());
+                        Assert.True(root.GetProperty("triggerCount").GetInt32() >= 5,
+                            $"{vp.Name}: Expected at least 5 registered ScrollTriggers on Home, found {root.GetProperty("triggerCount").GetInt32()}");
+                    }
+
                     // Verify initial Hero elements
                     Assert.True(await page.Locator("#heroTopLeft").IsVisibleAsync());
 
@@ -136,6 +154,16 @@ public class CinematicHeroBrowserQATests
                     await s6.ScrollIntoViewIfNeededAsync();
                     await page.WaitForTimeoutAsync(300);
                     Assert.True(await s6.IsVisibleAsync());
+
+                    // Scroll further into horizontal rail pin spacer to confirm scroll choreography moves the rail
+                    await page.EvaluateAsync("() => window.scrollBy(0, 400)");
+                    await page.WaitForTimeoutAsync(200);
+                    var activeTrackTransform = await page.EvaluateAsync<string>(@"() => {
+                        const track = document.querySelector('#horizontalTrack');
+                        return track ? window.getComputedStyle(track).transform : 'none';
+                    }");
+                    Assert.False(string.IsNullOrEmpty(activeTrackTransform) || activeTrackTransform == "none",
+                        $"{vp.Name}: Horizontal rail track should have active GSAP transform during scroll, found {activeTrackTransform}");
 
                     // Scroll down to Section 09 (CTA)
                     await s9.ScrollIntoViewIfNeededAsync();
@@ -610,6 +638,80 @@ public class CinematicHeroBrowserQATests
 
                 await context.CloseAsync();
             }
+        }
+        finally
+        {
+            await server.DisposeAsync();
+        }
+    }
+
+    [Fact]
+    public async Task CinematicHero_Offline_CDNBlocked_Fallback_Audit()
+    {
+        var server = new BrowserTestServer();
+        await server.InitializeAsync();
+
+        try
+        {
+            using var playwright = await Playwright.CreateAsync();
+            await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+            var context = await browser.NewContextAsync(new BrowserNewContextOptions
+            {
+                IgnoreHTTPSErrors = true,
+                BaseURL = server.ServerAddress,
+                ViewportSize = new ViewportSize { Width = 1440, Height = 900 }
+            });
+
+            var page = await context.NewPageAsync();
+
+            // Block external CDN requests to simulate offline / network partition
+            await page.RouteAsync("**/*jsdelivr.net*/**", route => route.AbortAsync());
+
+            var response = await page.GotoAsync("/", new PageGotoOptions
+            {
+                WaitUntil = WaitUntilState.DOMContentLoaded,
+                Timeout = 90000
+            });
+            Assert.NotNull(response);
+            Assert.Equal(200, response.Status);
+
+            await page.WaitForTimeoutAsync(600);
+
+            // Verify local fallback provided GSAP & ScrollTrigger with authentic engine
+            var auditJson = await page.EvaluateAsync<string>(@"() => {
+                return JSON.stringify({
+                    gsapType: typeof window.gsap,
+                    gsapVersion: window.gsap ? window.gsap.version : null,
+                    stType: typeof window.ScrollTrigger,
+                    stVersion: window.ScrollTrigger ? window.ScrollTrigger.version : null,
+                    triggerCount: (window.ScrollTrigger && typeof window.ScrollTrigger.getAll === 'function')
+                        ? window.ScrollTrigger.getAll().length : 0,
+                    hasHorizontalTrigger: (window.ScrollTrigger && typeof window.ScrollTrigger.getAll === 'function')
+                        ? window.ScrollTrigger.getAll().some(st => st.trigger && st.trigger.id === 'section-horizontal') : false
+                });
+            }");
+
+            using var doc = JsonDocument.Parse(auditJson);
+            var root = doc.RootElement;
+            Assert.Equal("object", root.GetProperty("gsapType").GetString());
+            Assert.Equal("3.12.5", root.GetProperty("gsapVersion").GetString());
+            Assert.Equal("function", root.GetProperty("stType").GetString());
+            Assert.Equal("3.12.5", root.GetProperty("stVersion").GetString());
+            Assert.True(root.GetProperty("triggerCount").GetInt32() >= 5,
+                $"Offline fallback should initialize all ScrollTriggers (found {root.GetProperty("triggerCount").GetInt32()})");
+            Assert.True(root.GetProperty("hasHorizontalTrigger").GetBoolean(),
+                "Horizontal rail ScrollTrigger must be registered in offline fallback mode");
+
+            // Scroll to horizontal rail and verify pin & transforms
+            var s6 = page.Locator("#section-horizontal");
+            await s6.ScrollIntoViewIfNeededAsync();
+            await page.WaitForTimeoutAsync(300);
+
+            var pinSpacerExists = await page.EvaluateAsync<bool>(@"() => {
+                const sec = document.querySelector('#section-horizontal');
+                return !!(sec && sec.closest('.pin-spacer'));
+            }");
+            Assert.True(pinSpacerExists, "Horizontal rail must be pinned via ScrollTrigger pinSpacer even when offline");
         }
         finally
         {

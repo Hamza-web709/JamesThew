@@ -4,18 +4,26 @@
  * Follows the approved Reference Video Motion Blueprint.
  */
 
-document.addEventListener('DOMContentLoaded', function () {
+(function () {
     'use strict';
 
-    // 1. Dependency Guard
-    if (typeof window.gsap === 'undefined' || typeof window.ScrollTrigger === 'undefined') {
-        console.warn('JamesThew: GSAP or ScrollTrigger not loaded.');
-        return;
-    }
+    var initialized = false;
 
-    var gsap = window.gsap;
-    var ScrollTrigger = window.ScrollTrigger;
-    gsap.registerPlugin(ScrollTrigger);
+    function initLandingChoreography() {
+        if (initialized) {
+            return;
+        }
+
+        // 1. Dependency Guard
+        if (typeof window.gsap === 'undefined' || typeof window.ScrollTrigger === 'undefined') {
+            return;
+        }
+
+        initialized = true;
+
+        var gsap = window.gsap;
+        var ScrollTrigger = window.ScrollTrigger;
+        gsap.registerPlugin(ScrollTrigger);
 
     // 2. Full-bleed and dynamic header offset handling
     var mainEl = document.querySelector('.jt-main-content');
@@ -599,4 +607,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     } // END buildChoreography
 
-});
+    } // END initLandingChoreography
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initLandingChoreography);
+    } else {
+        initLandingChoreography();
+    }
+
+    if (!initialized) {
+        window.addEventListener('load', initLandingChoreography);
+    }
+})();

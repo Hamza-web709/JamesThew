@@ -849,13 +849,14 @@
 </div>
 
 @section Scripts {
-    <environment include="Development">
-        <script src="~/js/gsap-fallback.js" asp-append-version="true"></script>
-    </environment>
-    <environment exclude="Development">
-        <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-        <script src="~/js/gsap-fallback.js" asp-append-version="true"></script>
-    </environment>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"
+            asp-fallback-src="~/lib/gsap/gsap.min.js"
+            asp-fallback-test="window.gsap"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"
+            asp-fallback-src="~/lib/gsap/ScrollTrigger.min.js"
+            asp-fallback-test="window.ScrollTrigger"
+            crossorigin="anonymous"></script>
+    <script src="~/js/gsap-fallback.js" asp-append-version="true"></script>
     <script src="~/js/landing-scroll.js" asp-append-version="true"></script>
 }
