@@ -486,3 +486,238 @@
         initPhase8AInputs();
     }
 })();
+
+// =========================================================================
+// GENERAL DYNAMIC BALANCED ARCHIVE GRID SYSTEM
+// Dynamic column-selection algorithm & mathematical sub-column centering
+// for arbitrary card counts on Recipe & Tip archives.
+// =========================================================================
+(function () {
+    'use strict';
+
+    function getVisibleCards(grid) {
+        var allChildren = Array.prototype.slice.call(grid.children);
+        return allChildren.filter(function (card) {
+            if (card.matches('script, style, template, .jt-grid-ignore')) {
+                return false;
+            }
+            if (card.hidden || card.getAttribute('aria-hidden') === 'true') {
+                return false;
+            }
+            var style = window.getComputedStyle(card);
+            if (style.display === 'none' || style.visibility === 'hidden') {
+                return false;
+            }
+            if (card.offsetParent === null && style.position !== 'fixed') {
+                return false;
+            }
+            return true;
+        });
+    }
+
+    function balanceArchiveGrid(grid) {
+        if (!grid) return;
+
+        var visibleCards = getVisibleCards(grid);
+        var count = visibleCards.length;
+
+        // Reset inline column offsets on all cards
+        visibleCards.forEach(function (card) {
+            card.style.removeProperty('grid-column');
+            card.style.removeProperty('grid-column-start');
+        });
+
+        if (count === 0) {
+            grid.style.removeProperty('--archive-columns');
+            grid.style.removeProperty('--archive-subcols');
+            grid.removeAttribute('data-balanced-columns');
+            return;
+        }
+
+        if (count === 1) {
+            grid.style.setProperty('--archive-columns', '1');
+            grid.style.setProperty('--archive-subcols', '2');
+            grid.setAttribute('data-balanced-columns', '1');
+            return;
+        }
+
+        // Measure available width and gap
+        var rect = grid.getBoundingClientRect();
+        var availableWidth = rect.width || grid.clientWidth;
+        if (!availableWidth || availableWidth < 60) {
+            var parent = grid.parentElement;
+            availableWidth = (parent && parent.clientWidth) || Math.min(1240, window.innerWidth - 32);
+        }
+
+        var cs = window.getComputedStyle(grid);
+        var gap = parseFloat(cs.gap || cs.columnGap) || 28;
+
+        // Bounds: minimum readable card width ~275px, max preferred columns 4
+        var minCardWidth = 275;
+        var maxPreferredColumns = 4;
+
+        // Candidates physically permitted by available width
+        var fitCols = Math.max(1, Math.floor((availableWidth + gap) / (minCardWidth + gap)));
+        var maxCandidate = Math.min(maxPreferredColumns, fitCols, count);
+        if (maxCandidate < 1) maxCandidate = 1;
+
+        var candidates = [];
+        if (fitCols <= 1) {
+            candidates = [1];
+        } else {
+            for (var c = 2; c <= maxCandidate; c++) {
+                candidates.push(c);
+            }
+            if (!candidates.length) {
+                candidates = [1];
+            }
+        }
+
+        // General candidate scoring algorithm
+        var bestColumns = candidates[0];
+        var bestScore = -Infinity;
+
+        candidates.forEach(function (c) {
+            var rows = Math.ceil(count / c);
+            var remainder = count % c;
+            var isOrphan = (remainder === 1 && rows > 1);
+
+            var score = 0;
+
+            // 1. Heavy penalty for leaving a single orphan card in final row
+            if (isOrphan) {
+                score -= 1000;
+            }
+
+            // 2. Full rows bonus vs fuller final row ratio
+            if (remainder === 0) {
+                score += 100;
+            } else {
+                score += (remainder / c) * 60;
+            }
+
+            // 3. Viewport utilization bonus (prefer more columns when balanced)
+            score += c * 10;
+
+            // 4. Stretched card penalty (avoid 2 giant columns for 6+ cards on wide desktop)
+            var cardWidth = (availableWidth - (c - 1) * gap) / c;
+            if (cardWidth > 480 && count >= 6) {
+                score -= 60;
+            }
+
+            // 5. Excessive vertical stack penalty (avoid 4+ rows if wider column exists)
+            if (rows > 3 && c < maxCandidate) {
+                score -= (rows - 2) * 15;
+            }
+
+            // 6. Single row compression penalty: prefer 2x2 grid over 4x1 ribbon for 4 cards
+            if (rows === 1 && count >= 4 && c >= 4) {
+                score -= 30;
+            }
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestColumns = c;
+            }
+        });
+
+        // Apply grid variables
+        grid.style.setProperty('--archive-columns', String(bestColumns));
+        grid.style.setProperty('--archive-subcols', String(bestColumns * 2));
+        grid.setAttribute('data-balanced-columns', String(bestColumns));
+
+        // Final row centering: offset first card of last row (spans 2 subcolumns)
+        var remainder = count % bestColumns;
+        if (remainder > 0 && remainder < bestColumns && bestColumns > 1) {
+            var offset = bestColumns - remainder;
+            var startCol = 1 + offset;
+            var lastRowStartIndex = count - remainder;
+            if (visibleCards[lastRowStartIndex]) {
+                visibleCards[lastRowStartIndex].style.gridColumn = startCol + ' / span 2';
+            }
+        }
+    }
+
+    var isBalancing = false;
+
+    function safeBalance(grid) {
+        if (!grid || isBalancing) return;
+        isBalancing = true;
+        try {
+            balanceArchiveGrid(grid);
+        } finally {
+            isBalancing = false;
+        }
+    }
+
+    function initBalancedArchiveGrids() {
+        var grids = document.querySelectorAll('.jt-archive-grid, [data-archive-grid]');
+        if (!grids.length) return;
+
+        var resizeObserver = null;
+        if (typeof window.ResizeObserver !== 'undefined') {
+            resizeObserver = new ResizeObserver(function (entries) {
+                if (isBalancing) return;
+                entries.forEach(function (entry) {
+                    safeBalance(entry.target);
+                });
+            });
+        }
+
+        grids.forEach(function (grid) {
+            safeBalance(grid);
+
+            if (resizeObserver) {
+                resizeObserver.observe(grid);
+            }
+
+            // MutationObserver to rebalance when items are dynamically added/removed or filtered
+            if (typeof window.MutationObserver !== 'undefined') {
+                var mutationObserver = new MutationObserver(function () {
+                    if (isBalancing) return;
+                    safeBalance(grid);
+                });
+                mutationObserver.observe(grid, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: ['class', 'hidden', 'data-admin-added']
+                });
+            }
+        });
+
+        var resizeTimer = null;
+        window.addEventListener('resize', function () {
+            if (resizeTimer) cancelAnimationFrame(resizeTimer);
+            resizeTimer = requestAnimationFrame(function () {
+                if (isBalancing) return;
+                grids.forEach(function (grid) {
+                    safeBalance(grid);
+                });
+            });
+        }, { passive: true });
+
+        // Expose public API for dynamic filters, manual triggers, and tests
+        window.JamesThewGrid = {
+            balance: function () {
+                grids.forEach(function (grid) {
+                    safeBalance(grid);
+                });
+            },
+            balanceGrid: safeBalance
+        };
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initBalancedArchiveGrids);
+    } else {
+        initBalancedArchiveGrids();
+    }
+
+    window.addEventListener('load', function () {
+        var grids = document.querySelectorAll('.jt-archive-grid, [data-archive-grid]');
+        grids.forEach(function (grid) {
+            safeBalance(grid);
+        });
+    });
+})();

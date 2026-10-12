@@ -588,42 +588,47 @@ body {
 
 
 /* ==========================================================================
-   RESPONSIVE ARCHIVE GRID (3-Col Desktop Large, 2-Col Tablet, 1-Col Mobile)
-   Dedicated CSS Grid layout isolated from GSAP sequential deck.
+   DYNAMIC BALANCED ARCHIVE GRID SYSTEM
+   General dynamic multi-column grid with sub-column alignment for centering
+   incomplete final rows without hardcoded count rules.
    ========================================================================== */
 
 .jt-archive-grid {
+  --archive-columns: 3;
+  --archive-subcols: 6;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--archive-subcols, 6), minmax(0, 1fr));
   gap: 2rem;
   width: 100%;
+  justify-content: center;
 }
 
-/* Balanced layout for 1 or 2 items to prevent empty space */
+.jt-archive-grid > * {
+  grid-column: span 2;
+}
+
+/* Balanced layout for single item to prevent excessive stretching */
 .jt-archive-grid:has(> :only-child) {
   grid-template-columns: minmax(auto, 560px);
   justify-content: center;
 }
 
-.jt-archive-grid:has(> :first-child:nth-last-child(2)),
-.jt-archive-grid:has(> :first-child:nth-last-child(2) ~ *) {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.jt-archive-grid:has(> :only-child) > * {
+  grid-column: auto;
 }
 
 @media (max-width: 1099px) and (min-width: 681px) {
   .jt-archive-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    --archive-columns: 2;
+    --archive-subcols: 4;
     gap: 1.5rem;
-  }
-  .jt-archive-grid:has(> :only-child) {
-    grid-template-columns: minmax(auto, 560px);
-    justify-content: center;
   }
 }
 
 @media (max-width: 680px) {
   .jt-archive-grid {
-    grid-template-columns: 1fr;
+    --archive-columns: 1;
+    --archive-subcols: 2;
     gap: 1.25rem;
   }
 }

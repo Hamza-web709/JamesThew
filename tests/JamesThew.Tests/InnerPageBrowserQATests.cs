@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -517,6 +517,378 @@ public class InnerPageBrowserQATests
 
                     await context.CloseAsync();
                 }
+            }
+        }
+        finally
+        {
+            await server.DisposeAsync();
+        }
+    }
+
+    [Fact]
+    public async Task PublicPages_DynamicBalancedGrid_MultiCount_And_Responsive_Audit()
+    {
+        var server = new BrowserTestServer();
+        await server.InitializeAsync();
+
+        try
+        {
+            using var playwright = await Playwright.CreateAsync();
+            await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+            {
+                Headless = true
+            });
+
+            var context = await browser.NewContextAsync(new BrowserNewContextOptions
+            {
+                IgnoreHTTPSErrors = true,
+                BaseURL = server.ServerAddress,
+                ViewportSize = new ViewportSize { Width = 1440, Height = 900 }
+            });
+            var page = await context.NewPageAsync();
+
+            // 1. Audit real dataset on /recipes (7 cards currently in DB)
+            await page.GotoAsync("/recipes", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+            await page.WaitForTimeoutAsync(300);
+
+            var recipesAudit = await page.EvaluateAsync<string>(@"() => {
+                const grid = document.querySelector('.jt-archive-grid');
+                if (!grid) return JSON.stringify({ error: 'No grid found' });
+                const gridRect = grid.getBoundingClientRect();
+                const cards = Array.from(grid.querySelectorAll('.jt-archive-card'));
+                const cardRects = cards.map(c => {
+                    const r = c.getBoundingClientRect();
+                    return { left: Math.round(r.left), right: Math.round(r.right), top: Math.round(r.top), width: Math.round(r.width) };
+                });
+
+                // Group cards by top position to identify rows
+                const rowMap = new Map();
+                for (const cr of cardRects) {
+                    let foundKey = null;
+                    for (const k of rowMap.keys()) {
+                        if (Math.abs(k - cr.top) < 15) { foundKey = k; break; }
+                    }
+                    const key = foundKey !== null ? foundKey : cr.top;
+                    if (!rowMap.has(key)) rowMap.set(key, []);
+                    rowMap.get(key).push(cr);
+                }
+                const rows = Array.from(rowMap.values());
+                const rowCounts = rows.map(r => r.length);
+                const balancedCols = grid.getAttribute('data-balanced-columns');
+
+                // Check final row centering if incomplete
+                let centeringDiff = 0;
+                if (rows.length > 1) {
+                    const lastRow = rows[rows.length - 1];
+                    const firstInLast = lastRow[0];
+                    const lastInLast = lastRow[lastRow.length - 1];
+                    const leftMargin = firstInLast.left - gridRect.left;
+                    const rightMargin = gridRect.right - lastInLast.right;
+                    centeringDiff = Math.abs(leftMargin - rightMargin);
+                }
+
+                return JSON.stringify({
+                    cardCount: cards.length,
+                    balancedCols,
+                    rowCount: rows.length,
+                    rowCounts,
+                    centeringDiff,
+                    minCardWidth: Math.min(...cardRects.map(c => c.width)),
+                    scrollWidth: document.documentElement.scrollWidth,
+                    clientWidth: document.documentElement.clientWidth
+                });
+            }");
+
+            using (var doc = System.Text.Json.JsonDocument.Parse(recipesAudit))
+            {
+                var root = doc.RootElement;
+                var cardCount = root.GetProperty("cardCount").GetInt32();
+                var balancedCols = root.GetProperty("balancedCols").GetString();
+                var rowCounts = root.GetProperty("rowCounts").EnumerateArray().Select(x => x.GetInt32()).ToArray();
+                var centeringDiff = root.GetProperty("centeringDiff").GetDouble();
+                var minCardWidth = root.GetProperty("minCardWidth").GetInt32();
+                var scrollWidth = root.GetProperty("scrollWidth").GetInt32();
+                var clientWidth = root.GetProperty("clientWidth").GetInt32();
+
+                Assert.Equal(4, cardCount);
+                Assert.Equal("2", balancedCols); // 2 columns chosen for 4 cards (2 + 2, avoiding 3 + 1 orphan)
+                Assert.Equal(new[] { 2, 2 }, rowCounts); // NOT 3 + 1!
+                Assert.True(centeringDiff <= 3.0, $"Last row of 3 cards must be centered within 3px (diff was {centeringDiff}px)");
+                Assert.True(minCardWidth >= 270, $"Card width ({minCardWidth}px) must be >= 270px for readability");
+                Assert.True(scrollWidth <= clientWidth + 2, "No horizontal page overflow on /recipes");
+            }
+
+            // 2. Multi-count Dynamic Simulation on /recipes (Testing counts 1 through 14)
+            var simulationResults = await page.EvaluateAsync<string>(@"() => {
+                const grid = document.querySelector('.jt-archive-grid');
+                if (!grid) return JSON.stringify({ error: 'No grid found' });
+                const originalCards = Array.from(grid.querySelectorAll('.jt-archive-card'));
+                const cardTemplate = originalCards[0].cloneNode(true);
+
+                const results = [];
+                const testCounts = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+
+                for (const count of testCounts) {
+                    grid.innerHTML = '';
+                    for (let i = 0; i < count; i++) {
+                        const clone = cardTemplate.cloneNode(true);
+                        clone.setAttribute('data-sim-index', String(i));
+                        grid.appendChild(clone);
+                    }
+
+                    if (window.JamesThewGrid && window.JamesThewGrid.balanceGrid) {
+                        window.JamesThewGrid.balanceGrid(grid);
+                    }
+
+                    const gridRect = grid.getBoundingClientRect();
+                    const cards = Array.from(grid.querySelectorAll('.jt-archive-card'));
+                    const cardRects = cards.map(c => {
+                        const r = c.getBoundingClientRect();
+                        return { left: Math.round(r.left), right: Math.round(r.right), top: Math.round(r.top), bottom: Math.round(r.bottom), width: Math.round(r.width), height: Math.round(r.height) };
+                    });
+
+                    const rowMap = new Map();
+                    for (const cr of cardRects) {
+                        let foundKey = null;
+                        for (const k of rowMap.keys()) {
+                            if (Math.abs(k - cr.top) < 15) { foundKey = k; break; }
+                        }
+                        const key = foundKey !== null ? foundKey : cr.top;
+                        if (!rowMap.has(key)) rowMap.set(key, []);
+                        rowMap.get(key).push(cr);
+                    }
+                    const rows = Array.from(rowMap.values());
+                    const rowCounts = rows.map(r => r.length);
+                    const lastRow = rows[rows.length - 1];
+                    const lastRowCardsCount = lastRow.length;
+                    const isOrphan = (lastRowCardsCount === 1 && rows.length > 1);
+
+                    let centeringDiff = 0;
+                    if (rows.length > 1 && lastRow.length < rowCounts[0]) {
+                        const firstInLast = lastRow[0];
+                        const lastInLast = lastRow[lastRow.length - 1];
+                        const leftMargin = firstInLast.left - gridRect.left;
+                        const rightMargin = gridRect.right - lastInLast.right;
+                        centeringDiff = Math.abs(leftMargin - rightMargin);
+                    }
+
+                    let hasOverlap = false;
+                    for (let i = 0; i < cardRects.length; i++) {
+                        for (let j = i + 1; j < cardRects.length; j++) {
+                            const a = cardRects[i];
+                            const b = cardRects[j];
+                            if (!(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom)) {
+                                hasOverlap = true;
+                            }
+                        }
+                    }
+
+                    let isInsideContainer = true;
+                    for (const cr of cardRects) {
+                        if (cr.left < gridRect.left - 3 || cr.right > gridRect.right + 3) {
+                            isInsideContainer = false;
+                        }
+                    }
+
+                    results.push({
+                        count,
+                        columns: Number(grid.getAttribute('data-balanced-columns') || 1),
+                        rowCount: rows.length,
+                        rowCounts,
+                        isOrphan,
+                        centeringDiff,
+                        hasOverlap,
+                        isInsideContainer,
+                        minCardWidth: Math.min(...cardRects.map(c => c.width))
+                    });
+                }
+
+                // Restore original cards
+                grid.innerHTML = '';
+                for (const c of originalCards) { grid.appendChild(c); }
+                if (window.JamesThewGrid) { window.JamesThewGrid.balanceGrid(grid); }
+
+                return JSON.stringify(results);
+            }");
+
+            using (var simDoc = System.Text.Json.JsonDocument.Parse(simulationResults))
+            {
+                var resultsArr = simDoc.RootElement.EnumerateArray();
+                foreach (var item in resultsArr)
+                {
+                    var count = item.GetProperty("count").GetInt32();
+                    var columns = item.GetProperty("columns").GetInt32();
+                    var rowCounts = item.GetProperty("rowCounts").EnumerateArray().Select(x => x.GetInt32()).ToArray();
+                    var isOrphan = item.GetProperty("isOrphan").GetBoolean();
+                    var centeringDiff = item.GetProperty("centeringDiff").GetDouble();
+                    var hasOverlap = item.GetProperty("hasOverlap").GetBoolean();
+                    var isInside = item.GetProperty("isInsideContainer").GetBoolean();
+                    var minWidth = item.GetProperty("minCardWidth").GetInt32();
+
+                    Assert.False(hasOverlap, $"Count {count}: Cards must not overlap");
+                    Assert.True(isInside, $"Count {count}: Cards must remain inside container");
+                    Assert.True(minWidth >= 270, $"Count {count}: Cards width ({minWidth}px) must be >= 270px");
+                    Assert.True(centeringDiff <= 3.0, $"Count {count}: Incomplete last row must be centered (diff was {centeringDiff}px)");
+
+                    // Avoidable orphan rows must be avoided
+                    if (count == 4) Assert.Equal(new[] { 2, 2 }, rowCounts);
+                    if (count == 5) Assert.Equal(new[] { 3, 2 }, rowCounts);
+                    if (count == 6) Assert.Equal(new[] { 3, 3 }, rowCounts);
+                    if (count == 7) Assert.Equal(new[] { 4, 3 }, rowCounts);
+                    if (count == 8) Assert.Equal(new[] { 4, 4 }, rowCounts);
+                    if (count == 9) Assert.Equal(new[] { 3, 3, 3 }, rowCounts);
+                    if (count == 10) Assert.Equal(new[] { 4, 4, 2 }, rowCounts);
+                    if (count == 11) Assert.Equal(new[] { 4, 4, 3 }, rowCounts);
+                    if (count == 12) Assert.Equal(new[] { 4, 4, 4 }, rowCounts);
+                }
+            }
+
+            // 3. Dynamic Filter Reaction: Filtering & dynamic DOM additions/removals
+            var filterResult = await page.EvaluateAsync<string>(@"() => {
+                const grid = document.querySelector('.jt-archive-grid');
+                const cards = Array.from(grid.querySelectorAll('.jt-archive-card'));
+
+                // A. Filter by hiding 2 cards (4 -> 2 visible cards)
+                cards[2].style.display = 'none';
+                cards[3].style.display = 'none';
+                if (window.JamesThewGrid) window.JamesThewGrid.balanceGrid(grid);
+                const colsWith2 = grid.getAttribute('data-balanced-columns');
+
+                // B. Filter down to 1 card (2 -> 1 visible card)
+                cards[1].style.display = 'none';
+                if (window.JamesThewGrid) window.JamesThewGrid.balanceGrid(grid);
+                const colsWith1 = grid.getAttribute('data-balanced-columns');
+
+                // C. Restore all 4 original cards
+                cards[1].style.display = '';
+                cards[2].style.display = '';
+                cards[3].style.display = '';
+                if (window.JamesThewGrid) window.JamesThewGrid.balanceGrid(grid);
+                const colsWith4 = grid.getAttribute('data-balanced-columns');
+
+                // D. Simulate admin adding 3 recipes dynamically (4 -> 7 cards)
+                const addedCards = [];
+                for (let i = 0; i < 3; i++) {
+                    const clone = cards[0].cloneNode(true);
+                    clone.setAttribute('data-admin-added', 'true');
+                    grid.appendChild(clone);
+                    addedCards.push(clone);
+                }
+                if (window.JamesThewGrid) window.JamesThewGrid.balanceGrid(grid);
+                const colsWith7 = grid.getAttribute('data-balanced-columns');
+
+                // E. Remove added cards
+                addedCards.forEach(c => c.remove());
+                if (window.JamesThewGrid) window.JamesThewGrid.balanceGrid(grid);
+                const colsRestored = grid.getAttribute('data-balanced-columns');
+
+                return JSON.stringify({ colsWith1, colsWith2, colsWith4, colsWith7, colsRestored });
+            }");
+
+            using (var fDoc = System.Text.Json.JsonDocument.Parse(filterResult))
+            {
+                var fRoot = fDoc.RootElement;
+                Assert.Equal("1", fRoot.GetProperty("colsWith1").GetString()); // 1 visible card -> 1 column
+                Assert.Equal("2", fRoot.GetProperty("colsWith2").GetString()); // 2 visible cards -> 2 columns
+                Assert.Equal("2", fRoot.GetProperty("colsWith4").GetString()); // 4 visible cards -> 2 columns (2x2)
+                Assert.Equal("4", fRoot.GetProperty("colsWith7").GetString()); // 7 visible cards -> 4 columns (4+3)
+                Assert.Equal("2", fRoot.GetProperty("colsRestored").GetString()); // restored 4 cards -> 2 columns
+            }
+
+            // 4. Responsive Viewport Reductions (1024, 768, 430, 390)
+            var responsiveViewports = new[]
+            {
+                new { Width = 1024, Height = 768, MaxAllowedCols = 3, MinWidth = 260 },
+                new { Width = 768, Height = 1024, MaxAllowedCols = 2, MinWidth = 260 },
+                new { Width = 430, Height = 932, MaxAllowedCols = 1, MinWidth = 300 },
+                new { Width = 390, Height = 844, MaxAllowedCols = 1, MinWidth = 300 }
+            };
+
+            foreach (var rvp in responsiveViewports)
+            {
+                await page.SetViewportSizeAsync(rvp.Width, rvp.Height);
+                await page.WaitForTimeoutAsync(100);
+
+                var respAudit = await page.EvaluateAsync<string>(@"() => {
+                    const grid = document.querySelector('.jt-archive-grid');
+                    if (window.JamesThewGrid) window.JamesThewGrid.balanceGrid(grid);
+                    const cols = Number(grid.getAttribute('data-balanced-columns') || 1);
+                    const cards = Array.from(grid.querySelectorAll('.jt-archive-card'));
+                    const widths = cards.map(c => Math.round(c.getBoundingClientRect().width));
+                    const scrollW = document.documentElement.scrollWidth;
+                    const clientW = document.documentElement.clientWidth;
+                    return JSON.stringify({
+                        cols,
+                        minCardWidth: Math.min(...widths),
+                        scrollW,
+                        clientW
+                    });
+                }");
+
+                using var rDoc = System.Text.Json.JsonDocument.Parse(respAudit);
+                var rRoot = rDoc.RootElement;
+                var cols = rRoot.GetProperty("cols").GetInt32();
+                var minW = rRoot.GetProperty("minCardWidth").GetInt32();
+                var sW = rRoot.GetProperty("scrollW").GetInt32();
+                var cW = rRoot.GetProperty("clientW").GetInt32();
+
+                Assert.True(cols <= rvp.MaxAllowedCols, $"At {rvp.Width}px, columns ({cols}) should be <= {rvp.MaxAllowedCols}");
+                Assert.True(minW >= rvp.MinWidth, $"At {rvp.Width}px, card width ({minW}px) must be >= {rvp.MinWidth}px");
+                Assert.True(sW <= cW + 2, $"At {rvp.Width}px, no horizontal overflow (scrollWidth {sW} <= clientWidth {cW})");
+            }
+
+            // 5. Audit real dataset on /tips
+            await page.SetViewportSizeAsync(1440, 900);
+            await page.GotoAsync("/tips", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+            await page.WaitForTimeoutAsync(300);
+
+            var tipsAudit = await page.EvaluateAsync<string>(@"() => {
+                const grid = document.querySelector('.jt-archive-grid');
+                if (!grid) return JSON.stringify({ error: 'No grid found' });
+                const gridRect = grid.getBoundingClientRect();
+                const cards = Array.from(grid.querySelectorAll('.jt-archive-card'));
+                const cardRects = cards.map(c => {
+                    const r = c.getBoundingClientRect();
+                    return { left: Math.round(r.left), right: Math.round(r.right), top: Math.round(r.top), width: Math.round(r.width) };
+                });
+                const rowMap = new Map();
+                for (const cr of cardRects) {
+                    let foundKey = null;
+                    for (const k of rowMap.keys()) {
+                        if (Math.abs(k - cr.top) < 15) { foundKey = k; break; }
+                    }
+                    const key = foundKey !== null ? foundKey : cr.top;
+                    if (!rowMap.has(key)) rowMap.set(key, []);
+                    rowMap.get(key).push(cr);
+                }
+                const rows = Array.from(rowMap.values());
+                const rowCounts = rows.map(r => r.length);
+                const lastRow = rows[rows.length - 1];
+                let centeringDiff = 0;
+                if (rows.length > 1 && lastRow.length < rowCounts[0]) {
+                    const firstInLast = lastRow[0];
+                    const lastInLast = lastRow[lastRow.length - 1];
+                    centeringDiff = Math.abs((firstInLast.left - gridRect.left) - (gridRect.right - lastInLast.right));
+                }
+                return JSON.stringify({
+                    cardCount: cards.length,
+                    columns: Number(grid.getAttribute('data-balanced-columns') || 1),
+                    rowCounts,
+                    centeringDiff,
+                    scrollWidth: document.documentElement.scrollWidth,
+                    clientWidth: document.documentElement.clientWidth
+                });
+            }");
+
+            using (var tDoc = System.Text.Json.JsonDocument.Parse(tipsAudit))
+            {
+                var tRoot = tDoc.RootElement;
+                var centeringDiff = tRoot.GetProperty("centeringDiff").GetDouble();
+                var scrollW = tRoot.GetProperty("scrollWidth").GetInt32();
+                var clientW = tRoot.GetProperty("clientWidth").GetInt32();
+
+                Assert.True(centeringDiff <= 3.0, $"/tips: last row centering diff ({centeringDiff}px) must be <= 3px");
+                Assert.True(scrollW <= clientW + 2, "/tips: no horizontal overflow");
             }
         }
         finally
