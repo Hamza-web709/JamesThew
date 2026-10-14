@@ -1048,3 +1048,18 @@ textarea:focus-visible,
   font-size: 0.85rem;
   flex-shrink: 0;
 }
+
+.jt-admin-user-avatar-lg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(214, 168, 90, 0.25), rgba(185, 130, 45, 0.45));
+  border: 1px solid var(--jt-admin-border);
+  color: var(--jt-admin-gold);
+  font-weight: 700;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}

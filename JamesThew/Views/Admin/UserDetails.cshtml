@@ -1,0 +1,244 @@
+@model JamesThew.ViewModels.AdminUserDetailsViewModel
+@using JamesThew.Authorization
+@{
+    ViewData["Title"] = $"{Model.DisplayName} - User Details - JamesThew Admin";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-2">
+    <div>
+        <a href="@Model.ReturnUrl" class="text-decoration-none text-muted small">&larr; Back to Users</a>
+        <div class="d-flex align-items-center gap-3 mt-2">
+            <div class="jt-admin-user-avatar-lg" aria-hidden="true">
+                @(!string.IsNullOrWhiteSpace(Model.DisplayName) ? Model.DisplayName[0].ToString().ToUpperInvariant() : "U")
+            </div>
+            <div>
+                <h1 class="h2 jt-serif mb-1 text-dark">@Model.DisplayName</h1>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="text-muted small">@Model.Email</span>
+                    <span class="text-muted small">&bull;</span>
+                    @if (Model.Role == AppRoles.Admin)
+                    {
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Administrator</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">Member</span>
+                    }
+                    @if (Model.EmailConfirmed)
+                    {
+                        <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">&#10003; Verified</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">&#9888; Unverified</span>
+                    }
+                    @if (Model.IsTemporarilyLocked)
+                    {
+                        <span class="badge bg-danger">Temporarily Locked</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Available</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <a href="@Model.ReturnUrl" class="jt-btn jt-btn-outline jt-btn-sm">&larr; Back to Users</a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- SECTION A: Account Details -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h2 class="h5 jt-serif mb-0 text-dark">Section A &mdash; Account Details</h2>
+                <div class="text-muted small">Identity credentials and security standing</div>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted small text-uppercase">User ID</dt>
+                    <dd class="col-sm-8 font-monospace small text-break">@Model.Id</dd>
+
+                    <dt class="col-sm-4 text-muted small text-uppercase">Display Name</dt>
+                    <dd class="col-sm-8 fw-semibold text-dark">@Model.DisplayName</dd>
+
+                    <dt class="col-sm-4 text-muted small text-uppercase">Email</dt>
+                    <dd class="col-sm-8 text-break">@Model.Email</dd>
+
+                    <dt class="col-sm-4 text-muted small text-uppercase">Assigned Role</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Role == AppRoles.Admin)
+                        {
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Administrator</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">Member</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted small text-uppercase">Email Verification</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.EmailConfirmed)
+                        {
+                            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">&#10003; Confirmed</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">&#9888; Unverified</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted small text-uppercase">Security Status</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.IsTemporarilyLocked)
+                        {
+                            <div class="mb-1">
+                                <span class="badge bg-danger">Temporarily Locked</span>
+                            </div>
+                            <div class="small text-danger">
+                                <strong>Temporary Identity Lockout:</strong> Until @(Model.LockoutEnd.HasValue ? Model.LockoutEnd.Value.UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'") : "unknown")
+                            </div>
+                            @if (Model.AccessFailedCount > 0)
+                            {
+                                <div class="small text-muted mt-1">Failed access attempts: @Model.AccessFailedCount</div>
+                            }
+                        }
+                        else
+                        {
+                            <div>
+                                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">Available</span>
+                            </div>
+                            <div class="small text-muted mt-1">Account authentication access is available.</div>
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION B: Membership Details -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h2 class="h5 jt-serif mb-0 text-dark">Section B &mdash; Membership &amp; Subscriptions</h2>
+                <div class="text-muted small">Subscription status, tier, and renewal lifecycle</div>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted small text-uppercase">Current Plan</dt>
+                    <dd class="col-sm-8 fw-semibold text-dark">@Model.CurrentPlan</dd>
+
+                    <dt class="col-sm-4 text-muted small text-uppercase">Membership Status</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.IsMembershipActive)
+                        {
+                            <span class="badge bg-success">@Model.MembershipLabel</span>
+                        }
+                        else if (Model.MembershipLabel.Equals("Expired", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <span class="badge bg-warning text-dark">Expired</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-light text-muted border">Free</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted small text-uppercase">Expiration Date</dt>
+                    <dd class="col-sm-8">
+                        @(Model.MembershipExpiry.HasValue ? Model.MembershipExpiry.Value.ToString("yyyy-MM-dd HH:mm 'UTC'") : "No active expiration")
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted small text-uppercase">Subscription History</dt>
+                    <dd class="col-sm-8">
+                        <span class="fw-semibold">@Model.SubscriptionHistoryCount</span> request(s) recorded
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted small text-uppercase">Latest Request</dt>
+                    <dd class="col-sm-8">
+                        @(!string.IsNullOrWhiteSpace(Model.LatestSubscriptionStatus) ? Model.LatestSubscriptionStatus : "None")
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted small text-uppercase">Last Approved</dt>
+                    <dd class="col-sm-8">
+                        @(Model.LastApprovedSubscriptionDate.HasValue ? Model.LastApprovedSubscriptionDate.Value.ToString("yyyy-MM-dd") : "None")
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION C: Activity Summary -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-header bg-transparent border-bottom py-3">
+        <h2 class="h5 jt-serif mb-0 text-dark">Section C &mdash; Activity Summary</h2>
+        <div class="text-muted small">Member engagement, community contributions, and platform participation</div>
+    </div>
+    <div class="card-body p-4">
+        <div class="row g-3">
+            <div class="col-6 col-lg-3">
+                <div class="p-3 bg-light rounded-3 text-center border">
+                    <div class="small text-muted text-uppercase fw-semibold">Recipe Contributions</div>
+                    <div class="h3 jt-serif mb-0 text-dark mt-1">@Model.RecipeContributionCount</div>
+                    <div class="text-muted small mt-1">Recipes submitted</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="p-3 bg-light rounded-3 text-center border">
+                    <div class="small text-muted text-uppercase fw-semibold">Tip Contributions</div>
+                    <div class="h3 jt-serif mb-0 text-dark mt-1">@Model.TipContributionCount</div>
+                    <div class="text-muted small mt-1">Tips submitted</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="p-3 bg-light rounded-3 text-center border">
+                    <div class="small text-muted text-uppercase fw-semibold">Contest Entries</div>
+                    <div class="h3 jt-serif mb-0 text-dark mt-1">@Model.ContestEntryCount</div>
+                    <div class="text-muted small mt-1">
+                        @if (Model.WinningContestEntryCount > 0)
+                        {
+                            <span class="text-success fw-semibold">&#9733; @Model.WinningContestEntryCount winning</span>
+                        }
+                        else
+                        {
+                            <span>0 winning entries</span>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="p-3 bg-light rounded-3 text-center border">
+                    <div class="small text-muted text-uppercase fw-semibold">Feedback Submissions</div>
+                    <div class="h3 jt-serif mb-0 text-dark mt-1">@Model.FeedbackCount</div>
+                    <div class="text-muted small mt-1">Feedback messages sent</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION D: Management Preview -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-header bg-transparent border-bottom py-3">
+        <h2 class="h5 jt-serif mb-0 text-dark">Section D &mdash; Management Preview</h2>
+        <div class="text-muted small">Administrative actions and account governance</div>
+    </div>
+    <div class="card-body p-4">
+        <div class="alert alert-secondary border mb-0 d-flex align-items-center gap-3">
+            <span class="fs-4 text-muted">&#9432;</span>
+            <div>
+                <div class="fw-semibold text-dark">Account management actions will be available from the management panel.</div>
+                <div class="text-muted small">Account modification, role assignments, security resets, and profile status changes are restricted to authorized operational workflows.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-4">
+    <a href="@Model.ReturnUrl" class="jt-btn jt-btn-outline">&larr; Back to Users</a>
+</div>

@@ -209,7 +209,10 @@
                                     }
                                 </td>
                                 <td class="text-end">
-                                    <span class="btn btn-sm btn-outline-secondary disabled opacity-50" aria-disabled="true" title="Detail inspection available in Phase U3">Details</span>
+                                    <a asp-action="UserDetails"
+                                       asp-route-id="@user.Id"
+                                       asp-route-returnUrl="@(Url.Action("Users", "Admin", new { q = Model.SearchQuery, role = Model.RoleFilter != "all" ? Model.RoleFilter : null, verification = Model.VerificationFilter != "all" ? Model.VerificationFilter : null, membership = Model.MembershipFilter != "all" ? Model.MembershipFilter : null, page = Model.Page > 1 ? Model.Page : (int?)null }))"
+                                       class="jt-btn jt-btn-outline jt-btn-sm text-nowrap">View Details</a>
                                 </td>
                             </tr>
                         }

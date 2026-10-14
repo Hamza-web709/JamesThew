@@ -253,6 +253,114 @@ public class AdminController(
         return View(viewModel);
     }
 
+    [HttpGet("users/{id}")]
+    public async Task<IActionResult> UserDetails(string id, string? returnUrl = null)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return NotFound();
+        }
+
+        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        var safeReturnUrl = "/admin/users";
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) && returnUrl.StartsWith("/admin/users", StringComparison.OrdinalIgnoreCase))
+        {
+            safeReturnUrl = returnUrl;
+        }
+
+        var roleNames = await (from ur in db.UserRoles.AsNoTracking()
+                               join r in db.Roles.AsNoTracking() on ur.RoleId equals r.Id
+                               where ur.UserId == id
+                               select r.Name)
+                              .ToListAsync();
+
+        var role = roleNames.Contains(AppRoles.Admin) ? AppRoles.Admin : AppRoles.Member;
+
+        var isLocked = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow;
+
+        var subscriptions = await db.SubscriptionRequests
+            .AsNoTracking()
+            .Where(s => s.UserId == id)
+            .OrderByDescending(s => s.CreatedAtUtc)
+            .ToListAsync();
+
+        var now = DateTime.UtcNow;
+        var activeSub = subscriptions.FirstOrDefault(s => s.Status == SubscriptionStatus.Approved && (s.ExpiresAtUtc == null || s.ExpiresAtUtc > now));
+        var lastApprovedSub = subscriptions.FirstOrDefault(s => s.Status == SubscriptionStatus.Approved);
+
+        string membershipLabel = "Free";
+        string currentPlan = "Free";
+        bool isMembershipActive = false;
+        DateTime? membershipExpiry = null;
+
+        if (activeSub != null)
+        {
+            isMembershipActive = true;
+            currentPlan = activeSub.Plan == SubscriptionPlan.Yearly ? "Annual" : "Monthly";
+            membershipLabel = activeSub.Plan == SubscriptionPlan.Yearly ? "Active Annual" : "Active Monthly";
+            membershipExpiry = activeSub.ExpiresAtUtc;
+        }
+        else if (subscriptions.Any(s => s.Status == SubscriptionStatus.Approved && s.ExpiresAtUtc <= now))
+        {
+            membershipLabel = "Expired";
+            currentPlan = "None";
+            membershipExpiry = subscriptions.Where(s => s.Status == SubscriptionStatus.Approved).Max(s => s.ExpiresAtUtc);
+        }
+
+        var recipeContributionsCount = await db.ContentItems
+            .AsNoTracking()
+            .CountAsync(c => c.AuthorUserId == id && c.Kind == ContentKind.Recipe);
+
+        var tipContributionsCount = await db.ContentItems
+            .AsNoTracking()
+            .CountAsync(c => c.AuthorUserId == id && c.Kind == ContentKind.Tip);
+
+        var contestEntriesCount = await db.ContestEntries
+            .AsNoTracking()
+            .CountAsync(e => e.AuthorUserId == id);
+
+        var winningEntriesCount = await db.ContestEntries
+            .AsNoTracking()
+            .CountAsync(e => e.AuthorUserId == id && e.Status == ContestEntryStatus.Selected);
+
+        var feedbackCount = await db.Feedbacks
+            .AsNoTracking()
+            .CountAsync(f => f.AuthorUserId == id);
+
+        var viewModel = new AdminUserDetailsViewModel
+        {
+            Id = user.Id,
+            DisplayName = user.DisplayName,
+            Email = user.Email ?? string.Empty,
+            Role = role,
+            EmailConfirmed = user.EmailConfirmed,
+            IsTemporarilyLocked = isLocked,
+            LockoutEnd = user.LockoutEnd,
+            AccessFailedCount = user.AccessFailedCount,
+            MembershipLabel = membershipLabel,
+            CurrentPlan = currentPlan,
+            IsMembershipActive = isMembershipActive,
+            MembershipExpiry = membershipExpiry,
+            SubscriptionHistoryCount = subscriptions.Count,
+            LatestSubscriptionStatus = subscriptions.FirstOrDefault()?.Status.ToString(),
+            LastApprovedSubscriptionDate = lastApprovedSub?.ReviewedAtUtc ?? lastApprovedSub?.CreatedAtUtc,
+            RecipeContributionCount = recipeContributionsCount,
+            TipContributionCount = tipContributionsCount,
+            ContestEntryCount = contestEntriesCount,
+            WinningContestEntryCount = winningEntriesCount,
+            FeedbackCount = feedbackCount,
+            ReturnUrl = safeReturnUrl
+        };
+
+        return View(viewModel);
+    }
+
+
     [HttpGet("feedback")]
     public async Task<IActionResult> Feedback(FeedbackStatus? status)
     {

@@ -35,3 +35,37 @@ public class AdminUserListItemViewModel
     public bool IsTemporarilyLocked { get; set; }
     public DateTimeOffset? LockoutEnd { get; set; }
 }
+
+public class AdminUserDetailsViewModel
+{
+    // Identity
+    public string Id { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+    public bool EmailConfirmed { get; set; }
+
+    // Security
+    public bool IsTemporarilyLocked { get; set; }
+    public DateTimeOffset? LockoutEnd { get; set; }
+    public int AccessFailedCount { get; set; }
+
+    // Membership
+    public string MembershipLabel { get; set; } = string.Empty;
+    public string CurrentPlan { get; set; } = "Free";
+    public bool IsMembershipActive { get; set; }
+    public DateTime? MembershipExpiry { get; set; }
+    public int SubscriptionHistoryCount { get; set; }
+    public string? LatestSubscriptionStatus { get; set; }
+    public DateTime? LastApprovedSubscriptionDate { get; set; }
+
+    // Activity Summary
+    public int RecipeContributionCount { get; set; }
+    public int TipContributionCount { get; set; }
+    public int ContestEntryCount { get; set; }
+    public int WinningContestEntryCount { get; set; }
+    public int FeedbackCount { get; set; }
+
+    // Safe Navigation
+    public string ReturnUrl { get; set; } = "/admin/users";
+}
