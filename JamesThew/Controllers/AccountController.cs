@@ -4,6 +4,7 @@ using JamesThew.Models;
 using JamesThew.Services;
 using JamesThew.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -15,7 +16,8 @@ namespace JamesThew.Controllers;
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public class AccountController(UserManager<ApplicationUser> users,
     SignInManager<ApplicationUser> signIn, ApplicationDbContext db,
-    ISubscriptionService subscriptionService, IEmailOtpService emailOtpService) : Controller
+    ISubscriptionService subscriptionService, IEmailOtpService emailOtpService,
+    IDataProtectionProvider dataProtectionProvider) : Controller
 {
     [AllowAnonymous, HttpGet("register")]
     public IActionResult Register() => User.Identity?.IsAuthenticated == true
@@ -198,6 +200,165 @@ public class AccountController(UserManager<ApplicationUser> users,
         return RedirectToAction(nameof(EmailOtp), new { challengeId, purpose });
     }
 
+    [AllowAnonymous, HttpGet("forgot-password")]
+    public IActionResult ForgotPassword() => User.Identity?.IsAuthenticated == true
+        ? RedirectToAction(nameof(Status)) : View(new ForgotPasswordViewModel());
+
+    [AllowAnonymous, HttpPost("forgot-password")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+            return RedirectToAction(nameof(Status));
+
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var user = await users.FindByEmailAsync(model.Email);
+        if (user is not null && !await users.IsLockedOutAsync(user) && !string.IsNullOrWhiteSpace(user.Email))
+        {
+            var otp = await emailOtpService.SendPasswordResetOtpAsync(user);
+            if (!otp.Success)
+            {
+                // Account enumeration protection: even if delivery fails, do not reveal account state.
+            }
+        }
+
+        TempData["OtpInfo"] = "If an account exists for this email, a verification code has been sent.";
+        return RedirectToAction(nameof(VerifyResetOtp), new { email = model.Email });
+    }
+
+    [AllowAnonymous, HttpGet("forgot-password/verify")]
+    public IActionResult VerifyResetOtp(string? email)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+            return RedirectToAction(nameof(Status));
+
+        if (string.IsNullOrWhiteSpace(email))
+            return RedirectToAction(nameof(ForgotPassword));
+
+        return View(new VerifyResetOtpViewModel
+        {
+            Email = email,
+            MaskedEmail = EmailOtpService.MaskEmail(email)
+        });
+    }
+
+    [AllowAnonymous, HttpPost("forgot-password/verify")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> VerifyResetOtp(VerifyResetOtpViewModel model)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+            return RedirectToAction(nameof(Status));
+
+        if (!ModelState.IsValid)
+        {
+            model.MaskedEmail = EmailOtpService.MaskEmail(model.Email);
+            return View(model);
+        }
+
+        var result = await emailOtpService.VerifyPasswordResetOtpAsync(model.Email, model.Code);
+        if (!result.Success || string.IsNullOrWhiteSpace(result.UserId))
+        {
+            ModelState.AddModelError(nameof(model.Code), result.Message);
+            model.MaskedEmail = EmailOtpService.MaskEmail(model.Email);
+            return View(model);
+        }
+
+        var user = await users.FindByIdAsync(result.UserId);
+        if (user is null)
+        {
+            ModelState.AddModelError(nameof(model.Code), "The verification code is incorrect.");
+            model.MaskedEmail = EmailOtpService.MaskEmail(model.Email);
+            return View(model);
+        }
+
+        var identityToken = await users.GeneratePasswordResetTokenAsync(user);
+        var ticket = new PasswordResetAuthTicket(user.Id, user.Email ?? model.Email, identityToken, DateTime.UtcNow);
+        var protector = dataProtectionProvider.CreateProtector("JamesThew.PasswordResetAuthorization");
+        var protectedToken = protector.Protect(System.Text.Json.JsonSerializer.Serialize(ticket));
+
+        return RedirectToAction(nameof(ResetPassword), new { token = protectedToken });
+    }
+
+    [AllowAnonymous, HttpPost("forgot-password/resend")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResendResetOtp(string email)
+    {
+        var result = await emailOtpService.ResendPasswordResetOtpAsync(email);
+        TempData[result.Success ? "OtpInfo" : "ErrorMessage"] = result.Message;
+        return RedirectToAction(nameof(VerifyResetOtp), new { email });
+    }
+
+    [AllowAnonymous, HttpGet("reset-password")]
+    public async Task<IActionResult> ResetPassword(string? token)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+            return RedirectToAction(nameof(Status));
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            TempData["ErrorMessage"] = "Password reset session has expired or is invalid. Please request a new code.";
+            return RedirectToAction(nameof(ForgotPassword));
+        }
+
+        var ticket = UnprotectResetToken(token);
+        if (ticket is null)
+        {
+            TempData["ErrorMessage"] = "Password reset session has expired or is invalid. Please request a new code.";
+            return RedirectToAction(nameof(ForgotPassword));
+        }
+
+        var user = await users.FindByIdAsync(ticket.UserId);
+        if (user is null || !string.Equals(user.Email, ticket.Email, StringComparison.OrdinalIgnoreCase))
+        {
+            TempData["ErrorMessage"] = "Password reset session has expired or is invalid. Please request a new code.";
+            return RedirectToAction(nameof(ForgotPassword));
+        }
+
+        return View(new ResetPasswordViewModel { Token = token });
+    }
+
+    [AllowAnonymous, HttpPost("reset-password")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+            return RedirectToAction(nameof(Status));
+
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var ticket = UnprotectResetToken(model.Token);
+        if (ticket is null)
+        {
+            ModelState.AddModelError(string.Empty, "Password reset session has expired or is invalid. Please request a new code.");
+            return View(model);
+        }
+
+        var user = await users.FindByIdAsync(ticket.UserId);
+        if (user is null || !string.Equals(user.Email, ticket.Email, StringComparison.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError(string.Empty, "Password reset session has expired or is invalid. Please request a new code.");
+            return View(model);
+        }
+
+        var resetResult = await users.ResetPasswordAsync(user, ticket.IdentityToken, model.NewPassword);
+        if (!resetResult.Succeeded)
+        {
+            foreach (var error in resetResult.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View(model);
+        }
+
+        return RedirectToAction(nameof(ResetPasswordConfirmation));
+    }
+
+    [AllowAnonymous, HttpGet("reset-password/confirmation")]
+    public IActionResult ResetPasswordConfirmation() => View();
+
     [Authorize, HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
@@ -323,4 +484,27 @@ public class AccountController(UserManager<ApplicationUser> users,
             ModelState.AddModelError(string.Empty, message);
         }
     }
+
+    private PasswordResetAuthTicket? UnprotectResetToken(string token)
+    {
+        try
+        {
+            var protector = dataProtectionProvider.CreateProtector("JamesThew.PasswordResetAuthorization");
+            var json = protector.Unprotect(token);
+            var ticket = System.Text.Json.JsonSerializer.Deserialize<PasswordResetAuthTicket>(json);
+            if (ticket is null) return null;
+            if (DateTime.UtcNow - ticket.IssuedAtUtc > TimeSpan.FromMinutes(15)) return null;
+            return ticket;
+        }
+        catch (System.Security.Cryptography.CryptographicException)
+        {
+            return null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    private sealed record PasswordResetAuthTicket(string UserId, string Email, string IdentityToken, DateTime IssuedAtUtc);
 }

@@ -869,6 +869,26 @@ body {
   text-decoration: underline;
 }
 
+.jt-auth-inline-link {
+  font-size: 0.8125rem;
+  color: var(--jt-gold-primary);
+  text-decoration: none;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+.jt-auth-inline-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.jt-auth-inline-link:focus-visible {
+  outline: 2px solid var(--jt-gold-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 /* ==========================================================================
    EDITORIAL DETAIL PAGES (RECIPES & TIPS)
    ========================================================================== */

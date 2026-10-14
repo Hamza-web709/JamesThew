@@ -1,4 +1,4 @@
-﻿@model JamesThew.ViewModels.LoginViewModel
+@model JamesThew.ViewModels.LoginViewModel
 @{
     ViewData["Title"] = "Member Sign In";
 }
@@ -44,7 +44,10 @@
                 </div>
 
                 <div class="jt-form-group">
-                    <label asp-for="Password" class="jt-form-label">Password</label>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label asp-for="Password" class="jt-form-label mb-0">Password</label>
+                        <a asp-action="ForgotPassword" class="jt-auth-inline-link">Forgot password?</a>
+                    </div>
                     <input asp-for="Password" class="jt-form-input" autocomplete="current-password" placeholder="••••••••••••" />
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>

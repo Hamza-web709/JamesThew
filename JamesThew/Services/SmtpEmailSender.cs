@@ -8,16 +8,16 @@ public class SmtpEmailSender(IConfiguration configuration, ILogger<SmtpEmailSend
     public async Task SendAsync(string toEmail, string subject, string htmlBody, CancellationToken cancellationToken = default)
     {
         var host = configuration["Email:Smtp:Host"];
-        var from = configuration["Email:Smtp:From"];
-        if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(from))
+        if (string.IsNullOrWhiteSpace(host))
         {
             throw new EmailSendException("Email delivery is not configured. Set Email:Smtp:Host and Email:Smtp:From.");
         }
 
+        var senderAddress = CreateSenderAddress(configuration);
         var port = configuration.GetValue("Email:Smtp:Port", 587);
         using var message = new MailMessage
         {
-            From = new MailAddress(from),
+            From = senderAddress,
             Subject = subject,
             Body = htmlBody,
             IsBodyHtml = true
@@ -46,5 +46,22 @@ public class SmtpEmailSender(IConfiguration configuration, ILogger<SmtpEmailSend
             logger.LogWarning(exception, "Email delivery failed for {Recipient}.", toEmail);
             throw new EmailSendException("Email delivery failed. Check SMTP connectivity and try again.", exception);
         }
+    }
+
+    public static MailAddress CreateSenderAddress(IConfiguration configuration)
+    {
+        var from = configuration["Email:Smtp:From"];
+        if (string.IsNullOrWhiteSpace(from))
+        {
+            throw new EmailSendException("Email delivery is not configured. Set Email:Smtp:Host and Email:Smtp:From.");
+        }
+
+        var fromName = configuration["Email:Smtp:FromName"];
+        if (string.IsNullOrWhiteSpace(fromName))
+        {
+            fromName = "JamesThew Sanctuary";
+        }
+
+        return new MailAddress(from, fromName);
     }
 }

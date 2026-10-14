@@ -35,5 +35,6 @@ public class EmailOtpChallenge
 public enum EmailOtpPurpose
 {
     Registration = 1,
-    Login = 2
+    Login = 2,
+    PasswordReset = 3
 }
