@@ -29,6 +29,14 @@
                         {
                             <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">Member</span>
                         }
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">&#10003; Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">&#9679; Inactive</span>
+                        }
                         @if (Model.EmailConfirmed)
                         {
                             <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">&#10003; Verified</span>

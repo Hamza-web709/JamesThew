@@ -30,6 +30,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         {
             user.Property(x => x.DisplayName).HasMaxLength(100).IsRequired();
             user.Property(x => x.IsDemoAdminOtpBypass).HasDefaultValue(false);
+            user.Property(x => x.IsActive).HasDefaultValue(true);
             user.HasIndex(x => x.NormalizedEmail).HasDatabaseName("EmailIndex")
                 .IsUnique().HasFilter("[NormalizedEmail] IS NOT NULL");
         });

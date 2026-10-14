@@ -7,6 +7,7 @@ public class ApplicationUser : IdentityUser
 {
     public string DisplayName { get; set; } = string.Empty;
     public bool IsDemoAdminOtpBypass { get; set; }
+    public bool IsActive { get; set; } = true;
 
     public ICollection<SubscriptionRequest> SubscriptionRequests { get; set; } = [];
     public ICollection<EmailOtpChallenge> EmailOtpChallenges { get; set; } = [];

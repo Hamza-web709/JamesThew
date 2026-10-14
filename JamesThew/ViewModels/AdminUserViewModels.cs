@@ -9,6 +9,7 @@ public class AdminUsersIndexViewModel
     public string RoleFilter { get; set; } = "all";
     public string VerificationFilter { get; set; } = "all";
     public string MembershipFilter { get; set; } = "all";
+    public string StatusFilter { get; set; } = "all";
 
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 15;
@@ -33,6 +34,7 @@ public class AdminUserListItemViewModel
     public string Email { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public bool EmailConfirmed { get; set; }
+    public bool IsActive { get; set; } = true;
     public string MembershipLabel { get; set; } = string.Empty;
     public bool IsTemporarilyLocked { get; set; }
     public DateTimeOffset? LockoutEnd { get; set; }
@@ -46,6 +48,7 @@ public class AdminUserDetailsViewModel
     public string Email { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public bool EmailConfirmed { get; set; }
+    public bool IsActive { get; set; } = true;
 
     // Security
     public bool IsTemporarilyLocked { get; set; }
@@ -97,6 +100,7 @@ public class AdminUserEditViewModel
     public string CurrentRole { get; set; } = string.Empty;
     public bool EmailConfirmed { get; set; }
     public bool IsDemoAdmin { get; set; }
+    public bool IsActive { get; set; } = true;
 }
 
 public class AdminUserChangeRoleViewModel

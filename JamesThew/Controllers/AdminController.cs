@@ -93,6 +93,7 @@ public class AdminController(
         string role = "all",
         string verification = "all",
         string membership = "all",
+        string status = "all",
         int page = 1)
     {
         var trimmedQ = q?.Trim();
@@ -107,6 +108,10 @@ public class AdminController(
         var normalizedMembership = (membership ?? "all").Trim().ToLowerInvariant();
         if (normalizedMembership is not ("all" or "active" or "inactive"))
             normalizedMembership = "all";
+
+        var normalizedStatus = (status ?? "all").Trim().ToLowerInvariant();
+        if (normalizedStatus is not ("all" or "active" or "inactive"))
+            normalizedStatus = "all";
 
         if (page < 1) page = 1;
         const int pageSize = 15;
@@ -152,6 +157,15 @@ public class AdminController(
         else if (normalizedMembership == "inactive")
         {
             query = query.Where(u => !u.SubscriptionRequests.Any(s => s.Status == SubscriptionStatus.Approved && (s.ExpiresAtUtc == null || s.ExpiresAtUtc > now)));
+        }
+
+        if (normalizedStatus == "active")
+        {
+            query = query.Where(u => u.IsActive);
+        }
+        else if (normalizedStatus == "inactive")
+        {
+            query = query.Where(u => !u.IsActive);
         }
 
         var totalItems = await query.CountAsync();
@@ -220,6 +234,7 @@ public class AdminController(
                 Email = user.Email ?? string.Empty,
                 Role = roleName,
                 EmailConfirmed = user.EmailConfirmed,
+                IsActive = user.IsActive,
                 MembershipLabel = membershipLabel,
                 IsTemporarilyLocked = isLocked,
                 LockoutEnd = user.LockoutEnd
@@ -244,6 +259,7 @@ public class AdminController(
             RoleFilter = normalizedRole,
             VerificationFilter = normalizedVerification,
             MembershipFilter = normalizedMembership,
+            StatusFilter = normalizedStatus,
             Page = page,
             PageSize = pageSize,
             TotalItems = totalItems,
@@ -363,6 +379,7 @@ public class AdminController(
             Email = user.Email ?? string.Empty,
             Role = role,
             EmailConfirmed = user.EmailConfirmed,
+            IsActive = user.IsActive,
             IsTemporarilyLocked = isLocked,
             LockoutEnd = user.LockoutEnd,
             AccessFailedCount = user.AccessFailedCount,
@@ -418,7 +435,8 @@ public class AdminController(
             ReturnUrl = safeReturnUrl,
             CurrentRole = currentRole,
             EmailConfirmed = user.EmailConfirmed,
-            IsDemoAdmin = user.IsDemoAdminOtpBypass
+            IsDemoAdmin = user.IsDemoAdminOtpBypass,
+            IsActive = user.IsActive
         };
 
         return View(model);
@@ -449,6 +467,7 @@ public class AdminController(
         model.CurrentRole = roles.Contains(AppRoles.Admin) ? AppRoles.Admin : AppRoles.Member;
         model.EmailConfirmed = user.EmailConfirmed;
         model.IsDemoAdmin = user.IsDemoAdminOtpBypass;
+        model.IsActive = user.IsActive;
         model.ReturnUrl = safeReturnUrl;
 
         var trimmedDisplayName = model.DisplayName?.Trim();
