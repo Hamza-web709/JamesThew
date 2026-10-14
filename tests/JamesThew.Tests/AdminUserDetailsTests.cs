@@ -428,20 +428,19 @@ public class AdminUserDetailsTests(FoundationFixture fixture)
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             var html = await response.Content.ReadAsStringAsync();
 
-            // Assert no POST forms exist on page (except layout logout form if present)
+            // Assert no POST forms exist on page (except layout logout form if present and U4B role form)
             var postForms = html.Split(new[] { "<form" }, StringSplitOptions.None)
                                 .Skip(1)
-                                .Select(f => f.Substring(0, Math.Min(200, f.Length)))
-                                .Where(f => !f.Contains("action=\"/account/logout\"", StringComparison.OrdinalIgnoreCase))
+                                .Select(f => f.Substring(0, Math.Min(500, f.Length)))
+                                .Where(f => !f.Contains("action=\"/account/logout\"", StringComparison.OrdinalIgnoreCase)
+                                         && !f.Contains($"/admin/users/{memberId}/role", StringComparison.OrdinalIgnoreCase))
                                 .ToList();
 
             Assert.Empty(postForms);
 
-            // Assert no edit/delete/deactivate/role change buttons exist
+            // Assert no delete/deactivate buttons exist
             Assert.DoesNotContain("Delete User", html);
             Assert.DoesNotContain("Deactivate", html);
-            Assert.DoesNotContain("Change Role", html);
-            Assert.DoesNotContain("Edit User", html);
         }
     }
 }

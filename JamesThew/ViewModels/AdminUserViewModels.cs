@@ -70,6 +70,11 @@ public class AdminUserDetailsViewModel
 
     // Safe Navigation
     public string ReturnUrl { get; set; } = "/admin/users";
+
+    // Governance / Role Management
+    public bool IsCurrentAdmin { get; set; }
+    public bool IsDemoAdmin { get; set; }
+    public bool IsOnlyAdmin { get; set; }
 }
 
 public class AdminUserEditViewModel
@@ -92,4 +97,15 @@ public class AdminUserEditViewModel
     public string CurrentRole { get; set; } = string.Empty;
     public bool EmailConfirmed { get; set; }
     public bool IsDemoAdmin { get; set; }
+}
+
+public class AdminUserChangeRoleViewModel
+{
+    [Required]
+    public string Id { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Target role is required.")]
+    public string TargetRole { get; set; } = string.Empty;
+
+    public string? ReturnUrl { get; set; }
 }

@@ -336,6 +336,26 @@ public class AdminController(
             .AsNoTracking()
             .CountAsync(f => f.AuthorUserId == id);
 
+        var currentAdminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isCurrentAdmin = string.Equals(user.Id, currentAdminId, StringComparison.Ordinal);
+        var isDemoAdmin = user.IsDemoAdminOtpBypass;
+        var isOnlyAdmin = false;
+        if (role == AppRoles.Admin)
+        {
+            var adminRoleId = await db.Roles
+                .Where(r => r.Name == AppRoles.Admin)
+                .Select(r => r.Id)
+                .FirstOrDefaultAsync();
+
+            if (adminRoleId != null)
+            {
+                var totalAdmins = await db.UserRoles
+                    .Where(ur => ur.RoleId == adminRoleId)
+                    .CountAsync();
+                isOnlyAdmin = totalAdmins <= 1;
+            }
+        }
+
         var viewModel = new AdminUserDetailsViewModel
         {
             Id = user.Id,
@@ -358,7 +378,10 @@ public class AdminController(
             ContestEntryCount = contestEntriesCount,
             WinningContestEntryCount = winningEntriesCount,
             FeedbackCount = feedbackCount,
-            ReturnUrl = safeReturnUrl
+            ReturnUrl = safeReturnUrl,
+            IsCurrentAdmin = isCurrentAdmin,
+            IsDemoAdmin = isDemoAdmin,
+            IsOnlyAdmin = isOnlyAdmin
         };
 
         return View(viewModel);
@@ -549,6 +572,121 @@ public class AdminController(
         }
 
         TempData["SuccessMessage"] = "User profile updated successfully.";
+        return RedirectToAction(nameof(UserDetails), new { id = user.Id });
+    }
+
+    [HttpPost("users/{id}/role")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangeRole(string id, AdminUserChangeRoleViewModel model)
+    {
+        if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(model.Id) || !string.Equals(id, model.Id, StringComparison.Ordinal))
+        {
+            return NotFound();
+        }
+
+        var user = await userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        var safeReturnUrl = Url.Action(nameof(UserDetails), new { id = user.Id }) ?? $"/admin/users/{user.Id}";
+        if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl) && model.ReturnUrl.StartsWith("/admin/users", StringComparison.OrdinalIgnoreCase))
+        {
+            safeReturnUrl = model.ReturnUrl;
+        }
+
+        var targetRole = model.TargetRole?.Trim();
+        if (string.IsNullOrWhiteSpace(targetRole) ||
+            (!string.Equals(targetRole, AppRoles.Member, StringComparison.OrdinalIgnoreCase) &&
+             !string.Equals(targetRole, AppRoles.Admin, StringComparison.OrdinalIgnoreCase)))
+        {
+            TempData["ErrorMessage"] = "Invalid role specified. Only 'Member' and 'Admin' roles are permitted.";
+            return Redirect(safeReturnUrl);
+        }
+
+        var normalizedTargetRole = string.Equals(targetRole, AppRoles.Admin, StringComparison.OrdinalIgnoreCase)
+            ? AppRoles.Admin
+            : AppRoles.Member;
+
+        var currentRoles = await userManager.GetRolesAsync(user);
+        if (currentRoles.Count != 1 || (!currentRoles.Contains(AppRoles.Member) && !currentRoles.Contains(AppRoles.Admin)))
+        {
+            TempData["ErrorMessage"] = "Account has an invalid or conflicting role configuration. Role changes cannot be performed automatically.";
+            return Redirect(safeReturnUrl);
+        }
+
+        var currentRole = currentRoles.First();
+        if (string.Equals(currentRole, normalizedTargetRole, StringComparison.Ordinal))
+        {
+            TempData["SuccessMessage"] = $"User already possesses the '{normalizedTargetRole}' role. No changes were made.";
+            return Redirect(safeReturnUrl);
+        }
+
+        var currentAdminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.Equals(user.Id, currentAdminId, StringComparison.Ordinal) && string.Equals(normalizedTargetRole, AppRoles.Member, StringComparison.Ordinal))
+        {
+            TempData["ErrorMessage"] = "You cannot revoke your own Administrator role.";
+            return Redirect(safeReturnUrl);
+        }
+
+        if (user.IsDemoAdminOtpBypass && string.Equals(normalizedTargetRole, AppRoles.Member, StringComparison.Ordinal))
+        {
+            TempData["ErrorMessage"] = "The demo administrator account must retain the Administrator role.";
+            return Redirect(safeReturnUrl);
+        }
+
+        if (string.Equals(currentRole, AppRoles.Admin, StringComparison.Ordinal) && string.Equals(normalizedTargetRole, AppRoles.Member, StringComparison.Ordinal))
+        {
+            var admins = await userManager.GetUsersInRoleAsync(AppRoles.Admin);
+            var otherAdminsCount = admins.Count(u => u.Id != user.Id);
+            if (otherAdminsCount < 1)
+            {
+                TempData["ErrorMessage"] = "The system must retain at least one Administrator.";
+                return Redirect(safeReturnUrl);
+            }
+        }
+
+        if (string.Equals(normalizedTargetRole, AppRoles.Admin, StringComparison.Ordinal))
+        {
+            var removeResult = await userManager.RemoveFromRoleAsync(user, AppRoles.Member);
+            if (!removeResult.Succeeded)
+            {
+                TempData["ErrorMessage"] = "Failed to update user role: " + string.Join("; ", removeResult.Errors.Select(e => e.Description));
+                return Redirect(safeReturnUrl);
+            }
+
+            var addResult = await userManager.AddToRoleAsync(user, AppRoles.Admin);
+            if (!addResult.Succeeded)
+            {
+                // Rollback
+                await userManager.AddToRoleAsync(user, AppRoles.Member);
+                TempData["ErrorMessage"] = "Failed to grant Administrator role: " + string.Join("; ", addResult.Errors.Select(e => e.Description));
+                return Redirect(safeReturnUrl);
+            }
+        }
+        else
+        {
+            var removeResult = await userManager.RemoveFromRoleAsync(user, AppRoles.Admin);
+            if (!removeResult.Succeeded)
+            {
+                TempData["ErrorMessage"] = "Failed to revoke Administrator role: " + string.Join("; ", removeResult.Errors.Select(e => e.Description));
+                return Redirect(safeReturnUrl);
+            }
+
+            var addResult = await userManager.AddToRoleAsync(user, AppRoles.Member);
+            if (!addResult.Succeeded)
+            {
+                // Rollback
+                await userManager.AddToRoleAsync(user, AppRoles.Admin);
+                TempData["ErrorMessage"] = "Failed to grant Member role: " + string.Join("; ", addResult.Errors.Select(e => e.Description));
+                return Redirect(safeReturnUrl);
+            }
+        }
+
+        await userManager.UpdateSecurityStampAsync(user);
+
+        TempData["SuccessMessage"] = "User role updated successfully.";
         return RedirectToAction(nameof(UserDetails), new { id = user.Id });
     }
 

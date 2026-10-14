@@ -238,22 +238,87 @@
     </div>
 </div>
 
-<!-- SECTION D: Management Preview -->
+<!-- SECTION D: Role Management & Governance -->
 <div class="card border-0 shadow-sm rounded-4 mb-4">
     <div class="card-header bg-transparent border-bottom py-3">
-        <h2 class="h5 jt-serif mb-0 text-dark">Section D &mdash; Management Preview</h2>
-        <div class="text-muted small">Administrative actions and account governance</div>
+        <h2 class="h5 jt-serif mb-0 text-dark">Section D &mdash; Role Management & Governance</h2>
+        <div class="text-muted small">Administrative actions and security role governance</div>
     </div>
     <div class="card-body p-4">
-        <div class="alert alert-secondary border mb-3 d-flex align-items-center gap-3">
-            <span class="fs-4 text-muted">&#9432;</span>
+        <!-- Profile Editing Action -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 mb-4 border-bottom gap-2">
             <div>
-                <div class="fw-semibold text-dark">Account management actions will be available from the management panel.</div>
-                <div class="text-muted small">Display name and email editing are enabled. Role assignments, deactivation, and deletion controls will be available in future governance phases.</div>
+                <div class="fw-semibold text-dark">Account Profile Details</div>
+                <div class="text-muted small">Update Display Name and email address credentials.</div>
             </div>
+            <a asp-action="EditUser" asp-route-id="@Model.Id" class="jt-btn jt-btn-outline jt-btn-sm">Edit Profile</a>
         </div>
+
+        <!-- Role Management Subsection -->
         <div>
-            <a asp-action="EditUser" asp-route-id="@Model.Id" class="jt-btn jt-btn-primary jt-btn-sm">Edit Profile</a>
+            <div class="fw-semibold text-dark mb-1">Security Role Assignment</div>
+            <div class="text-muted small mb-3">Manage administrative and member privilege boundaries. Changing a role invalidates all active sessions.</div>
+
+            <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                <span class="text-muted small">Current Role:</span>
+                @if (Model.Role == AppRoles.Admin)
+                {
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1">Administrator</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle px-3 py-1">Member</span>
+                }
+            </div>
+
+            @if (Model.IsDemoAdmin)
+            {
+                <div class="alert alert-warning border d-flex align-items-center gap-2 mb-0" role="alert">
+                    <span>&#9888;</span>
+                    <div class="small">
+                        <strong>Demo Administrator Account:</strong> The seeded demo administrator must retain the Administrator role. Role transitions are locked for this account.
+                    </div>
+                </div>
+            }
+            else if (Model.IsCurrentAdmin)
+            {
+                <div class="alert alert-info border d-flex align-items-center gap-2 mb-0" role="alert">
+                    <span>&#9432;</span>
+                    <div class="small">
+                        <strong>Current Active Session:</strong> You are currently signed in as this administrator. Self-demotion is disabled to prevent accidental administrative lockout.
+                    </div>
+                </div>
+            }
+            else if (Model.IsOnlyAdmin)
+            {
+                <div class="alert alert-warning border d-flex align-items-center gap-2 mb-0" role="alert">
+                    <span>&#9888;</span>
+                    <div class="small">
+                        <strong>Sole Administrator:</strong> This account is the only Administrator in the system. Demoting this account is blocked to ensure system governance continuity.
+                    </div>
+                </div>
+            }
+            else
+            {
+                <form asp-action="ChangeRole" asp-route-id="@Model.Id" method="post" class="row g-2 align-items-center" onsubmit="return confirm('Are you sure you want to change this user\'s role? This will alter their system privileges and invalidate all active sessions.');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="Id" value="@Model.Id" />
+                    <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+                    <div class="col-auto">
+                        <label for="TargetRole" class="visually-hidden">Target Role</label>
+                        <select id="TargetRole" name="TargetRole" class="form-select form-select-sm">
+                            <option value="@AppRoles.Member" selected="@(Model.Role == AppRoles.Member)">Member</option>
+                            <option value="@AppRoles.Admin" selected="@(Model.Role == AppRoles.Admin)">Administrator</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="jt-btn jt-btn-primary jt-btn-sm">Update Role</button>
+                    </div>
+                    <div class="col-12 mt-2">
+                        <span class="form-text text-muted small">Select the new privilege tier and submit. Browser confirmation is required.</span>
+                    </div>
+                </form>
+            }
         </div>
     </div>
 </div>
