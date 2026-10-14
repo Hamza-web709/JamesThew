@@ -1033,3 +1033,18 @@ textarea:focus-visible,
     justify-content: stretch;
   }
 }
+
+.jt-admin-user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(214, 168, 90, 0.2), rgba(185, 130, 45, 0.4));
+  border: 1px solid var(--jt-admin-border);
+  color: var(--jt-admin-gold);
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}

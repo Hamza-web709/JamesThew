@@ -1,10 +1,12 @@
 using System.Security.Claims;
 using JamesThew.Authorization;
+using JamesThew.Data;
 using JamesThew.Models;
 using JamesThew.Services;
 using JamesThew.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace JamesThew.Controllers;
 
@@ -19,7 +21,8 @@ public class AdminController(
     IMediaService mediaService,
     IContestService contestService,
     IContestEntryService contestEntryService,
-    IContestJudgingService contestJudgingService) : Controller
+    IContestJudgingService contestJudgingService,
+    ApplicationDbContext db) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index()
@@ -78,6 +81,176 @@ public class AdminController(
             TempData["ErrorMessage"] = $"Unable to reject subscription request #{id}.";
 
         return RedirectToAction(nameof(Subscriptions));
+    }
+
+    [HttpGet("users")]
+    public async Task<IActionResult> Users(
+        string? q,
+        string role = "all",
+        string verification = "all",
+        string membership = "all",
+        int page = 1)
+    {
+        var trimmedQ = q?.Trim();
+        var normalizedRole = (role ?? "all").Trim().ToLowerInvariant();
+        if (normalizedRole is not ("all" or "member" or "admin"))
+            normalizedRole = "all";
+
+        var normalizedVerification = (verification ?? "all").Trim().ToLowerInvariant();
+        if (normalizedVerification is not ("all" or "verified" or "unverified"))
+            normalizedVerification = "all";
+
+        var normalizedMembership = (membership ?? "all").Trim().ToLowerInvariant();
+        if (normalizedMembership is not ("all" or "active" or "inactive"))
+            normalizedMembership = "all";
+
+        if (page < 1) page = 1;
+        const int pageSize = 15;
+
+        var query = db.Users.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(trimmedQ))
+        {
+            query = query.Where(u => u.DisplayName.Contains(trimmedQ) || (u.Email != null && u.Email.Contains(trimmedQ)));
+        }
+
+        if (normalizedRole == "admin")
+        {
+            var adminRole = await db.Roles.AsNoTracking().FirstOrDefaultAsync(r => r.Name == AppRoles.Admin);
+            if (adminRole != null)
+            {
+                query = query.Where(u => db.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == adminRole.Id));
+            }
+        }
+        else if (normalizedRole == "member")
+        {
+            var memberRole = await db.Roles.AsNoTracking().FirstOrDefaultAsync(r => r.Name == AppRoles.Member);
+            if (memberRole != null)
+            {
+                query = query.Where(u => db.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == memberRole.Id));
+            }
+        }
+
+        if (normalizedVerification == "verified")
+        {
+            query = query.Where(u => u.EmailConfirmed);
+        }
+        else if (normalizedVerification == "unverified")
+        {
+            query = query.Where(u => !u.EmailConfirmed);
+        }
+
+        var now = DateTime.UtcNow;
+        if (normalizedMembership == "active")
+        {
+            query = query.Where(u => u.SubscriptionRequests.Any(s => s.Status == SubscriptionStatus.Approved && (s.ExpiresAtUtc == null || s.ExpiresAtUtc > now)));
+        }
+        else if (normalizedMembership == "inactive")
+        {
+            query = query.Where(u => !u.SubscriptionRequests.Any(s => s.Status == SubscriptionStatus.Approved && (s.ExpiresAtUtc == null || s.ExpiresAtUtc > now)));
+        }
+
+        var totalItems = await query.CountAsync();
+        var totalPages = pageSize > 0 ? (int)Math.Ceiling((double)totalItems / pageSize) : 0;
+        if (page > totalPages && totalPages > 0)
+        {
+            page = totalPages;
+        }
+
+        var pagedUsers = await query
+            .OrderBy(u => u.DisplayName)
+            .ThenBy(u => u.Email)
+            .ThenBy(u => u.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var userIds = pagedUsers.Select(u => u.Id).ToList();
+
+        var userRolesQuery = await (from ur in db.UserRoles.AsNoTracking()
+                                    join r in db.Roles.AsNoTracking() on ur.RoleId equals r.Id
+                                    where userIds.Contains(ur.UserId)
+                                    select new { ur.UserId, RoleName = r.Name })
+                                   .ToListAsync();
+
+        var rolesByUser = userRolesQuery
+            .GroupBy(x => x.UserId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Any(x => x.RoleName == AppRoles.Admin) ? AppRoles.Admin : AppRoles.Member
+            );
+
+        var subscriptions = await db.SubscriptionRequests
+            .AsNoTracking()
+            .Where(s => userIds.Contains(s.UserId))
+            .OrderByDescending(s => s.CreatedAtUtc)
+            .ToListAsync();
+
+        var subsByUser = subscriptions
+            .GroupBy(s => s.UserId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var items = pagedUsers.Select(user =>
+        {
+            var roleName = rolesByUser.TryGetValue(user.Id, out var rName) ? rName : AppRoles.Member;
+            var isLocked = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow;
+
+            string membershipLabel = "Free / No Active Membership";
+            if (subsByUser.TryGetValue(user.Id, out var userSubs))
+            {
+                var activeSub = userSubs.FirstOrDefault(s => s.Status == SubscriptionStatus.Approved && (s.ExpiresAtUtc == null || s.ExpiresAtUtc > now));
+                if (activeSub != null)
+                {
+                    membershipLabel = activeSub.Plan == SubscriptionPlan.Yearly ? "Active Annual" : "Active Monthly";
+                }
+                else if (userSubs.Any(s => s.Status == SubscriptionStatus.Approved && s.ExpiresAtUtc <= now))
+                {
+                    membershipLabel = "Expired";
+                }
+            }
+
+            return new AdminUserListItemViewModel
+            {
+                Id = user.Id,
+                DisplayName = user.DisplayName,
+                Email = user.Email ?? string.Empty,
+                Role = roleName,
+                EmailConfirmed = user.EmailConfirmed,
+                MembershipLabel = membershipLabel,
+                IsTemporarilyLocked = isLocked,
+                LockoutEnd = user.LockoutEnd
+            };
+        }).ToList();
+
+        var adminRoleItem = await db.Roles.AsNoTracking().FirstOrDefaultAsync(r => r.Name == AppRoles.Admin);
+        var totalUsers = await db.Users.CountAsync();
+        var totalAdmins = adminRoleItem != null ? await db.UserRoles.CountAsync(ur => ur.RoleId == adminRoleItem.Id) : 0;
+        var totalMembers = totalUsers - totalAdmins;
+        var totalVerified = await db.Users.CountAsync(u => u.EmailConfirmed);
+        var totalActiveMemberships = await db.SubscriptionRequests.AsNoTracking()
+            .Where(s => s.Status == SubscriptionStatus.Approved && (s.ExpiresAtUtc == null || s.ExpiresAtUtc > now))
+            .Select(s => s.UserId)
+            .Distinct()
+            .CountAsync();
+
+        var viewModel = new AdminUsersIndexViewModel
+        {
+            Users = items,
+            SearchQuery = trimmedQ,
+            RoleFilter = normalizedRole,
+            VerificationFilter = normalizedVerification,
+            MembershipFilter = normalizedMembership,
+            Page = page,
+            PageSize = pageSize,
+            TotalItems = totalItems,
+            TotalUsersCount = totalUsers,
+            TotalMembersCount = totalMembers,
+            TotalAdminsCount = totalAdmins,
+            TotalVerifiedCount = totalVerified,
+            TotalActiveMembershipsCount = totalActiveMemberships
+        };
+
+        return View(viewModel);
     }
 
     [HttpGet("feedback")]
