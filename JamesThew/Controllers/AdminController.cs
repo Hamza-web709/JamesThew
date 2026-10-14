@@ -26,7 +26,8 @@ public class AdminController(
     IContestJudgingService contestJudgingService,
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
-    ApplicationDbContext db) : Controller
+    ApplicationDbContext db,
+    IEmailOtpService emailOtpService) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index()
@@ -208,10 +209,24 @@ public class AdminController(
             .GroupBy(s => s.UserId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
+        var currentAdminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var adminRoleItem = await db.Roles.AsNoTracking().FirstOrDefaultAsync(r => r.Name == AppRoles.Admin);
+        var totalActiveAdmins = 0;
+        if (adminRoleItem != null)
+        {
+            totalActiveAdmins = await (from ur in db.UserRoles.AsNoTracking()
+                                       join u in db.Users.AsNoTracking() on ur.UserId equals u.Id
+                                       where ur.RoleId == adminRoleItem.Id && u.IsActive
+                                       select u.Id).CountAsync();
+        }
+
         var items = pagedUsers.Select(user =>
         {
             var roleName = rolesByUser.TryGetValue(user.Id, out var rName) ? rName : AppRoles.Member;
             var isLocked = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow;
+            var isCurrentAdmin = string.Equals(user.Id, currentAdminId, StringComparison.Ordinal);
+            var isDemoAdmin = user.IsDemoAdminOtpBypass;
+            var isLastActiveAdmin = roleName == AppRoles.Admin && user.IsActive && totalActiveAdmins <= 1;
 
             string membershipLabel = "Free / No Active Membership";
             if (subsByUser.TryGetValue(user.Id, out var userSubs))
@@ -237,11 +252,12 @@ public class AdminController(
                 IsActive = user.IsActive,
                 MembershipLabel = membershipLabel,
                 IsTemporarilyLocked = isLocked,
-                LockoutEnd = user.LockoutEnd
+                LockoutEnd = user.LockoutEnd,
+                IsCurrentAdmin = isCurrentAdmin,
+                IsDemoAdmin = isDemoAdmin,
+                IsLastActiveAdmin = isLastActiveAdmin
             };
         }).ToList();
-
-        var adminRoleItem = await db.Roles.AsNoTracking().FirstOrDefaultAsync(r => r.Name == AppRoles.Admin);
         var totalUsers = await db.Users.CountAsync();
         var totalAdmins = adminRoleItem != null ? await db.UserRoles.CountAsync(ur => ur.RoleId == adminRoleItem.Id) : 0;
         var totalMembers = totalUsers - totalAdmins;
@@ -356,6 +372,7 @@ public class AdminController(
         var isCurrentAdmin = string.Equals(user.Id, currentAdminId, StringComparison.Ordinal);
         var isDemoAdmin = user.IsDemoAdminOtpBypass;
         var isOnlyAdmin = false;
+        var isLastActiveAdmin = false;
         if (role == AppRoles.Admin)
         {
             var adminRoleId = await db.Roles
@@ -369,6 +386,12 @@ public class AdminController(
                     .Where(ur => ur.RoleId == adminRoleId)
                     .CountAsync();
                 isOnlyAdmin = totalAdmins <= 1;
+
+                var totalActiveAdmins = await (from ur in db.UserRoles
+                                               join u in db.Users on ur.UserId equals u.Id
+                                               where ur.RoleId == adminRoleId && u.IsActive
+                                               select u.Id).CountAsync();
+                isLastActiveAdmin = user.IsActive && totalActiveAdmins <= 1;
             }
         }
 
@@ -398,7 +421,8 @@ public class AdminController(
             ReturnUrl = safeReturnUrl,
             IsCurrentAdmin = isCurrentAdmin,
             IsDemoAdmin = isDemoAdmin,
-            IsOnlyAdmin = isOnlyAdmin
+            IsOnlyAdmin = isOnlyAdmin,
+            IsLastActiveAdmin = isLastActiveAdmin
         };
 
         return View(viewModel);
@@ -707,6 +731,124 @@ public class AdminController(
 
         TempData["SuccessMessage"] = "User role updated successfully.";
         return RedirectToAction(nameof(UserDetails), new { id = user.Id });
+    }
+
+    [HttpPost("users/{id}/deactivate")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeactivateUser(string id, string? returnUrl = null)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return NotFound();
+        }
+
+        var user = await userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        var safeReturnUrl = Url.Action(nameof(UserDetails), new { id = user.Id }) ?? $"/admin/users/{user.Id}";
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) && returnUrl.StartsWith("/admin/users", StringComparison.OrdinalIgnoreCase))
+        {
+            safeReturnUrl = returnUrl;
+        }
+
+        if (!user.IsActive)
+        {
+            TempData["SuccessMessage"] = "User account is already inactive.";
+            return Redirect(safeReturnUrl);
+        }
+
+        var currentAdminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.Equals(user.Id, currentAdminId, StringComparison.Ordinal))
+        {
+            TempData["ErrorMessage"] = "You cannot deactivate your own account.";
+            return Redirect(safeReturnUrl);
+        }
+
+        if (user.IsDemoAdminOtpBypass)
+        {
+            TempData["ErrorMessage"] = "The demo administrator account cannot be deactivated.";
+            return Redirect(safeReturnUrl);
+        }
+
+        var roles = await userManager.GetRolesAsync(user);
+        if (roles.Contains(AppRoles.Admin))
+        {
+            var adminRoleId = await db.Roles
+                .Where(r => r.Name == AppRoles.Admin)
+                .Select(r => r.Id)
+                .FirstOrDefaultAsync();
+
+            if (adminRoleId != null)
+            {
+                var remainingActiveAdmins = await (from ur in db.UserRoles
+                                                   join u in db.Users on ur.UserId equals u.Id
+                                                   where ur.RoleId == adminRoleId && u.Id != user.Id && u.IsActive
+                                                   select u.Id).CountAsync();
+                if (remainingActiveAdmins < 1)
+                {
+                    TempData["ErrorMessage"] = "The system must retain at least one active Administrator.";
+                    return Redirect(safeReturnUrl);
+                }
+            }
+        }
+
+        user.IsActive = false;
+        var updateResult = await userManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            TempData["ErrorMessage"] = "Failed to deactivate user: " + string.Join("; ", updateResult.Errors.Select(e => e.Description));
+            return Redirect(safeReturnUrl);
+        }
+
+        await userManager.UpdateSecurityStampAsync(user);
+        await emailOtpService.InvalidateUserChallengesAsync(user.Id);
+
+        TempData["SuccessMessage"] = "User account deactivated successfully.";
+        return Redirect(safeReturnUrl);
+    }
+
+    [HttpPost("users/{id}/activate")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ActivateUser(string id, string? returnUrl = null)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return NotFound();
+        }
+
+        var user = await userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        var safeReturnUrl = Url.Action(nameof(UserDetails), new { id = user.Id }) ?? $"/admin/users/{user.Id}";
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) && returnUrl.StartsWith("/admin/users", StringComparison.OrdinalIgnoreCase))
+        {
+            safeReturnUrl = returnUrl;
+        }
+
+        if (user.IsActive)
+        {
+            TempData["SuccessMessage"] = "User account is already active.";
+            return Redirect(safeReturnUrl);
+        }
+
+        user.IsActive = true;
+        var updateResult = await userManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            TempData["ErrorMessage"] = "Failed to activate user: " + string.Join("; ", updateResult.Errors.Select(e => e.Description));
+            return Redirect(safeReturnUrl);
+        }
+
+        await userManager.UpdateSecurityStampAsync(user);
+
+        TempData["SuccessMessage"] = "User account activated successfully.";
+        return Redirect(safeReturnUrl);
     }
 
 

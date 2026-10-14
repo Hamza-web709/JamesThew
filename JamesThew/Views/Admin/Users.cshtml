@@ -228,10 +228,43 @@
                                     }
                                 </td>
                                 <td class="text-end">
-                                    <a asp-action="UserDetails"
-                                       asp-route-id="@user.Id"
-                                       asp-route-returnUrl="@(Url.Action("Users", "Admin", new { q = Model.SearchQuery, role = Model.RoleFilter != "all" ? Model.RoleFilter : null, status = Model.StatusFilter != "all" ? Model.StatusFilter : null, verification = Model.VerificationFilter != "all" ? Model.VerificationFilter : null, membership = Model.MembershipFilter != "all" ? Model.MembershipFilter : null, page = Model.Page > 1 ? Model.Page : (int?)null }))"
-                                       class="jt-btn jt-btn-outline jt-btn-sm text-nowrap">View Details</a>
+                                    <div class="d-inline-flex align-items-center justify-content-end gap-1 flex-nowrap">
+                                        <a asp-action="UserDetails"
+                                           asp-route-id="@user.Id"
+                                           asp-route-returnUrl="@(Url.Action("Users", "Admin", new { q = Model.SearchQuery, role = Model.RoleFilter != "all" ? Model.RoleFilter : null, status = Model.StatusFilter != "all" ? Model.StatusFilter : null, verification = Model.VerificationFilter != "all" ? Model.VerificationFilter : null, membership = Model.MembershipFilter != "all" ? Model.MembershipFilter : null, page = Model.Page > 1 ? Model.Page : (int?)null }))"
+                                           class="jt-btn jt-btn-outline jt-btn-sm text-nowrap">View Details</a>
+
+                                        @if (user.CanDeactivate)
+                                        {
+                                            <form asp-action="DeactivateUser" asp-route-id="@user.Id" method="post" class="d-inline"
+                                                  onsubmit="return confirm('Deactivate this account? The user will be unable to sign in until an administrator reactivates it.');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="returnUrl" value="@(Url.Action("Users", "Admin", new { q = Model.SearchQuery, role = Model.RoleFilter != "all" ? Model.RoleFilter : null, status = Model.StatusFilter != "all" ? Model.StatusFilter : null, verification = Model.VerificationFilter != "all" ? Model.VerificationFilter : null, membership = Model.MembershipFilter != "all" ? Model.MembershipFilter : null, page = Model.Page > 1 ? Model.Page : (int?)null }))" />
+                                                <button type="submit" class="jt-btn jt-btn-outline-danger jt-btn-sm text-nowrap" title="Deactivate account">Deactivate</button>
+                                            </form>
+                                        }
+                                        else if (user.CanActivate)
+                                        {
+                                            <form asp-action="ActivateUser" asp-route-id="@user.Id" method="post" class="d-inline"
+                                                  onsubmit="return confirm('Reactivate this account?');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="returnUrl" value="@(Url.Action("Users", "Admin", new { q = Model.SearchQuery, role = Model.RoleFilter != "all" ? Model.RoleFilter : null, status = Model.StatusFilter != "all" ? Model.StatusFilter : null, verification = Model.VerificationFilter != "all" ? Model.VerificationFilter : null, membership = Model.MembershipFilter != "all" ? Model.MembershipFilter : null, page = Model.Page > 1 ? Model.Page : (int?)null }))" />
+                                                <button type="submit" class="jt-btn jt-btn-outline-success jt-btn-sm text-nowrap" title="Activate account">Activate</button>
+                                            </form>
+                                        }
+                                        else if (user.IsCurrentAdmin)
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary border small" title="Current administrator cannot be deactivated">Self</span>
+                                        }
+                                        else if (user.IsDemoAdmin)
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary border small" title="Demo administrator account is protected">Protected</span>
+                                        }
+                                        else if (user.IsLastActiveAdmin)
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary border small" title="Last active administrator must be retained">Last Admin</span>
+                                        }
+                                    </div>
                                 </td>
                             </tr>
                         }

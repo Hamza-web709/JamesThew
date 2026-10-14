@@ -345,6 +345,95 @@
     </div>
 </div>
 
+<!-- SECTION E: Account Access & Status Governance -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-header bg-transparent border-bottom py-3">
+        <h2 class="h5 jt-serif mb-0 text-dark">Section E &mdash; Account Access &amp; Status Governance</h2>
+        <div class="text-muted small">Administrative account activation, deactivation, and authentication availability control</div>
+    </div>
+    <div class="card-body p-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+            <div>
+                <span class="text-muted small me-2">Account Status:</span>
+                @if (Model.IsActive)
+                {
+                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-3 py-1">&#10003; Active</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle px-3 py-1">&#10007; Inactive</span>
+                }
+            </div>
+            <div class="small text-muted">
+                Deactivation prevents sign-in and account recovery until an administrator reactivates the account.
+            </div>
+        </div>
+
+        @if (Model.IsActive)
+        {
+            @if (Model.IsCurrentAdmin)
+            {
+                <div class="alert alert-info border d-flex align-items-center gap-2 mb-3" role="alert">
+                    <span>&#9432;</span>
+                    <div class="small">
+                        <strong>Current Active Session:</strong> You cannot deactivate your own account. Administrative governance prevents self-deactivation.
+                    </div>
+                </div>
+            }
+            @if (Model.IsDemoAdmin)
+            {
+                <div class="alert alert-warning border d-flex align-items-center gap-2 mb-3" role="alert">
+                    <span>&#9888;</span>
+                    <div class="small">
+                        <strong>Demo Administrator Account:</strong> The demo administrator account cannot be deactivated.
+                    </div>
+                </div>
+            }
+            @if (!Model.IsCurrentAdmin && !Model.IsDemoAdmin && Model.IsLastActiveAdmin)
+            {
+                <div class="alert alert-warning border d-flex align-items-center gap-2 mb-3" role="alert">
+                    <span>&#9888;</span>
+                    <div class="small">
+                        <strong>Last Active Administrator:</strong> The system must retain at least one active Administrator. Deactivation is locked for this account.
+                    </div>
+                </div>
+            }
+            @if (Model.CanDeactivate)
+            {
+                <div class="p-3 bg-light rounded-3 border">
+                    <p class="small text-muted mb-3">
+                        Deactivating this account will immediately revoke access, invalidate pending one-time passcodes, and rotate authentication security tokens.
+                    </p>
+                    <form asp-action="DeactivateUser" asp-route-id="@Model.Id" method="post"
+                          onsubmit="return confirm('Deactivate this account? The user will be unable to sign in until an administrator reactivates it.');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="returnUrl" value="@(Url.Action("UserDetails", "Admin", new { id = Model.Id, returnUrl = Model.ReturnUrl }))" />
+                        <button type="submit" class="jt-btn jt-btn-outline-danger jt-btn-sm" id="btn-deactivate-user">
+                            Deactivate Account
+                        </button>
+                    </form>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="p-3 bg-light rounded-3 border">
+                <p class="small text-muted mb-3">
+                    Reactivating this account will restore authentication access. The user will be able to sign in or initiate account recovery using fresh verification codes.
+                </p>
+                <form asp-action="ActivateUser" asp-route-id="@Model.Id" method="post"
+                      onsubmit="return confirm('Reactivate this account?');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@(Url.Action("UserDetails", "Admin", new { id = Model.Id, returnUrl = Model.ReturnUrl }))" />
+                    <button type="submit" class="jt-btn jt-btn-outline-success jt-btn-sm" id="btn-activate-user">
+                        Activate Account
+                    </button>
+                </form>
+            </div>
+        }
+    </div>
+</div>
+
 <div class="mb-4">
     <a href="@Model.ReturnUrl" class="jt-btn jt-btn-outline">&larr; Back to Users</a>
 </div>

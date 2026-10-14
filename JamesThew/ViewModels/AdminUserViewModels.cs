@@ -38,6 +38,11 @@ public class AdminUserListItemViewModel
     public string MembershipLabel { get; set; } = string.Empty;
     public bool IsTemporarilyLocked { get; set; }
     public DateTimeOffset? LockoutEnd { get; set; }
+    public bool IsCurrentAdmin { get; set; }
+    public bool IsDemoAdmin { get; set; }
+    public bool IsLastActiveAdmin { get; set; }
+    public bool CanDeactivate => IsActive && !IsCurrentAdmin && !IsDemoAdmin && !IsLastActiveAdmin;
+    public bool CanActivate => !IsActive;
 }
 
 public class AdminUserDetailsViewModel
@@ -74,10 +79,13 @@ public class AdminUserDetailsViewModel
     // Safe Navigation
     public string ReturnUrl { get; set; } = "/admin/users";
 
-    // Governance / Role Management
+    // Governance / Role & Status Management
     public bool IsCurrentAdmin { get; set; }
     public bool IsDemoAdmin { get; set; }
     public bool IsOnlyAdmin { get; set; }
+    public bool IsLastActiveAdmin { get; set; }
+    public bool CanDeactivate => IsActive && !IsCurrentAdmin && !IsDemoAdmin && !IsLastActiveAdmin;
+    public bool CanActivate => !IsActive;
 }
 
 public class AdminUserEditViewModel

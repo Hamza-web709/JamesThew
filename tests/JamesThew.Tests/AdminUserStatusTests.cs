@@ -483,10 +483,10 @@ public class AdminUserStatusTests(FoundationFixture fixture)
         using (adminClient)
         {
             var actResp = await adminClient.PostAsync("/admin/users/any-id/activate", new StringContent(string.Empty));
-            Assert.True(actResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed);
+            Assert.True(actResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed or HttpStatusCode.BadRequest);
 
             var deactResp = await adminClient.PostAsync("/admin/users/any-id/deactivate", new StringContent(string.Empty));
-            Assert.True(deactResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed);
+            Assert.True(deactResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed or HttpStatusCode.BadRequest);
         }
     }
 

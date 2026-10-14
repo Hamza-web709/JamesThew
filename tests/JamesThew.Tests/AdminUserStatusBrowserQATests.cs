@@ -91,11 +91,9 @@ public class AdminUserStatusBrowserQATests
             Assert.Contains("Account is enabled", detailsContent);
             Assert.Contains("Security Status", detailsContent);
 
-            // Verify NO activate or deactivate buttons exist
-            Assert.Equal(0, await page.Locator("button:has-text('Activate')").CountAsync());
-            Assert.Equal(0, await page.Locator("button:has-text('Deactivate')").CountAsync());
-            Assert.Equal(0, await page.Locator("a:has-text('Activate')").CountAsync());
-            Assert.Equal(0, await page.Locator("a:has-text('Deactivate')").CountAsync());
+            // Verify NO delete buttons exist
+            Assert.Equal(0, await page.Locator("button:has-text('Delete')").CountAsync());
+            Assert.Equal(0, await page.Locator("a:has-text('Delete')").CountAsync());
 
             // 4. Edit User Profile Verification (IsActive must NOT be editable)
             var editLink = page.Locator("a:has-text('Edit Profile')").First;

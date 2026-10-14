@@ -696,10 +696,10 @@ public class AdminUserRoleTests(FoundationFixture fixture)
         using (adminClient)
         {
             var activateResp = await adminClient.PostAsync("/admin/users/any-id/activate", new StringContent(string.Empty));
-            Assert.True(activateResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed);
+            Assert.True(activateResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed or HttpStatusCode.BadRequest);
 
             var deactivateResp = await adminClient.PostAsync("/admin/users/any-id/deactivate", new StringContent(string.Empty));
-            Assert.True(deactivateResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed);
+            Assert.True(deactivateResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed or HttpStatusCode.BadRequest);
 
             var deleteResp = await adminClient.PostAsync("/admin/users/any-id/delete", new StringContent(string.Empty));
             Assert.True(deleteResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed);

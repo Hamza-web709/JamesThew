@@ -149,6 +149,27 @@ public class EmailOtpService(ApplicationDbContext db, IEmailSender emailSender, 
         return new EmailOtpStartResult(sendResult.Success, "If an account exists for this email, a verification code has been sent.", sendResult.ChallengeId, sendResult.MaskedEmail);
     }
 
+    public async Task InvalidateUserChallengesAsync(string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return;
+
+        var now = DateTime.UtcNow;
+        var activeChallenges = await db.EmailOtpChallenges
+            .Where(x => x.UserId == userId && x.ConsumedAtUtc == null)
+            .ToListAsync();
+
+        foreach (var challenge in activeChallenges)
+        {
+            challenge.ConsumedAtUtc = now;
+        }
+
+        if (activeChallenges.Count > 0)
+        {
+            await db.SaveChangesAsync();
+        }
+    }
+
     private async Task<EmailOtpStartResult> CreateAndSendAsync(ApplicationUser user, EmailOtpPurpose purpose, string? returnUrl, bool rememberMe)
     {
         if (string.IsNullOrWhiteSpace(user.Email))

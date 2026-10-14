@@ -433,14 +433,15 @@ public class AdminUserDetailsTests(FoundationFixture fixture)
                                 .Skip(1)
                                 .Select(f => f.Substring(0, Math.Min(500, f.Length)))
                                 .Where(f => !f.Contains("action=\"/account/logout\"", StringComparison.OrdinalIgnoreCase)
-                                         && !f.Contains($"/admin/users/{memberId}/role", StringComparison.OrdinalIgnoreCase))
+                                         && !f.Contains($"/admin/users/{memberId}/role", StringComparison.OrdinalIgnoreCase)
+                                         && !f.Contains($"/admin/users/{memberId}/deactivate", StringComparison.OrdinalIgnoreCase)
+                                         && !f.Contains($"/admin/users/{memberId}/activate", StringComparison.OrdinalIgnoreCase))
                                 .ToList();
 
             Assert.Empty(postForms);
 
             // Assert no delete/deactivate buttons exist
             Assert.DoesNotContain("Delete User", html);
-            Assert.DoesNotContain("Deactivate", html);
         }
     }
 }

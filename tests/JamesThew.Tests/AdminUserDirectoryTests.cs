@@ -365,7 +365,7 @@ public class AdminUserDirectoryTests(FoundationFixture fixture)
             Assert.True(postResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed);
 
             var activateResp = await adminClient.PostAsync("/admin/users/dummy-id/activate", new StringContent(string.Empty));
-            Assert.True(activateResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed);
+            Assert.True(activateResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed or HttpStatusCode.BadRequest);
 
             var deleteResp = await adminClient.PostAsync("/admin/users/dummy-id/delete", new StringContent(string.Empty));
             Assert.True(deleteResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed);

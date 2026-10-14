@@ -11,6 +11,7 @@ public interface IEmailOtpService
     Task<EmailOtpVerifyResult> VerifyPasswordResetOtpAsync(string email, string code);
     Task<EmailOtpStartResult> ResendAsync(int challengeId, EmailOtpPurpose purpose);
     Task<EmailOtpStartResult> ResendPasswordResetOtpAsync(string email);
+    Task InvalidateUserChallengesAsync(string userId);
 }
 
 public sealed record EmailOtpStartResult(bool Success, string Message, int? ChallengeId = null, string? MaskedEmail = null);

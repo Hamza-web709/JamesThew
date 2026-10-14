@@ -776,7 +776,7 @@ public class AdminUserAuthenticationStatusTests(FoundationFixture fixture)
     {
         using var adminClient = await CreateAdminClientAsync();
         var response = await adminClient.PostAsync("/admin/users/any-id/activate", new StringContent(string.Empty));
-        Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed);
+        Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed or HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -784,7 +784,7 @@ public class AdminUserAuthenticationStatusTests(FoundationFixture fixture)
     {
         using var adminClient = await CreateAdminClientAsync();
         var response = await adminClient.PostAsync("/admin/users/any-id/deactivate", new StringContent(string.Empty));
-        Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed);
+        Assert.True(response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed or HttpStatusCode.BadRequest);
     }
 
     [Fact]

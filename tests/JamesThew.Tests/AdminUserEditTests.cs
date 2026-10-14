@@ -578,7 +578,7 @@ public class AdminUserEditTests(FoundationFixture fixture)
             Assert.Equal(HttpStatusCode.BadRequest, roleResp.StatusCode);
 
             var deactResp = await adminClient.PostAsync("/admin/users/any-id/deactivate", new StringContent(string.Empty));
-            Assert.True(deactResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed);
+            Assert.True(deactResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed or HttpStatusCode.BadRequest);
 
             var deleteResp = await adminClient.PostAsync("/admin/users/any-id/delete", new StringContent(string.Empty));
             Assert.True(deleteResp.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed);
