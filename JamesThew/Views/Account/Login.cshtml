@@ -32,6 +32,10 @@
         <!-- Glass Auth Card -->
         <div class="jt-glass-panel jt-glass-panel-pinnacle jt-form-card jt-card-interactive-utility position-relative">
             <div class="jt-card-spotlight" aria-hidden="true"></div>
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger jt-glass-alert mb-4" role="alert">@TempData["ErrorMessage"]</div>
+            }
             <form asp-controller="Account" asp-action="Login" method="post" novalidate>
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="All" class="jt-validation-summary" role="alert"></div>

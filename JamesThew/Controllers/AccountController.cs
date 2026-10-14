@@ -102,6 +102,12 @@ public class AccountController(UserManager<ApplicationUser> users,
 
         await users.ResetAccessFailedCountAsync(user);
 
+        if (!user.IsActive)
+        {
+            ModelState.AddModelError(string.Empty, "This account is currently inactive. Please contact an administrator.");
+            return View(model);
+        }
+
         if (user.IsDemoAdminOtpBypass && await users.IsInRoleAsync(user, AppRoles.Admin))
         {
             await signIn.SignInAsync(user, model.RememberMe);
@@ -135,11 +141,17 @@ public class AccountController(UserManager<ApplicationUser> users,
     [AllowAnonymous, HttpGet("otp/email")]
     public async Task<IActionResult> EmailOtp(int challengeId, EmailOtpPurpose purpose)
     {
-        var challenge = await db.EmailOtpChallenges.AsNoTracking()
+        var challenge = await db.EmailOtpChallenges.Include(x => x.User).AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == challengeId && x.Purpose == purpose);
         if (challenge is null || challenge.ConsumedAtUtc.HasValue)
         {
             TempData["ErrorMessage"] = "Verification session was not found. Please start again.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        if (challenge.User is not null && !challenge.User.IsActive)
+        {
+            TempData["ErrorMessage"] = "This account is currently inactive. Please contact an administrator.";
             return RedirectToAction(nameof(Login));
         }
 
@@ -173,6 +185,12 @@ public class AccountController(UserManager<ApplicationUser> users,
             return View(model);
         }
 
+        if (!user.IsActive)
+        {
+            TempData["ErrorMessage"] = "This account is currently inactive. Please contact an administrator.";
+            return RedirectToAction(nameof(Login));
+        }
+
         if (model.Purpose == EmailOtpPurpose.Registration && !user.EmailConfirmed)
         {
             user.EmailConfirmed = true;
@@ -195,6 +213,20 @@ public class AccountController(UserManager<ApplicationUser> users,
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ResendEmailOtp(int challengeId, EmailOtpPurpose purpose)
     {
+        var challenge = await db.EmailOtpChallenges.Include(x => x.User)
+            .FirstOrDefaultAsync(x => x.Id == challengeId && x.Purpose == purpose);
+        if (challenge is null || challenge.ConsumedAtUtc.HasValue)
+        {
+            TempData["ErrorMessage"] = "Verification session was not found. Please start again.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        if (challenge.User is not null && !challenge.User.IsActive)
+        {
+            TempData["ErrorMessage"] = "This account is currently inactive. Please contact an administrator.";
+            return RedirectToAction(nameof(Login));
+        }
+
         var result = await emailOtpService.ResendAsync(challengeId, purpose);
         TempData[result.Success ? "OtpInfo" : "ErrorMessage"] = result.Message;
         return RedirectToAction(nameof(EmailOtp), new { challengeId, purpose });
@@ -215,7 +247,7 @@ public class AccountController(UserManager<ApplicationUser> users,
             return View(model);
 
         var user = await users.FindByEmailAsync(model.Email);
-        if (user is not null && !await users.IsLockedOutAsync(user) && !string.IsNullOrWhiteSpace(user.Email))
+        if (user is not null && user.IsActive && !await users.IsLockedOutAsync(user) && !string.IsNullOrWhiteSpace(user.Email))
         {
             var otp = await emailOtpService.SendPasswordResetOtpAsync(user);
             if (!otp.Success)
@@ -266,7 +298,7 @@ public class AccountController(UserManager<ApplicationUser> users,
         }
 
         var user = await users.FindByIdAsync(result.UserId);
-        if (user is null)
+        if (user is null || !user.IsActive)
         {
             ModelState.AddModelError(nameof(model.Code), "The verification code is incorrect.");
             model.MaskedEmail = EmailOtpService.MaskEmail(model.Email);
@@ -285,6 +317,13 @@ public class AccountController(UserManager<ApplicationUser> users,
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ResendResetOtp(string email)
     {
+        var user = !string.IsNullOrWhiteSpace(email) ? await users.FindByEmailAsync(email) : null;
+        if (user is not null && !user.IsActive)
+        {
+            TempData["OtpInfo"] = "If an account exists for this email, a verification code has been sent.";
+            return RedirectToAction(nameof(VerifyResetOtp), new { email });
+        }
+
         var result = await emailOtpService.ResendPasswordResetOtpAsync(email);
         TempData[result.Success ? "OtpInfo" : "ErrorMessage"] = result.Message;
         return RedirectToAction(nameof(VerifyResetOtp), new { email });
@@ -310,7 +349,7 @@ public class AccountController(UserManager<ApplicationUser> users,
         }
 
         var user = await users.FindByIdAsync(ticket.UserId);
-        if (user is null || !string.Equals(user.Email, ticket.Email, StringComparison.OrdinalIgnoreCase))
+        if (user is null || !string.Equals(user.Email, ticket.Email, StringComparison.OrdinalIgnoreCase) || !user.IsActive)
         {
             TempData["ErrorMessage"] = "Password reset session has expired or is invalid. Please request a new code.";
             return RedirectToAction(nameof(ForgotPassword));
@@ -337,7 +376,7 @@ public class AccountController(UserManager<ApplicationUser> users,
         }
 
         var user = await users.FindByIdAsync(ticket.UserId);
-        if (user is null || !string.Equals(user.Email, ticket.Email, StringComparison.OrdinalIgnoreCase))
+        if (user is null || !string.Equals(user.Email, ticket.Email, StringComparison.OrdinalIgnoreCase) || !user.IsActive)
         {
             ModelState.AddModelError(string.Empty, "Password reset session has expired or is invalid. Please request a new code.");
             return View(model);

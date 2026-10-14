@@ -512,14 +512,18 @@ public class AdminUserStatusTests(FoundationFixture fixture)
             await userMgr.AddToRoleAsync(user, AppRoles.Member);
         }
 
-        // In U5A, auth enforcement is intentionally NOT added yet.
-        // Inactive account can still login until U5B.
+        // In U5B, auth enforcement is active: inactive account cannot login.
         using var client = fixture.NewClient();
-        await TestAuth.Login(client, email, password);
+        var response = await client.PostAsync("/account/login", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = await TestAuth.Token(client, "/account/login"),
+            ["Email"] = email,
+            ["Password"] = password
+        }));
 
-        // Verify successful authenticated response
-        var profileResp = await client.GetAsync("/account/profile");
-        Assert.Equal(HttpStatusCode.OK, profileResp.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var html = await response.Content.ReadAsStringAsync();
+        Assert.Contains("This account is currently inactive. Please contact an administrator.", html);
     }
 
     [Fact]
