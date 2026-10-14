@@ -1,0 +1,129 @@
+@model JamesThew.ViewModels.AdminUserEditViewModel
+@using JamesThew.Authorization
+@{
+    ViewData["Title"] = $"Edit User: {Model.DisplayName} - JamesThew Admin";
+    var cancelUrl = !string.IsNullOrWhiteSpace(Model.ReturnUrl) ? Model.ReturnUrl : Url.Action("UserDetails", new { id = Model.Id });
+}
+
+<div class="mb-4 pb-3 border-bottom">
+    <a href="@cancelUrl" class="text-decoration-none text-muted small">&larr; Back to User Details</a>
+    <h1 class="h2 jt-serif mt-2 mb-1">Edit User Profile</h1>
+    <p class="text-muted small mb-0">Update account display name or email address. Changes apply immediately upon saving.</p>
+</div>
+
+<div class="row">
+    <div class="col-12 col-lg-8 col-xl-7">
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <h2 class="h5 jt-serif mb-0 text-dark">Profile Credentials</h2>
+                        <div class="text-muted small">Manage account identity details</div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        @if (Model.CurrentRole == AppRoles.Admin)
+                        {
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Administrator</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">Member</span>
+                        }
+                        @if (Model.EmailConfirmed)
+                        {
+                            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">&#10003; Verified</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">&#9888; Unverified</span>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                @if (Model.IsDemoAdmin)
+                {
+                    <div class="alert alert-warning border mb-4 d-flex align-items-center gap-2" role="alert">
+                        <span>&#9888;</span>
+                        <div class="small">
+                            <strong>Demo Administrator Account:</strong> The email address is protected to prevent test suite and automated login disruptions. Display name may be edited.
+                        </div>
+                    </div>
+                }
+
+                <form asp-action="EditUser" asp-route-id="@Model.Id" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="ReturnUrl" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small mb-3" role="alert"></div>
+
+                    <!-- Display Name Field -->
+                    <div class="mb-4">
+                        <label asp-for="DisplayName" class="form-label fw-semibold">Display Name <span class="text-danger">*</span></label>
+                        <input asp-for="DisplayName"
+                               class="form-control"
+                               maxlength="100"
+                               placeholder="e.g., Chef Alexander"
+                               required
+                               autocomplete="name" />
+                        <span asp-validation-for="DisplayName" class="text-danger small d-block mt-1"></span>
+                        <div class="form-text text-muted small">The name displayed on recipe/tip contributions, forum activity, and public profile. Max 100 characters.</div>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="mb-4">
+                        <label asp-for="Email" class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+                        @if (Model.IsDemoAdmin)
+                        {
+                            <input asp-for="Email"
+                                   class="form-control bg-light"
+                                   maxlength="256"
+                                   readonly />
+                            <div class="form-text text-muted small">Protected demo admin account email address.</div>
+                        }
+                        else
+                        {
+                            <input asp-for="Email"
+                                   class="form-control"
+                                   type="email"
+                                   maxlength="256"
+                                   placeholder="e.g., user@example.com"
+                                   required
+                                   autocomplete="email" />
+                            <span asp-validation-for="Email" class="text-danger small d-block mt-1"></span>
+                            <div class="form-text text-muted small">
+                                Used for account login and platform communications. Changing this address will reset the account's email verification status and invalidate existing authentication sessions.
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+                        <button type="submit" class="jt-btn jt-btn-primary">Save Changes</button>
+                        <a href="@cancelUrl" class="jt-btn jt-btn-outline">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informational Side Card -->
+    <div class="col-12 col-lg-4 col-xl-5">
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h3 class="h6 jt-serif mb-0 text-dark">Account Governance Policy</h3>
+            </div>
+            <div class="card-body p-4 small text-muted">
+                <h4 class="fw-semibold text-dark small mb-1">Display Name Updates</h4>
+                <p class="mb-3">Updating the display name updates user identity records across the platform. Historical editorial and recipe submission snapshots are preserved.</p>
+
+                <h4 class="fw-semibold text-dark small mb-1">Email Modifications</h4>
+                <p class="mb-3">For security assurance, changing a member's email address resets their verification status to <em>Unverified</em> and refreshes their security stamp. The user will be required to verify their new address via OTP before signing in.</p>
+
+                <h4 class="fw-semibold text-dark small mb-1">Future Governance Controls</h4>
+                <p class="mb-0">Role changes, membership tier modifications, account deactivation, and password resets are managed in subsequent operational phases.</p>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace JamesThew.ViewModels;
 
 public class AdminUsersIndexViewModel
@@ -68,4 +70,26 @@ public class AdminUserDetailsViewModel
 
     // Safe Navigation
     public string ReturnUrl { get; set; } = "/admin/users";
+}
+
+public class AdminUserEditViewModel
+{
+    [Required]
+    public string Id { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Display Name is required and cannot be empty or whitespace.")]
+    [StringLength(100, ErrorMessage = "Display Name cannot exceed 100 characters.")]
+    public string DisplayName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Email address is required.")]
+    [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
+    [StringLength(256, ErrorMessage = "Email address cannot exceed 256 characters.")]
+    public string Email { get; set; } = string.Empty;
+
+    public string? ReturnUrl { get; set; }
+
+    // Read-only context for display
+    public string CurrentRole { get; set; } = string.Empty;
+    public bool EmailConfirmed { get; set; }
+    public bool IsDemoAdmin { get; set; }
 }

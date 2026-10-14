@@ -4,6 +4,21 @@
     ViewData["Title"] = $"{Model.DisplayName} - User Details - JamesThew Admin";
 }
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <strong>&#10004; Success:</strong> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <strong>&#9888; Error:</strong> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-2">
     <div>
         <a href="@Model.ReturnUrl" class="text-decoration-none text-muted small">&larr; Back to Users</a>
@@ -44,7 +59,8 @@
             </div>
         </div>
     </div>
-    <div>
+    <div class="d-flex gap-2">
+        <a asp-action="EditUser" asp-route-id="@Model.Id" class="jt-btn jt-btn-primary jt-btn-sm">Edit Profile</a>
         <a href="@Model.ReturnUrl" class="jt-btn jt-btn-outline jt-btn-sm">&larr; Back to Users</a>
     </div>
 </div>
@@ -229,12 +245,15 @@
         <div class="text-muted small">Administrative actions and account governance</div>
     </div>
     <div class="card-body p-4">
-        <div class="alert alert-secondary border mb-0 d-flex align-items-center gap-3">
+        <div class="alert alert-secondary border mb-3 d-flex align-items-center gap-3">
             <span class="fs-4 text-muted">&#9432;</span>
             <div>
                 <div class="fw-semibold text-dark">Account management actions will be available from the management panel.</div>
-                <div class="text-muted small">Account modification, role assignments, security resets, and profile status changes are restricted to authorized operational workflows.</div>
+                <div class="text-muted small">Display name and email editing are enabled. Role assignments, deactivation, and deletion controls will be available in future governance phases.</div>
             </div>
+        </div>
+        <div>
+            <a asp-action="EditUser" asp-route-id="@Model.Id" class="jt-btn jt-btn-primary jt-btn-sm">Edit Profile</a>
         </div>
     </div>
 </div>

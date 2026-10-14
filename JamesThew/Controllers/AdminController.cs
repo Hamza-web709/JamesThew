@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using JamesThew.Authorization;
 using JamesThew.Data;
@@ -5,6 +6,7 @@ using JamesThew.Models;
 using JamesThew.Services;
 using JamesThew.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,6 +24,8 @@ public class AdminController(
     IContestService contestService,
     IContestEntryService contestEntryService,
     IContestJudgingService contestJudgingService,
+    UserManager<ApplicationUser> userManager,
+    SignInManager<ApplicationUser> signInManager,
     ApplicationDbContext db) : Controller
 {
     [HttpGet("")]
@@ -359,6 +363,195 @@ public class AdminController(
 
         return View(viewModel);
     }
+
+    [HttpGet("users/{id}/edit")]
+    public async Task<IActionResult> EditUser(string id, string? returnUrl = null)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return NotFound();
+        }
+
+        var user = await userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        var safeReturnUrl = Url.Action(nameof(UserDetails), new { id = user.Id }) ?? $"/admin/users/{user.Id}";
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) && returnUrl.StartsWith("/admin/users", StringComparison.OrdinalIgnoreCase))
+        {
+            safeReturnUrl = returnUrl;
+        }
+
+        var roles = await userManager.GetRolesAsync(user);
+        var currentRole = roles.Contains(AppRoles.Admin) ? AppRoles.Admin : AppRoles.Member;
+
+        var model = new AdminUserEditViewModel
+        {
+            Id = user.Id,
+            DisplayName = user.DisplayName,
+            Email = user.Email ?? string.Empty,
+            ReturnUrl = safeReturnUrl,
+            CurrentRole = currentRole,
+            EmailConfirmed = user.EmailConfirmed,
+            IsDemoAdmin = user.IsDemoAdminOtpBypass
+        };
+
+        return View(model);
+    }
+
+    [HttpPost("users/{id}/edit")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditUser(string id, AdminUserEditViewModel model)
+    {
+        if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(model.Id) || !string.Equals(id, model.Id, StringComparison.Ordinal))
+        {
+            return NotFound();
+        }
+
+        var user = await userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        var safeReturnUrl = Url.Action(nameof(UserDetails), new { id = user.Id }) ?? $"/admin/users/{user.Id}";
+        if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl) && model.ReturnUrl.StartsWith("/admin/users", StringComparison.OrdinalIgnoreCase))
+        {
+            safeReturnUrl = model.ReturnUrl;
+        }
+
+        var roles = await userManager.GetRolesAsync(user);
+        model.CurrentRole = roles.Contains(AppRoles.Admin) ? AppRoles.Admin : AppRoles.Member;
+        model.EmailConfirmed = user.EmailConfirmed;
+        model.IsDemoAdmin = user.IsDemoAdminOtpBypass;
+        model.ReturnUrl = safeReturnUrl;
+
+        var trimmedDisplayName = model.DisplayName?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedDisplayName))
+        {
+            ModelState.AddModelError(nameof(model.DisplayName), "Display Name is required and cannot be empty or whitespace.");
+        }
+        else if (trimmedDisplayName.Length > 100)
+        {
+            ModelState.AddModelError(nameof(model.DisplayName), "Display Name cannot exceed 100 characters.");
+        }
+
+        var trimmedEmail = model.Email?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedEmail) || !new EmailAddressAttribute().IsValid(trimmedEmail))
+        {
+            ModelState.AddModelError(nameof(model.Email), "Please provide a valid email address.");
+        }
+        else if (trimmedEmail.Length > 256)
+        {
+            ModelState.AddModelError(nameof(model.Email), "Email address cannot exceed 256 characters.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var isEmailChanged = !string.Equals(user.Email, trimmedEmail, StringComparison.OrdinalIgnoreCase);
+        var isDisplayNameChanged = !string.Equals(user.DisplayName, trimmedDisplayName, StringComparison.Ordinal);
+
+        if (!isEmailChanged && !isDisplayNameChanged)
+        {
+            TempData["SuccessMessage"] = "No changes were made to the user profile.";
+            return RedirectToAction(nameof(UserDetails), new { id = user.Id });
+        }
+
+        if (isEmailChanged)
+        {
+            if (user.IsDemoAdminOtpBypass)
+            {
+                ModelState.AddModelError(nameof(model.Email), "The demo administrator email address is protected and cannot be changed.");
+                return View(model);
+            }
+
+            var existingWithEmail = await userManager.FindByEmailAsync(trimmedEmail!);
+            if (existingWithEmail != null && existingWithEmail.Id != user.Id)
+            {
+                ModelState.AddModelError(nameof(model.Email), "Another account is already registered with this email address.");
+                return View(model);
+            }
+        }
+
+        var originalDisplayName = user.DisplayName;
+        var originalEmail = user.Email;
+        var originalUserName = user.UserName;
+        var originalEmailConfirmed = user.EmailConfirmed;
+
+        if (isDisplayNameChanged)
+        {
+            user.DisplayName = trimmedDisplayName!;
+        }
+
+        if (isEmailChanged)
+        {
+            var setEmailResult = await userManager.SetEmailAsync(user, trimmedEmail);
+            if (!setEmailResult.Succeeded)
+            {
+                foreach (var err in setEmailResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, err.Description);
+                }
+                user.DisplayName = originalDisplayName;
+                return View(model);
+            }
+
+            var setUserNameResult = await userManager.SetUserNameAsync(user, trimmedEmail);
+            if (!setUserNameResult.Succeeded)
+            {
+                foreach (var err in setUserNameResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, err.Description);
+                }
+                await userManager.SetEmailAsync(user, originalEmail);
+                user.DisplayName = originalDisplayName;
+                return View(model);
+            }
+
+            user.EmailConfirmed = false;
+        }
+
+        var updateResult = await userManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            foreach (var err in updateResult.Errors)
+            {
+                ModelState.AddModelError(string.Empty, err.Description);
+            }
+
+            user.DisplayName = originalDisplayName;
+            if (isEmailChanged)
+            {
+                await userManager.SetEmailAsync(user, originalEmail);
+                await userManager.SetUserNameAsync(user, originalUserName);
+                user.EmailConfirmed = originalEmailConfirmed;
+            }
+
+            return View(model);
+        }
+
+        if (isEmailChanged)
+        {
+            await userManager.UpdateSecurityStampAsync(user);
+        }
+
+        var currentAdminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (isEmailChanged && string.Equals(user.Id, currentAdminId, StringComparison.Ordinal))
+        {
+            await signInManager.SignOutAsync();
+            TempData["SuccessMessage"] = "Your email address has been updated. Please sign in with your new email address.";
+            return RedirectToAction("Login", "Account");
+        }
+
+        TempData["SuccessMessage"] = "User profile updated successfully.";
+        return RedirectToAction(nameof(UserDetails), new { id = user.Id });
+    }
+
 
 
     [HttpGet("feedback")]
