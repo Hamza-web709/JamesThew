@@ -19,6 +19,14 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     </environment>
+    <!-- Favicons & Brand Identity -->
+    <link rel="icon" type="image/svg+xml" href="~/images/branding/logo-mark.svg" asp-append-version="true" />
+    <link rel="icon" type="image/png" sizes="32x32" href="~/images/branding/favicon-32x32.png" asp-append-version="true" />
+    <link rel="icon" type="image/png" sizes="16x16" href="~/images/branding/favicon-16x16.png" asp-append-version="true" />
+    <link rel="apple-touch-icon" sizes="180x180" href="~/images/branding/apple-touch-icon.png" asp-append-version="true" />
+    <link rel="manifest" href="~/site.webmanifest" />
+    <link rel="shortcut icon" href="~/favicon.ico" />
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
@@ -30,11 +38,13 @@
     <div class="jt-admin-shell">
         <aside class="jt-admin-sidebar" id="adminSidebar" aria-label="Admin Console Navigation">
             <div class="jt-admin-brand">
-                <span class="jt-admin-brand-mark">JT</span>
-                <span>
-                    <span class="jt-admin-kicker">Admin Console</span>
-                    <span class="jt-admin-brand-name">James Thew</span>
-                </span>
+                <a asp-controller="Admin" asp-action="Index" class="jt-admin-brand-link" aria-label="JamesThew Admin Dashboard">
+                    <img src="~/images/branding/logo-mark.svg" alt="JamesThew Sanctuary" class="jt-admin-brand-icon" width="40" height="40" asp-append-version="true" />
+                    <span>
+                        <span class="jt-admin-kicker">Admin Console</span>
+                        <span class="jt-admin-brand-name">JamesThew</span>
+                    </span>
+                </a>
             </div>
 
             <nav class="jt-admin-nav" aria-label="Admin sections">

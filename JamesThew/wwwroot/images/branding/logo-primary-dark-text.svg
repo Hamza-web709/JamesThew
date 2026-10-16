@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 68" width="100%" height="100%" fill="none">
+  <defs>
+    <!-- Premium Warm Gold Gradient -->
+    <linearGradient id="pGoldGradLight" x1="15%" y1="0%" x2="85%" y2="100%">
+      <stop offset="0%" stop-color="#FFE7A3"/>
+      <stop offset="28%" stop-color="#F5CB73"/>
+      <stop offset="65%" stop-color="#D49E3F"/>
+      <stop offset="100%" stop-color="#9E6919"/>
+    </linearGradient>
+
+    <!-- Radiant Inner Gold Highlight -->
+    <linearGradient id="pGoldLightLight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF5D6"/>
+      <stop offset="100%" stop-color="#ECC065"/>
+    </linearGradient>
+
+    <!-- Subtle Flame Glow -->
+    <linearGradient id="pFlameGradLight" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FFF2BF"/>
+      <stop offset="35%" stop-color="#F8D47C"/>
+      <stop offset="80%" stop-color="#E2A63B"/>
+      <stop offset="100%" stop-color="#B8771A"/>
+    </linearGradient>
+
+    <!-- Deep Luxury Platter Shadow -->
+    <linearGradient id="pPlatterGradLight" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#B98328"/>
+      <stop offset="25%" stop-color="#F8D580"/>
+      <stop offset="50%" stop-color="#FFEBB0"/>
+      <stop offset="75%" stop-color="#F8D580"/>
+      <stop offset="100%" stop-color="#B98328"/>
+    </linearGradient>
+  </defs>
+
+  <!-- EMBLEM MARK (Scaled and Positioned on the Left) -->
+  <g transform="translate(6, 4) scale(0.50)">
+    <!-- Outer Flame -->
+    <path d="M 60 12
+             C 63 18, 69 24, 70 32
+             C 71 39, 66 45, 60 45
+             C 54 45, 49 39, 50 32
+             C 51 24, 57 18, 60 12 Z"
+          fill="url(#pFlameGradLight)"/>
+
+    <!-- Inner Flame Negative Space -->
+    <path d="M 60 21
+             C 61.8 25, 64.5 28, 64.5 33
+             C 64.5 36.5, 62.5 39.5, 60 39.5
+             C 57.5 39.5, 55.5 36.5, 55.5 33
+             C 55.5 28, 58.2 25, 60 21 Z"
+          fill="#111418"/>
+
+    <!-- Inner Flame Tongue -->
+    <path d="M 60 25
+             C 61 27.5, 62.2 30, 62 33
+             C 61.8 35.5, 61 37, 60 37
+             C 59 37, 58.2 35.5, 58 33
+             C 57.8 30, 59 27.5, 60 25 Z"
+          fill="url(#pGoldLightLight)"/>
+
+    <!-- Cloche Collar / Knob Mount -->
+    <rect x="52" y="44" width="16" height="5.5" rx="2.5" fill="url(#pPlatterGradLight)"/>
+
+    <!-- Main Cloche Dome Outer Shell -->
+    <path d="M 18 78
+             C 18 52, 36 47, 52 47
+             L 68 47
+             C 84 47, 102 52, 102 78
+             Z"
+          fill="url(#pGoldGradLight)"/>
+
+    <!-- Cloche Inner Recess Arc -->
+    <path d="M 24 75
+             C 24 55, 40 51, 54 51
+             L 66 51
+             C 80 51, 96 55, 96 75
+             Z"
+          fill="#111418" opacity="0.94"/>
+
+    <!-- Inner Golden Cloche Core -->
+    <path d="M 28 75
+             C 28 58, 42 54, 55 54
+             L 65 54
+             C 78 54, 92 58, 92 75
+             Z"
+          fill="url(#pGoldGradLight)" opacity="0.9"/>
+
+    <!-- Specular Highlight -->
+    <path d="M 33 72
+             C 33 60, 44 56, 56 56"
+          stroke="url(#pGoldLightLight)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+
+    <!-- Cloche Dish Platter -->
+    <path d="M 12 79
+             C 12 77, 14 76, 17 76
+             L 103 76
+             C 106 76, 108 77, 108 79
+             L 106 82.5
+             C 105.5 84, 103.5 85, 101 85
+             L 19 85
+             C 16.5 85, 14.5 84, 14 82.5
+             Z"
+          fill="url(#pPlatterGradLight)"/>
+    <line x1="20" y1="80.5" x2="100" y2="80.5" stroke="#FFF7DE" stroke-width="0.8" opacity="0.8"/>
+
+    <!-- Sanctuary Cradle Base -->
+    <path d="M 26 88
+             C 36 102, 50 108, 60 108
+             C 70 108, 84 102, 94 88
+             C 86 98, 72 103, 60 103
+             C 48 103, 34 98, 26 88 Z"
+          fill="url(#pGoldGradLight)"/>
+
+    <!-- Star Accent -->
+    <polygon points="60,94 62.5,99 67.5,100 62.5,101 60,106 57.5,101 52.5,100 57.5,99"
+             fill="url(#pGoldLightLight)"/>
+  </g>
+
+  <!-- REFINED TYPOGRAPHY (Vertical Divider & Lettering for Light Backgrounds) -->
+  <line x1="72" y1="15" x2="72" y2="53" stroke="url(#pGoldGradLight)" stroke-width="1" opacity="0.55" stroke-linecap="round"/>
+
+  <!-- Brand Title: "JamesThew" (Dark Charcoal on light theme) -->
+  <text x="86" y="38"
+        font-family="'Playfair Display', 'Cormorant Garamond', 'Cinzel', 'Times New Roman', Georgia, serif"
+        font-size="26"
+        font-weight="700"
+        letter-spacing="0.02em"
+        fill="#11151C">
+    James<tspan fill="#A67018">Thew</tspan>
+  </text>
+
+  <!-- Brand Sub-Tag: "SANCTUARY" -->
+  <text x="87" y="52"
+        font-family="'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+        font-size="8.8"
+        font-weight="700"
+        letter-spacing="0.34em"
+        fill="#9E6919">
+    SANCTUARY
+  </text>
+</svg>

@@ -65,6 +65,28 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.jt-admin-brand-link {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease;
+}
+
+.jt-admin-brand-link:hover {
+  transform: translateX(2px);
+}
+
+.jt-admin-brand-icon {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(243, 198, 105, 0.35));
+}
+
 .jt-admin-brand-mark {
   display: inline-flex;
   width: 44px;

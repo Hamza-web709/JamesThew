@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} - JamesThew Culinary Portal" : "JamesThew - Master Chef Recipes & Cooking Tips")</title>
     <meta name="description" content="Explore master chef recipes, culinary secrets, knife skills, and cooking tips by James Thew. Discover both free public recipes and exclusive members-only masterclasses." />
+    <!-- Favicons & Brand Identity -->
+    <link rel="icon" type="image/svg+xml" href="~/images/branding/logo-mark.svg" asp-append-version="true" />
+    <link rel="icon" type="image/png" sizes="32x32" href="~/images/branding/favicon-32x32.png" asp-append-version="true" />
+    <link rel="icon" type="image/png" sizes="16x16" href="~/images/branding/favicon-16x16.png" asp-append-version="true" />
+    <link rel="apple-touch-icon" sizes="180x180" href="~/images/branding/apple-touch-icon.png" asp-append-version="true" />
+    <link rel="manifest" href="~/site.webmanifest" />
+    <link rel="shortcut icon" href="~/favicon.ico" />
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
@@ -14,12 +22,19 @@
 
     <header class="jt-header jt-header-capsule" id="jtHeader" data-theme="dark">
         <nav class="jt-navbar" aria-label="Main Navigation">
-            <a class="jt-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                <span class="jt-brand-crest">JT</span>
-                <span class="jt-brand-text">
-                    <span class="jt-brand-name">James Thew</span>
-                    <span class="jt-brand-tag">Sanctuary</span>
-                </span>
+            <a class="jt-brand" asp-area="" asp-controller="Home" asp-action="Index" aria-label="JamesThew Sanctuary - Home">
+                <img src="~/images/branding/logo-primary.svg"
+                     alt="JamesThew Sanctuary"
+                     class="jt-brand-img jt-brand-img-dark"
+                     width="200"
+                     height="40"
+                     asp-append-version="true" />
+                <img src="~/images/branding/logo-primary-dark-text.svg"
+                     alt="JamesThew Sanctuary"
+                     class="jt-brand-img jt-brand-img-light"
+                     width="200"
+                     height="40"
+                     asp-append-version="true" />
             </a>
 
             <button id="navbarToggleBtn" class="jt-nav-toggle" type="button" aria-expanded="false" aria-controls="navbarSupportedContent" aria-label="Toggle navigation">
